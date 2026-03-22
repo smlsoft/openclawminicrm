@@ -85,10 +85,10 @@ function Bar({ score, level, w = 80 }: { score: number; level: string; w?: numbe
   const c = LC[level as keyof typeof LC] || LC.green;
   return (
     <div className="flex items-center gap-1.5">
-      <div className="bg-gray-800 rounded-full h-1.5 flex-1" style={{ maxWidth: w }}>
+      <div className="theme-bg-card rounded-full h-1.5 flex-1" style={{ maxWidth: w }}>
         <div className={`${c.bar} h-1.5 rounded-full`} style={{ width: `${Math.min(score, 100)}%` }} />
       </div>
-      <span className="text-[10px] text-gray-500 w-7 text-right">{score}%</span>
+      <span className="text-[10px] theme-text-muted w-7 text-right">{score}%</span>
     </div>
   );
 }
@@ -103,11 +103,11 @@ function formatTime(min: number) {
 }
 
 function ResponseTimeBadge({ rt }: { rt: ResponseTime }) {
-  if (rt.totalResponses === 0) return <span className="text-gray-600 text-[11px]">-</span>;
+  if (rt.totalResponses === 0) return <span className="theme-text-muted text-[11px]">-</span>;
   return (
     <div className="flex items-center gap-1.5">
       <Badge level={rt.level} label={formatTime(rt.avgMinutes)} />
-      <span className="text-[10px] text-gray-500">({rt.totalResponses})</span>
+      <span className="text-[10px] theme-text-muted">({rt.totalResponses})</span>
     </div>
   );
 }
@@ -120,7 +120,7 @@ function ResponseTimeDetail({ rt }: { rt: ResponseTime }) {
       <span className="text-emerald-400">{rt.fastCount} เร็ว</span>
       <span className="text-amber-400">{rt.mediumCount} กลาง</span>
       <span className="text-red-400">{rt.slowCount} ช้า</span>
-      <div className="flex-1 bg-gray-800 rounded-full h-1.5 overflow-hidden flex">
+      <div className="flex-1 theme-bg-card rounded-full h-1.5 overflow-hidden flex">
         {rt.fastCount > 0 && <div className="bg-emerald-500 h-1.5" style={{ width: `${(rt.fastCount / total) * 100}%` }} />}
         {rt.mediumCount > 0 && <div className="bg-amber-500 h-1.5" style={{ width: `${(rt.mediumCount / total) * 100}%` }} />}
         {rt.slowCount > 0 && <div className="bg-red-500 h-1.5" style={{ width: `${(rt.slowCount / total) * 100}%` }} />}
@@ -151,8 +151,8 @@ export default function KpiPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { const i = setInterval(fetchData, 10000); return () => clearInterval(i); }, [fetchData]);
 
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="text-gray-400 animate-pulse">Loading...</div></div>;
-  if (!data) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="text-red-400">Failed</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">Loading...</div></div>;
+  if (!data) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="text-red-400">Failed</div></div>;
 
   const { summary: s, staffKpi, staffConversion, customerKpi, rooms, pipeline, inactiveCustomers, atRiskCustomers, revenue } = data;
   const filteredRooms = tab === "alert" ? rooms.filter((r) => r.customerSentiment?.level === "red" || r.purchaseIntent?.level === "red")
@@ -161,11 +161,11 @@ export default function KpiPage() {
 
   return (
     <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b border-gray-800 px-6 py-4 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center justify-between pl-10 md:pl-0">
           <div>
             <h1 className="text-base font-bold">📊 KPI Dashboard</h1>
-            <p className="text-xs text-gray-400">OpenClaw Mini CRM &middot; Real-time</p>
+            <p className="text-xs theme-text-secondary">OpenClaw Mini CRM &middot; Real-time</p>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -179,21 +179,21 @@ export default function KpiPage() {
         <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-9 gap-3">
           {[
             { label: "ห้อง", value: s.totalRooms, icon: "💬", color: "border-blue-500/30" },
-            { label: "ข้อความ", value: s.totalMessages.toLocaleString(), icon: "📨", color: "border-gray-700" },
+            { label: "ข้อความ", value: s.totalMessages.toLocaleString(), icon: "📨", color: "theme-border" },
             { label: "พนักงาน", value: s.totalStaff, icon: "👔", color: "border-purple-500/30" },
             { label: "ลูกค้า", value: s.totalCustomers, icon: "👥", color: "border-cyan-500/30" },
-            { label: "ต้องดูแล", value: s.alertCount, icon: "🚨", color: s.alertCount > 0 ? "border-red-500/50 bg-red-500/5" : "border-gray-700" },
+            { label: "ต้องดูแล", value: s.alertCount, icon: "🚨", color: s.alertCount > 0 ? "border-red-500/50 bg-red-500/5" : "theme-border" },
             { label: "ตอบเฉลี่ย", value: formatTime(s.avgResponseMinutes), icon: "⏱️", color: s.responseTimeLevel === "red" ? "border-red-500/50 bg-red-500/5" : s.responseTimeLevel === "yellow" ? "border-amber-500/30" : "border-emerald-500/30" },
-            { label: "ปิดการขาย", value: `${s.conversionRate || 0}%`, icon: "🎯", color: (s.conversionRate || 0) >= 50 ? "border-emerald-500/30" : (s.conversionRate || 0) >= 20 ? "border-amber-500/30" : "border-gray-700" },
-            { label: "ลูกค้าหลุด", value: s.inactiveCount || 0, icon: "😴", color: (s.inactiveCount || 0) > 0 ? "border-red-500/50 bg-red-500/5" : "border-gray-700" },
-            { label: "เสี่ยงหลุด", value: s.atRiskCount || 0, icon: "⚠️", color: (s.atRiskCount || 0) > 0 ? "border-amber-500/30" : "border-gray-700" },
+            { label: "ปิดการขาย", value: `${s.conversionRate || 0}%`, icon: "🎯", color: (s.conversionRate || 0) >= 50 ? "border-emerald-500/30" : (s.conversionRate || 0) >= 20 ? "border-amber-500/30" : "theme-border" },
+            { label: "ลูกค้าหลุด", value: s.inactiveCount || 0, icon: "😴", color: (s.inactiveCount || 0) > 0 ? "border-red-500/50 bg-red-500/5" : "theme-border" },
+            { label: "เสี่ยงหลุด", value: s.atRiskCount || 0, icon: "⚠️", color: (s.atRiskCount || 0) > 0 ? "border-amber-500/30" : "theme-border" },
           ].map((c) => (
-            <div key={c.label} className={`rounded-xl border ${c.color} bg-gray-900/50 p-3`}>
+            <div key={c.label} className={`rounded-xl border ${c.color} theme-bg-secondary p-3`}>
               <div className="flex items-center justify-between">
                 <span className="text-xl">{c.icon}</span>
                 <span className="text-xl font-bold">{c.value}</span>
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">{c.label}</p>
+              <p className="text-[11px] theme-text-secondary mt-1">{c.label}</p>
             </div>
           ))}
         </div>
@@ -208,11 +208,11 @@ export default function KpiPage() {
             { key: "customers", label: "👥 ลูกค้า" }, { key: "rooms", label: "💬 ห้อง" },
           ] as const).map(({ key, label }) => (
             <button key={key} onClick={() => { setTab(key); setStaffFilter(""); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${tab === key ? "bg-white text-black" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>{label}</button>
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${tab === key ? "bg-white text-black" : "theme-bg-card theme-text-secondary hover:theme-bg-hover"}`}>{label}</button>
           ))}
           {staffKpi.length > 0 && (
             <select value={staffFilter} onChange={(e) => { setStaffFilter(e.target.value); if (e.target.value) setTab("all"); }}
-              className="bg-gray-800 text-gray-300 text-xs rounded-lg px-3 py-1.5 border border-gray-700">
+              className="theme-bg-card theme-text-secondary text-xs rounded-lg px-3 py-1.5 border theme-border">
               <option value="">-- เลือกพนักงาน --</option>
               {staffKpi.map((st) => <option key={st.name} value={st.name}>{st.name}</option>)}
             </select>
@@ -222,13 +222,13 @@ export default function KpiPage() {
         {/* Staff KPI */}
         {(tab === "all" || tab === "staff") && (
           <section>
-            <h2 className="text-lg font-bold mb-3">👔 KPI พนักงาน <span className="text-xs text-gray-500 font-normal">({filteredStaff.length} คน)</span></h2>
+            <h2 className="text-lg font-bold mb-3">👔 KPI พนักงาน <span className="text-xs theme-text-muted font-normal">({filteredStaff.length} คน)</span></h2>
             {filteredStaff.length === 0 ? (
-              <div className="text-center text-gray-500 py-6 bg-gray-900/50 rounded-xl border border-gray-800">ยังไม่มีข้อมูลพนักงาน (ชื่อขึ้นต้นด้วย SML)</div>
+              <div className="text-center theme-text-muted py-6 theme-bg-secondary rounded-xl border theme-border">ยังไม่มีข้อมูลพนักงาน (ชื่อขึ้นต้นด้วย SML)</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredStaff.map((st) => (
-                  <div key={st.name} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 hover:border-gray-600 transition">
+                  <div key={st.name} className="theme-bg-secondary border theme-border rounded-xl p-4 hover:border-gray-600 transition">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 bg-purple-600/30 rounded-full flex items-center justify-center text-xs font-bold text-purple-300 border border-purple-500/30">
@@ -236,7 +236,7 @@ export default function KpiPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{st.name}</p>
-                          <p className="text-[10px] text-gray-500">{st.messageCount} msgs &middot; {st.roomCount} ห้อง</p>
+                          <p className="text-[10px] theme-text-muted">{st.messageCount} msgs &middot; {st.roomCount} ห้อง</p>
                         </div>
                       </div>
                     </div>
@@ -245,7 +245,7 @@ export default function KpiPage() {
                       {/* Response Time */}
                       <div>
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-gray-400">⏱️ เวลาตอบ</span>
+                          <span className="theme-text-secondary">⏱️ เวลาตอบ</span>
                           <ResponseTimeBadge rt={st.responseTime} />
                         </div>
                         <ResponseTimeDetail rt={st.responseTime} />
@@ -254,7 +254,7 @@ export default function KpiPage() {
                       {/* ลูกค้าพอใจ */}
                       <div>
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-gray-400">😊 ลูกค้าพอใจ</span>
+                          <span className="theme-text-secondary">😊 ลูกค้าพอใจ</span>
                           <Badge level={st.customerSatisfaction.level} label={SL[st.customerSatisfaction.level]} />
                         </div>
                         <Bar score={st.customerSatisfaction.score} level={st.customerSatisfaction.level} />
@@ -264,7 +264,7 @@ export default function KpiPage() {
                       {st.sentiment && (
                         <div>
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-gray-400">👔 ความรู้สึก</span>
+                            <span className="theme-text-secondary">👔 ความรู้สึก</span>
                             <Badge level={st.sentiment.level} label={SL[st.sentiment.level]} />
                           </div>
                           <Bar score={st.sentiment.score} level={st.sentiment.level} />
@@ -273,7 +273,7 @@ export default function KpiPage() {
                     </div>
 
                     {st.rooms.length > 0 && (
-                      <div className="mt-3 pt-2 border-t border-gray-800">
+                      <div className="mt-3 pt-2 border-t theme-border">
                         <div className="flex flex-wrap gap-1">
                           {st.rooms.map((r) => {
                             const c = LC[r.sentiment?.level as keyof typeof LC] || LC.green;
@@ -292,11 +292,11 @@ export default function KpiPage() {
         {/* Customer KPI */}
         {(tab === "all" || tab === "customers") && customerKpi.length > 0 && (
           <section>
-            <h2 className="text-lg font-bold mb-3">👥 ลูกค้า <span className="text-xs text-gray-500 font-normal">({customerKpi.length} คน)</span></h2>
+            <h2 className="text-lg font-bold mb-3">👥 ลูกค้า <span className="text-xs theme-text-muted font-normal">({customerKpi.length} คน)</span></h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-[11px] text-gray-500 border-b border-gray-800">
+                  <tr className="text-left text-xs theme-text-muted border-b theme-border">
                     <th className="pb-2 pr-4">ชื่อ</th>
                     <th className="pb-2 px-2 text-center">ข้อความ</th>
                     <th className="pb-2 px-2 text-center">ห้อง</th>
@@ -304,12 +304,12 @@ export default function KpiPage() {
                     <th className="pb-2 px-2 text-center">🛒 โอกาสซื้อ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/50">
+                <tbody className="theme-divide divide-y">
                   {customerKpi.map((c) => (
-                    <tr key={c.name} className="hover:bg-gray-900/50">
+                    <tr key={c.name} className="hover:theme-bg-hover">
                       <td className="py-2 pr-4 font-medium text-sm">{c.name}</td>
-                      <td className="py-2 px-2 text-center text-xs text-gray-400">{c.messageCount}</td>
-                      <td className="py-2 px-2 text-center text-xs text-gray-400">{c.roomCount}</td>
+                      <td className="py-2 px-2 text-center text-sm theme-text-secondary">{c.messageCount}</td>
+                      <td className="py-2 px-2 text-center text-sm theme-text-secondary">{c.roomCount}</td>
                       <td className="py-2 px-2 text-center"><Badge level={c.sentiment.level} label={SL[c.sentiment.level]} /></td>
                       <td className="py-2 px-2 text-center"><Badge level={c.purchaseIntent.level} label={PL[c.purchaseIntent.level]} /></td>
                     </tr>
@@ -323,14 +323,14 @@ export default function KpiPage() {
         {/* Rooms */}
         {(tab === "all" || tab === "rooms" || tab === "alert") && (
           <section>
-            <h2 className="text-lg font-bold mb-3">{tab === "alert" ? "🚨 ห้องที่ต้องดูแล" : "💬 ภาพรวมห้อง"} <span className="text-xs text-gray-500 font-normal">({filteredRooms.length})</span></h2>
+            <h2 className="text-lg font-bold mb-3">{tab === "alert" ? "🚨 ห้องที่ต้องดูแล" : "💬 ภาพรวมห้อง"} <span className="text-xs theme-text-muted font-normal">({filteredRooms.length})</span></h2>
             {filteredRooms.length === 0 ? (
-              <div className="text-center text-gray-500 py-6 bg-gray-900/50 rounded-xl border border-gray-800">{tab === "alert" ? "ไม่มีห้องที่ต้องดูแล 🎉" : "ยังไม่มีข้อมูล"}</div>
+              <div className="text-center theme-text-muted py-6 theme-bg-secondary rounded-xl border theme-border">{tab === "alert" ? "ไม่มีห้องที่ต้องดูแล 🎉" : "ยังไม่มีข้อมูล"}</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[11px] text-gray-500 border-b border-gray-800">
+                    <tr className="text-left text-xs theme-text-muted border-b theme-border">
                       <th className="pb-2 pr-4">ห้อง</th>
                       <th className="pb-2 px-2 text-center">📨</th>
                       <th className="pb-2 px-2 text-center">😊 ลูกค้า</th>
@@ -340,16 +340,16 @@ export default function KpiPage() {
                       <th className="pb-2 px-2 text-center">👥</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800/50">
+                  <tbody className="theme-divide divide-y">
                     {filteredRooms.map((r) => (
-                      <tr key={r.sourceId} className="hover:bg-gray-900/50">
+                      <tr key={r.sourceId} className="hover:theme-bg-hover">
                         <td className="py-2.5 pr-4"><p className="font-medium truncate max-w-[200px]" title={r.name}>{r.name}</p></td>
-                        <td className="py-2.5 px-2 text-center text-xs text-gray-400">{r.messageCount}</td>
-                        <td className="py-2.5 px-2 text-center">{r.customerSentiment ? <Badge level={r.customerSentiment.level} label={SL[r.customerSentiment.level]} /> : <span className="text-gray-600">-</span>}</td>
-                        <td className="py-2.5 px-2 text-center">{r.staffSentiment ? <Badge level={r.staffSentiment.level} label={SL[r.staffSentiment.level]} /> : <span className="text-gray-600">-</span>}</td>
-                        <td className="py-2.5 px-2 text-center">{r.purchaseIntent ? <Badge level={r.purchaseIntent.level} label={PL[r.purchaseIntent.level]} /> : <span className="text-gray-600">-</span>}</td>
+                        <td className="py-2.5 px-2 text-center text-sm theme-text-secondary">{r.messageCount}</td>
+                        <td className="py-2.5 px-2 text-center">{r.customerSentiment ? <Badge level={r.customerSentiment.level} label={SL[r.customerSentiment.level]} /> : <span className="theme-text-muted">-</span>}</td>
+                        <td className="py-2.5 px-2 text-center">{r.staffSentiment ? <Badge level={r.staffSentiment.level} label={SL[r.staffSentiment.level]} /> : <span className="theme-text-muted">-</span>}</td>
+                        <td className="py-2.5 px-2 text-center">{r.purchaseIntent ? <Badge level={r.purchaseIntent.level} label={PL[r.purchaseIntent.level]} /> : <span className="theme-text-muted">-</span>}</td>
                         <td className="py-2.5 px-2 text-center"><ResponseTimeBadge rt={r.responseTime} /></td>
-                        <td className="py-2.5 px-2 text-center text-xs text-gray-400">{r.customerCount}+{r.staffCount}</td>
+                        <td className="py-2.5 px-2 text-center text-sm theme-text-secondary">{r.customerCount}+{r.staffCount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -365,11 +365,11 @@ export default function KpiPage() {
             <h2 className="text-lg font-bold mb-3">🎯 Pipeline &amp; อัตราปิดการขาย</h2>
 
             {/* Pipeline funnel */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 mb-4">
+            <div className="theme-bg-secondary border theme-border rounded-xl p-4 mb-4">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-2xl font-bold">{pipeline.conversionRate}%</span>
-                <span className="text-sm text-gray-400">อัตราปิดการขาย</span>
-                <span className="text-xs text-gray-600">({pipeline.closedWon} ปิดได้ / {pipeline.closedWon + pipeline.closedLost} ปิดทั้งหมด)</span>
+                <span className="text-sm theme-text-secondary">อัตราปิดการขาย</span>
+                <span className="text-xs theme-text-muted">({pipeline.closedWon} ปิดได้ / {pipeline.closedWon + pipeline.closedLost} ปิดทั้งหมด)</span>
               </div>
               <div className="flex gap-1 h-8 rounded-lg overflow-hidden mb-3">
                 {Object.entries(pipeline.counts).map(([stage, count]) => {
@@ -388,7 +388,7 @@ export default function KpiPage() {
                 {Object.entries(pipeline.counts).map(([stage, count]) => (
                   <div key={stage} className="flex items-center gap-1">
                     <div className={`w-2.5 h-2.5 rounded-sm ${PIPELINE_COLORS[stage] || "bg-gray-500"}`} />
-                    <span className="text-gray-400">{PIPELINE_LABELS[stage] || stage}</span>
+                    <span className="theme-text-secondary">{PIPELINE_LABELS[stage] || stage}</span>
                     <span className="font-medium">{count}</span>
                   </div>
                 ))}
@@ -398,11 +398,11 @@ export default function KpiPage() {
             {/* Staff conversion table */}
             {staffConversion && staffConversion.length > 0 && (
               <div>
-                <h3 className="text-sm font-bold mb-2 text-gray-300">👔 อัตราปิดต่อพนักงาน</h3>
+                <h3 className="text-sm font-bold mb-2 theme-text-secondary">👔 อัตราปิดต่อพนักงาน</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-[11px] text-gray-500 border-b border-gray-800">
+                      <tr className="text-left text-xs theme-text-muted border-b theme-border">
                         <th className="pb-2 pr-4">พนักงาน</th>
                         <th className="pb-2 px-2 text-center">ลูกค้า</th>
                         <th className="pb-2 px-2 text-center">สนใจ</th>
@@ -413,18 +413,18 @@ export default function KpiPage() {
                         <th className="pb-2 px-2 text-center">อัตราปิด</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-800/50">
+                    <tbody className="theme-divide divide-y">
                       {staffConversion.map((sc) => (
-                        <tr key={sc.name} className="hover:bg-gray-900/50">
+                        <tr key={sc.name} className="hover:theme-bg-hover">
                           <td className="py-2 pr-4 font-medium">{sc.name}</td>
-                          <td className="py-2 px-2 text-center text-gray-400">{sc.totalCustomers}</td>
+                          <td className="py-2 px-2 text-center theme-text-secondary">{sc.totalCustomers}</td>
                           <td className="py-2 px-2 text-center text-blue-400">{sc.pipeline.interested || "-"}</td>
                           <td className="py-2 px-2 text-center text-cyan-400">{sc.pipeline.quoting || "-"}</td>
                           <td className="py-2 px-2 text-center text-amber-400">{sc.pipeline.negotiating || "-"}</td>
                           <td className="py-2 px-2 text-center text-emerald-400 font-bold">{sc.closedWon || "-"}</td>
                           <td className="py-2 px-2 text-center text-red-400">{sc.closedLost || "-"}</td>
                           <td className="py-2 px-2 text-center">
-                            <span className={`font-bold ${sc.conversionRate >= 50 ? "text-emerald-400" : sc.conversionRate >= 20 ? "text-amber-400" : "text-gray-500"}`}>
+                            <span className={`font-bold ${sc.conversionRate >= 50 ? "text-emerald-400" : sc.conversionRate >= 20 ? "text-amber-400" : "theme-text-muted"}`}>
                               {sc.closedWon + sc.closedLost > 0 ? `${sc.conversionRate}%` : "-"}
                             </span>
                           </td>
@@ -445,14 +445,14 @@ export default function KpiPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* ลูกค้าหลุด (>7 วัน) */}
               {inactiveCustomers?.length > 0 && (
-                <div className="bg-gray-900/50 border border-red-500/20 rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-red-400 mb-3">🔴 ลูกค้าหลุด ({inactiveCustomers.length} คน) <span className="text-[10px] text-gray-500 font-normal">ไม่มีข้อความ &gt; 7 วัน</span></h3>
+                <div className="theme-bg-secondary border border-red-500/20 rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-red-400 mb-3">🔴 ลูกค้าหลุด ({inactiveCustomers.length} คน) <span className="text-[10px] theme-text-muted font-normal">ไม่มีข้อความ &gt; 7 วัน</span></h3>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {inactiveCustomers.map((c, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg bg-gray-800/50">
+                      <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg theme-bg-card">
                         <div>
                           <p className="font-medium">{c.userName}</p>
-                          <p className="text-[10px] text-gray-500">{c.roomName} &middot; {PIPELINE_LABELS[c.pipelineStage] || c.pipelineStage}</p>
+                          <p className="text-[10px] theme-text-muted">{c.roomName} &middot; {PIPELINE_LABELS[c.pipelineStage] || c.pipelineStage}</p>
                         </div>
                         <div className="text-right">
                           <Badge level={c.level} label={`${c.daysSinceLastMsg} วัน`} />
@@ -465,14 +465,14 @@ export default function KpiPage() {
 
               {/* เสี่ยงหลุด (3-7 วัน) */}
               {atRiskCustomers?.length > 0 && (
-                <div className="bg-gray-900/50 border border-amber-500/20 rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-amber-400 mb-3">🟡 เสี่ยงหลุด ({atRiskCustomers.length} คน) <span className="text-[10px] text-gray-500 font-normal">ไม่มีข้อความ 3-7 วัน</span></h3>
+                <div className="theme-bg-secondary border border-amber-500/20 rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-amber-400 mb-3">🟡 เสี่ยงหลุด ({atRiskCustomers.length} คน) <span className="text-[10px] theme-text-muted font-normal">ไม่มีข้อความ 3-7 วัน</span></h3>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {atRiskCustomers.map((c, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg bg-gray-800/50">
+                      <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg theme-bg-card">
                         <div>
                           <p className="font-medium">{c.userName}</p>
-                          <p className="text-[10px] text-gray-500">{c.roomName} &middot; {PIPELINE_LABELS[c.pipelineStage] || c.pipelineStage}</p>
+                          <p className="text-[10px] theme-text-muted">{c.roomName} &middot; {PIPELINE_LABELS[c.pipelineStage] || c.pipelineStage}</p>
                         </div>
                         <div className="text-right">
                           <Badge level="yellow" label={`${c.daysSinceLastMsg} วัน`} />
@@ -494,23 +494,23 @@ export default function KpiPage() {
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
                 <p className="text-[11px] text-blue-400 mb-1">💼 Pipeline รวม</p>
                 <p className="text-2xl font-bold text-blue-300">{revenue.totalPipeline > 0 ? formatTHB(revenue.totalPipeline) : "-"}</p>
-                <p className="text-[11px] text-gray-500 mt-1">{revenue.pipelineCount} deal ที่กำลังดำเนินการ</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.pipelineCount} deal ที่กำลังดำเนินการ</p>
               </div>
               <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
                 <p className="text-[11px] text-emerald-400 mb-1">✅ ปิดการขายได้</p>
                 <p className="text-2xl font-bold text-emerald-300">{revenue.wonRevenue > 0 ? formatTHB(revenue.wonRevenue) : "-"}</p>
-                <p className="text-[11px] text-gray-500 mt-1">{revenue.wonCount} deal</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.wonCount} deal</p>
               </div>
               <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
                 <p className="text-[11px] text-red-400 mb-1">❌ ปิดไม่ได้</p>
                 <p className="text-2xl font-bold text-red-300">{revenue.lostRevenue > 0 ? formatTHB(revenue.lostRevenue) : "-"}</p>
-                <p className="text-[11px] text-gray-500 mt-1">{revenue.lostCount} deal</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.lostCount} deal</p>
               </div>
             </div>
 
             {/* Win Rate by Value */}
             {(revenue.wonRevenue > 0 || revenue.lostRevenue > 0) && (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
+              <div className="theme-bg-secondary border theme-border rounded-xl p-4">
                 <p className="text-sm font-medium mb-3">อัตราปิดตามมูลค่า</p>
                 <div className="flex h-6 rounded-lg overflow-hidden mb-2">
                   {revenue.wonRevenue > 0 && (
@@ -557,8 +557,8 @@ export default function KpiPage() {
                 }
                 const total = green + yellow + red || 1;
                 return (
-                  <div key={field} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-                    <p className="text-sm text-gray-400 mb-3">{title}</p>
+                  <div key={field} className="theme-bg-secondary border theme-border rounded-xl p-4">
+                    <p className="text-sm theme-text-secondary mb-3">{title}</p>
                     <div className="space-y-2">
                       {[
                         { count: green, color: "bg-emerald-500", label: labels.green },
@@ -566,8 +566,8 @@ export default function KpiPage() {
                         { count: red, color: "bg-red-500", label: labels.red },
                       ].map(({ count, color, label }) => (
                         <div key={label} className="flex items-center gap-2">
-                          <span className="text-[11px] text-gray-400 w-16">{label}</span>
-                          <div className="flex-1 bg-gray-800 rounded-full h-5 overflow-hidden">
+                          <span className="text-[11px] theme-text-secondary w-16">{label}</span>
+                          <div className="flex-1 theme-bg-card rounded-full h-5 overflow-hidden">
                             <div className={`${color} h-5 rounded-full flex items-center px-2 text-[10px] font-bold`} style={{ width: `${(count / total) * 100}%`, minWidth: count > 0 ? 24 : 0 }}>{count}</div>
                           </div>
                         </div>
