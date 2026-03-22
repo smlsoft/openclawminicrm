@@ -103,3 +103,9 @@ groups_meta     { sourceId, groupName, platform, teamId }
 - ห้ามเปลี่ยน deploy strategy โดยไม่แจ้ง
 - ห้ามแยก MongoDB collection ตามคน/กลุ่ม
 - ห้ามลบ OpenClaw — เป็นแกนหลักของระบบ
+- ห้าม hardcode สี Tailwind ในหน้าใหม่ — ใช้ theme-* classes
+
+## Skills
+| Skill | File | หน้าที่ |
+|-------|------|--------|
+| theming | `skills/theming/SKILL.md` | มาตรฐานสี Dark/Light theme ทุกจอ |

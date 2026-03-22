@@ -7,7 +7,7 @@
       "name": "problem-solver",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774166539642,
+      "updatedAtMs": 1774214108933,
       "schedule": {
         "kind": "cron",
         "expr": "15 * * * *",
@@ -23,7 +23,16 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774217708933,
+        "lastRunAtMs": 1774214107953,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 980,
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 13,
+        "runningAtMs": 1774217708934
+      }
     },
     {
       "id": "advisor-sales-hunter",
@@ -31,7 +40,7 @@
       "name": "sales-hunter",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774008018371,
+      "updatedAtMs": 1774215009216,
       "schedule": {
         "kind": "cron",
         "expr": "30 * * * *",
@@ -47,7 +56,16 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774218609216,
+        "lastRunAtMs": 1774215008239,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 977,
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 13,
+        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+      }
     },
     {
       "id": "crm-advisor-6h",
@@ -55,7 +73,7 @@
       "name": "team-coach",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774008592468,
+      "updatedAtMs": 1774198801000,
       "schedule": {
         "kind": "cron",
         "expr": "0 */6 * * *",
@@ -71,7 +89,16 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774220400000,
+        "lastRunAtMs": 1774198800026,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 974,
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 2,
+        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+      }
     },
     {
       "id": "advisor-weekly-strategist",
@@ -95,7 +122,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774227600000
+      }
     },
     {
       "id": "advisor-health-monitor",
@@ -103,7 +132,7 @@
       "name": "health-monitor",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774008018371,
+      "updatedAtMs": 1774209600977,
       "schedule": {
         "kind": "cron",
         "expr": "0 */3 * * *",
@@ -119,7 +148,16 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774220400000,
+        "lastRunAtMs": 1774209600028,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 949,
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 4,
+        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+      }
     }
   ]
 }

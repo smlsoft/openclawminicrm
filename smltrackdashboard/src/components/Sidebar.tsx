@@ -66,7 +66,7 @@ function NavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => voi
       className={`flex items-center gap-3 py-2 px-3 rounded-lg text-sm transition-all ${
         isActive
           ? "bg-indigo-900/50 text-indigo-400 font-medium"
-          : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+          : "theme-text-secondary hover:theme-bg-hover hover:theme-text"
       }`}
     >
       <span className="text-base leading-none">{icon}</span>
@@ -80,7 +80,7 @@ function UserSection() {
   const [open, setOpen] = useState(false);
 
   if (status === "loading") {
-    return <div className="w-full h-9 rounded-lg bg-gray-800 animate-pulse" />;
+    return <div className="w-full h-9 rounded-lg theme-bg-card animate-pulse" />;
   }
 
   if (!session) {
@@ -103,13 +103,13 @@ function UserSection() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-800 transition"
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:theme-bg-hover transition"
       >
         {user?.image ? (
           <img
             src={user.image}
             alt={user.name || ""}
-            className="w-7 h-7 rounded-full object-cover border border-gray-700 shrink-0"
+            className="w-7 h-7 rounded-full object-cover border theme-border shrink-0"
           />
         ) : (
           <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
@@ -117,19 +117,19 @@ function UserSection() {
           </div>
         )}
         <div className="flex-1 text-left min-w-0">
-          <p className="text-xs text-gray-200 truncate font-medium">{user?.name || user?.email}</p>
-          <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+          <p className="text-xs theme-text truncate font-medium">{user?.name || user?.email}</p>
+          <p className="text-[10px] theme-text-muted truncate">{user?.email}</p>
         </div>
-        <span className="text-gray-600 text-xs shrink-0">{open ? "▲" : "▼"}</span>
+        <span className="theme-text-muted text-xs shrink-0">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full left-0 right-0 mb-1 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-xs font-medium text-white truncate">{user?.name || "ผู้ใช้"}</p>
-              <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
+          <div className="absolute bottom-full left-0 right-0 mb-1 theme-bg-secondary border theme-border rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="px-3 py-2.5 border-b theme-border">
+              <p className="text-xs font-medium theme-text truncate">{user?.name || "ผู้ใช้"}</p>
+              <p className="text-[11px] theme-text-secondary truncate">{user?.email}</p>
               <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">
                 {(user as any)?.plan === "pro" ? "Pro" : "Free"}
               </span>
@@ -137,7 +137,7 @@ function UserSection() {
             <button
               onClick={() => {
                 setOpen(false);
-                signOut({ callbackUrl: "/dashboard/login" });
+                signOut({ callbackUrl: "/login" });
               }}
               className="w-full text-left px-3 py-2.5 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
             >
@@ -156,14 +156,14 @@ export default function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-800">
+      <div className="px-4 py-4 border-b theme-border">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-xl flex items-center justify-center text-sm shadow-lg shadow-indigo-500/20 shrink-0">
             💬
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-white leading-tight">OpenClaw Mini CRM</h1>
-            <p className="text-[10px] text-gray-500 leading-tight">AI Chat Intelligence</p>
+            <h1 className="text-sm font-bold theme-text leading-tight">OpenClaw Mini CRM</h1>
+            <p className="text-[10px] theme-text-muted leading-tight">AI Chat Intelligence</p>
           </div>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function Sidebar() {
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi} className={gi > 0 ? "mt-4" : ""}>
             {group.groupLabel && (
-              <p className="text-[11px] text-gray-500 uppercase tracking-wider px-3 mb-1.5 mt-1">
+              <p className="text-[11px] theme-text-muted uppercase tracking-wider px-3 mb-1.5 mt-1">
                 {group.groupLabel}
               </p>
             )}
@@ -189,9 +189,9 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom: Theme + User */}
-      <div className="px-3 pb-3 pt-2 border-t border-gray-800 space-y-2">
+      <div className="px-3 pb-3 pt-2 border-t theme-border space-y-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] text-gray-500">Theme</span>
+          <span className="text-[11px] theme-text-muted">Theme</span>
           <ThemeToggle />
         </div>
         <UserSection />
@@ -202,13 +202,13 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-gray-950 border-r border-gray-800 h-screen sticky top-0 overflow-hidden">
+      <aside className="hidden md:flex flex-col w-60 shrink-0 theme-bg border-r theme-border h-screen sticky top-0 overflow-hidden">
         {sidebarContent}
       </aside>
 
       {/* Mobile: hamburger button */}
       <button
-        className="md:hidden fixed top-3 left-3 z-50 w-9 h-9 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center text-gray-300 hover:bg-gray-800 transition shadow-lg"
+        className="md:hidden fixed top-3 left-3 z-50 w-9 h-9 theme-bg-secondary border theme-border rounded-lg flex items-center justify-center theme-text-secondary hover:theme-bg-hover transition shadow-lg"
         onClick={() => setMobileOpen(true)}
         aria-label="เปิดเมนู"
       >
@@ -229,13 +229,13 @@ export default function Sidebar() {
 
       {/* Mobile: slide-in sidebar */}
       <aside
-        className={`md:hidden fixed top-0 left-0 z-50 h-full w-60 bg-gray-950 border-r border-gray-800 transform transition-transform duration-200 ease-in-out ${
+        className={`md:hidden fixed top-0 left-0 z-50 h-full w-60 theme-bg border-r theme-border transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Close button */}
         <button
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-white"
+          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center theme-text-secondary hover:theme-text"
           onClick={() => setMobileOpen(false)}
           aria-label="ปิดเมนู"
         >

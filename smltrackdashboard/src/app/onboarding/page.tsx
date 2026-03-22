@@ -122,7 +122,7 @@ export default function OnboardingPage() {
       });
     } catch {}
     setSaving(false);
-    router.replace("/dashboard");
+    router.replace("/");
   };
 
   const userName = session?.user?.name || "คุณ";

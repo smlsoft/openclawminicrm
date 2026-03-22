@@ -131,7 +131,7 @@ function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-3 flex items-start gap-3 transition border-b border-gray-800/60 hover:bg-gray-800/60 ${
+      className={`w-full text-left px-3 py-3 flex items-start gap-3 transition border-b theme-border hover:theme-bg-hover ${
         isSelected ? "bg-indigo-950/60 border-l-2 border-l-indigo-500" : ""
       }`}
     >
@@ -140,13 +140,13 @@ function ConversationItem({
         <div className={`w-10 h-10 rounded-full ${avatarBg(platform)} flex items-center justify-center text-sm font-bold text-white`}>
           {getInitials(conv.name)}
         </div>
-        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900 ${cfg.dot}`} />
+        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${cfg.dot}`} style={{ borderColor: 'var(--bg-secondary)' }} />
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className={`text-xs font-semibold truncate flex-1 ${isSelected ? "text-white" : "text-gray-200"}`}>
+          <span className={`text-sm font-semibold truncate flex-1 ${isSelected ? "text-white" : "theme-text"}`}>
             {conv.name !== conv.id ? conv.name : conv.id.substring(0, 16) + "…"}
           </span>
           {sentimentLevel && (
@@ -155,9 +155,9 @@ function ConversationItem({
         </div>
         <div className="flex items-center gap-1.5">
           {platformBadge(platform)}
-          <span className="text-[11px] text-gray-500 truncate flex-1">{conv.lastMessage || "—"}</span>
+          <span className="text-sm theme-text-muted truncate flex-1">{conv.lastMessage || "—"}</span>
         </div>
-        <span className="text-[10px] text-gray-600 mt-0.5 block">{timeAgo(conv.lastActivity)}</span>
+        <span className="text-[10px] theme-text-muted mt-0.5 block">{timeAgo(conv.lastActivity)}</span>
       </div>
     </button>
   );
@@ -179,7 +179,7 @@ function ChatBubble({
         className={`relative max-w-[70%] px-3 py-2 text-sm rounded-2xl ${
           isStaff
             ? "bg-indigo-600 text-white rounded-br-sm"
-            : "bg-gray-700 text-gray-100 rounded-bl-sm"
+            : "theme-bg-card theme-text rounded-bl-sm"
         }`}
       >
         {msg.userName && (
@@ -200,7 +200,7 @@ function ChatBubble({
           <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
         )}
         {msg.createdAt && (
-          <span className={`text-[10px] mt-1 block ${isStaff ? "text-indigo-300" : "text-gray-500"} text-right`}>
+          <span className={`text-[10px] mt-1 block ${isStaff ? "text-indigo-300" : "theme-text-muted"} text-right`}>
             {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
@@ -212,11 +212,11 @@ function ChatBubble({
 function DateSeparator({ date }: { date: string }) {
   return (
     <div className="flex items-center gap-3 my-3">
-      <div className="flex-1 h-px bg-gray-800" />
-      <span className="text-[11px] text-gray-500 px-3 py-1 bg-gray-800/60 rounded-full">
+      <div className="flex-1 h-px theme-bg-card" />
+      <span className="text-xs theme-text-muted px-3 py-1 theme-bg-card rounded-full">
         {new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "2-digit" })}
       </span>
-      <div className="flex-1 h-px bg-gray-800" />
+      <div className="flex-1 h-px theme-bg-card" />
     </div>
   );
 }
@@ -420,7 +420,7 @@ export default function InboxPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden">
+    <div className="flex h-screen theme-bg theme-text overflow-hidden">
 
       {/* ── Zoom Lightbox ── */}
       {zoomImage && (
@@ -439,31 +439,31 @@ export default function InboxPage() {
       {/* ═══════════════════════════════════════════════════════════════════
           LEFT PANEL — Conversation List
       ══════════════════════════════════════════════════════════════════════ */}
-      <aside className={`flex flex-col w-80 shrink-0 bg-gray-900 border-r border-gray-800 ${selectedId ? "hidden md:flex" : "flex"}`}>
+      <aside className={`flex flex-col w-80 shrink-0 theme-bg-secondary border-r theme-border ${selectedId ? "hidden md:flex" : "flex"}`}>
 
         {/* Header */}
-        <div className="px-4 pt-4 pb-3 border-b border-gray-800">
+        <div className="px-4 pt-4 pb-3 border-b theme-border">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-base font-bold text-white">Inbox</h1>
-            <span className="text-[11px] text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
+            <h1 className="text-base font-bold theme-text">Inbox</h1>
+            <span className="text-xs theme-text-muted theme-bg-card px-2 py-0.5 rounded-full">
               {conversations.length} บทสนทนา
             </span>
           </div>
           {/* Search */}
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 theme-text-muted text-sm">🔍</span>
             <input
               type="text"
               placeholder="ค้นหาชื่อหรือข้อความ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition"
+              className="w-full theme-input border rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition"
             />
           </div>
         </div>
 
         {/* Platform Filter Tabs */}
-        <div className="px-3 py-2 border-b border-gray-800 flex gap-1 flex-wrap">
+        <div className="px-3 py-2 border-b theme-border flex gap-1 flex-wrap">
           {(["all", "line", "facebook", "instagram"] as const).map((p) => {
             const isActive = platformFilter === p;
             const labels: Record<string, string> = { all: "ทั้งหมด", line: "LINE", facebook: "FB", instagram: "IG" };
@@ -474,7 +474,7 @@ export default function InboxPage() {
               instagram: "bg-gradient-to-r from-purple-600 to-pink-600 text-white",
             };
             const inactiveColors: Record<string, string> = {
-              all: "bg-gray-800 text-gray-400",
+              all: "theme-bg-card theme-text-secondary",
               line: "bg-green-900/30 text-green-400",
               facebook: "bg-blue-900/30 text-blue-400",
               instagram: "bg-pink-900/30 text-pink-400",
@@ -499,7 +499,7 @@ export default function InboxPage() {
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 gap-2">
               <span className="text-3xl">💬</span>
-              <p className="text-sm text-gray-500">ไม่พบบทสนทนา</p>
+              <p className="text-sm theme-text-muted">ไม่พบบทสนทนา</p>
             </div>
           ) : (
             filtered.map((conv) => (
@@ -526,21 +526,21 @@ export default function InboxPage() {
         {!selectedId ? (
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
-            <div className="w-20 h-20 bg-gray-800 rounded-3xl flex items-center justify-center text-4xl">
+            <div className="w-20 h-20 theme-bg-card rounded-3xl flex items-center justify-center text-4xl">
               💬
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white mb-1">เลือกบทสนทนา</h2>
-              <p className="text-sm text-gray-500">คลิกชื่อลูกค้าทางซ้ายเพื่อเปิดแชท</p>
+              <h2 className="text-lg font-bold theme-text mb-1">เลือกบทสนทนา</h2>
+              <p className="text-sm theme-text-muted">คลิกชื่อลูกค้าทางซ้ายเพื่อเปิดแชท</p>
             </div>
           </div>
         ) : (
           <>
             {/* ── Chat Header ── */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 bg-gray-900 shrink-0">
+            <div className="flex items-center gap-3 px-4 py-3 border-b theme-border theme-bg-secondary shrink-0">
               {/* Back button (mobile) */}
               <button
-                className="md:hidden text-gray-400 hover:text-white text-xl"
+                className="md:hidden theme-text-secondary hover:theme-text text-xl"
                 onClick={() => setSelectedId(null)}
               >←</button>
 
@@ -550,7 +550,7 @@ export default function InboxPage() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white truncate">
+                  <span className="font-semibold theme-text truncate">
                     {selectedConv?.name !== selectedConv?.id
                       ? selectedConv?.name
                       : (selectedConv?.id.substring(0, 20) + "…")}
@@ -559,7 +559,7 @@ export default function InboxPage() {
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-[11px] text-gray-500">{selectedConv?.messageCount} ข้อความ</span>
+                  <span className="text-xs theme-text-muted">{selectedConv?.messageCount} ข้อความ</span>
                   {selectedConv?.customerSentiment && (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${
                       selectedConv.customerSentiment.level === "green" ? "bg-emerald-900/50 text-emerald-400" :
@@ -584,7 +584,7 @@ export default function InboxPage() {
               {/* Right panel toggle */}
               <button
                 onClick={() => setShowRightPanel((v) => !v)}
-                className={`p-2 rounded-lg transition text-sm ${showRightPanel ? "bg-indigo-900/50 text-indigo-400" : "bg-gray-800 text-gray-400 hover:text-white"}`}
+                className={`p-2 rounded-lg transition text-sm ${showRightPanel ? "bg-indigo-900/50 text-indigo-400" : "theme-bg-card theme-text-secondary hover:theme-text"}`}
                 title="ข้อมูลลูกค้า"
               >
                 👤
@@ -603,7 +603,7 @@ export default function InboxPage() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-600 text-sm">ยังไม่มีข้อความ</p>
+                  <p className="theme-text-muted text-sm">ยังไม่มีข้อความ</p>
                 </div>
               ) : (
                 messages.map((msg, i) => {
@@ -634,15 +634,15 @@ export default function InboxPage() {
 
             {/* ── Quick Reply Templates ── */}
             {showTemplates && (
-              <div className="border-t border-gray-800 bg-gray-900 max-h-60 overflow-y-auto">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
-                  <span className="text-xs font-bold text-gray-300">⚡ Quick Reply</span>
-                  <button onClick={() => setShowTemplates(false)} className="text-gray-500 hover:text-white text-sm">✕</button>
+              <div className="border-t theme-border theme-bg-secondary max-h-60 overflow-y-auto">
+                <div className="flex items-center justify-between px-4 py-2 border-b theme-border">
+                  <span className="text-xs font-bold theme-text-secondary">⚡ Quick Reply</span>
+                  <button onClick={() => setShowTemplates(false)} className="theme-text-muted hover:theme-text text-sm">✕</button>
                 </div>
                 {loadingTemplates ? (
-                  <p className="text-xs text-center py-4 text-gray-500">กำลังโหลด...</p>
+                  <p className="text-xs text-center py-4 theme-text-muted">กำลังโหลด...</p>
                 ) : templates.length === 0 ? (
-                  <p className="text-xs text-center py-4 text-gray-500">
+                  <p className="text-xs text-center py-4 theme-text-muted">
                     ยังไม่มี template —{" "}
                     <a href="/dashboard/templates" className="text-indigo-400 underline">เพิ่มที่นี่</a>
                   </p>
@@ -662,15 +662,15 @@ export default function InboxPage() {
                             body: JSON.stringify({ id: t._id }),
                           }).catch(() => {});
                         }}
-                        className="w-full text-left bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 text-xs transition"
+                        className="w-full text-left theme-bg-card hover:theme-bg-hover rounded-lg px-3 py-2 text-xs transition"
                       >
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-medium text-gray-200">{t.title}</span>
-                          <span className="text-[10px] text-gray-500 bg-gray-700 px-1.5 rounded">
+                          <span className="font-medium theme-text">{t.title}</span>
+                          <span className="text-[10px] theme-text-muted bg-gray-700/40 px-1.5 rounded">
                             {CATEGORY_LABELS[t.category] || t.category}
                           </span>
                         </div>
-                        <p className="text-gray-400 line-clamp-2">{t.content}</p>
+                        <p className="theme-text-secondary line-clamp-2">{t.content}</p>
                       </button>
                     ))}
                   </div>
@@ -679,7 +679,7 @@ export default function InboxPage() {
             )}
 
             {/* ── Input Bar ── */}
-            <div className="border-t border-gray-800 bg-gray-900 px-3 py-3 shrink-0">
+            <div className="border-t theme-border theme-bg-secondary px-3 py-3 shrink-0">
               <div className="flex items-end gap-2">
                 {/* Quick Reply toggle */}
                 <button
@@ -688,7 +688,7 @@ export default function InboxPage() {
                     if (!showTemplates) fetchTemplates();
                   }}
                   className={`p-2 rounded-lg transition shrink-0 text-sm ${
-                    showTemplates ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-gray-800 text-gray-400 hover:text-gray-200"
+                    showTemplates ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "theme-bg-card theme-text-secondary hover:theme-text"
                   }`}
                   title="Quick Reply Templates"
                 >⚡</button>
@@ -708,7 +708,7 @@ export default function InboxPage() {
                     onKeyDown={handleKeyDown}
                     placeholder="พิมพ์ข้อความ… (Enter ส่ง, Shift+Enter ขึ้นบรรทัด)"
                     disabled={sending}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500 resize-none transition disabled:opacity-50"
+                    className="w-full theme-input border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 resize-none transition disabled:opacity-50"
                     style={{ minHeight: "40px", maxHeight: "120px" }}
                   />
                 </div>
@@ -736,7 +736,7 @@ export default function InboxPage() {
                   )}
                 </button>
               </div>
-              <p className="text-[10px] text-gray-600 mt-1.5 px-1">
+              <p className="text-[10px] theme-text-muted mt-1.5 px-1">
                 Enter = ส่ง · Shift+Enter = ขึ้นบรรทัด · ⚡ = ข้อความสำเร็จรูป
               </p>
             </div>
@@ -751,7 +751,7 @@ export default function InboxPage() {
         <aside
           className={`${
             showRightPanel ? "flex" : "hidden xl:flex"
-          } flex-col w-72 shrink-0 bg-gray-900 border-l border-gray-800 overflow-y-auto`}
+          } flex-col w-72 shrink-0 theme-bg-secondary border-l theme-border overflow-y-auto`}
         >
           <CustomerInfoPanel
             conv={selectedConv}
@@ -780,9 +780,9 @@ function CustomerInfoPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">ข้อมูลลูกค้า</span>
-        <button onClick={onClose} className="xl:hidden text-gray-500 hover:text-white text-sm">✕</button>
+      <div className="flex items-center justify-between px-4 py-3 border-b theme-border">
+        <span className="text-xs font-bold theme-text-secondary uppercase tracking-wider">ข้อมูลลูกค้า</span>
+        <button onClick={onClose} className="xl:hidden theme-text-muted hover:theme-text text-sm">✕</button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
@@ -793,32 +793,32 @@ function CustomerInfoPanel({
             {getInitials(conv.name)}
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">
+            <p className="font-semibold theme-text text-sm">
               {conv.name !== conv.id ? conv.name : conv.id.substring(0, 20)}
             </p>
             <div className="flex items-center justify-center gap-1.5 mt-1">
               {platformBadge(platform)}
             </div>
-            <p className="text-[11px] text-gray-500 mt-1 font-mono break-all">{conv.id}</p>
+            <p className="text-xs theme-text-muted mt-1 font-mono break-all">{conv.id}</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-gray-800 rounded-xl p-3 text-center">
-            <p className="text-xl font-bold text-white">{conv.messageCount}</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">ข้อความ</p>
+          <div className="theme-bg-card rounded-xl p-3 text-center">
+            <p className="text-xl font-bold theme-text">{conv.messageCount}</p>
+            <p className="text-[10px] theme-text-muted mt-0.5">ข้อความ</p>
           </div>
-          <div className="bg-gray-800 rounded-xl p-3 text-center">
-            <p className="text-xl font-bold text-white">{conv.analysisLogsCount || 0}</p>
-            <p className="text-[10px] text-gray-500 mt-0.5">วิเคราะห์</p>
+          <div className="theme-bg-card rounded-xl p-3 text-center">
+            <p className="text-xl font-bold theme-text">{conv.analysisLogsCount || 0}</p>
+            <p className="text-[10px] theme-text-muted mt-0.5">วิเคราะห์</p>
           </div>
         </div>
 
         {/* Sentiment */}
         {(sentimentData || purchaseData) && (
           <div className="space-y-2">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">การวิเคราะห์</p>
+            <p className="text-xs font-bold theme-text-secondary uppercase tracking-wider">การวิเคราะห์</p>
             {sentimentData && (
               <div className={`flex items-center justify-between rounded-xl px-3 py-2.5 ${
                 sentimentData.level === "green" ? "bg-emerald-950/60 border border-emerald-800/50" :
@@ -826,7 +826,7 @@ function CustomerInfoPanel({
                 "bg-red-950/60 border border-red-800/50"
               }`}>
                 <div>
-                  <p className="text-xs font-medium text-gray-200">ความรู้สึกลูกค้า 😊</p>
+                  <p className="text-xs font-medium theme-text">ความรู้สึกลูกค้า 😊</p>
                   <p className={`text-[11px] mt-0.5 ${
                     sentimentData.level === "green" ? "text-emerald-400" :
                     sentimentData.level === "yellow" ? "text-amber-400" : "text-red-400"
@@ -834,7 +834,7 @@ function CustomerInfoPanel({
                     {SENTIMENT_LABELS[sentimentData.level]}
                   </p>
                 </div>
-                <span className="text-lg font-bold text-white">{sentimentData.score}%</span>
+                <span className="text-lg font-bold theme-text">{sentimentData.score}%</span>
               </div>
             )}
             {purchaseData && (
@@ -844,7 +844,7 @@ function CustomerInfoPanel({
                 "bg-red-950/60 border border-red-800/50"
               }`}>
                 <div>
-                  <p className="text-xs font-medium text-gray-200">โอกาสซื้อ 🛒</p>
+                  <p className="text-xs font-medium theme-text">โอกาสซื้อ 🛒</p>
                   <p className={`text-[11px] mt-0.5 ${
                     purchaseData.level === "green" ? "text-emerald-400" :
                     purchaseData.level === "yellow" ? "text-amber-400" : "text-red-400"
@@ -852,11 +852,11 @@ function CustomerInfoPanel({
                     {PURCHASE_LABELS[purchaseData.level]}
                   </p>
                 </div>
-                <span className="text-lg font-bold text-white">{purchaseData.score}%</span>
+                <span className="text-lg font-bold theme-text">{purchaseData.score}%</span>
               </div>
             )}
             {sentimentData?.reason && (
-              <p className="text-[11px] text-gray-500 leading-relaxed px-1">{sentimentData.reason}</p>
+              <p className="text-xs theme-text-muted leading-relaxed px-1">{sentimentData.reason}</p>
             )}
           </div>
         )}
@@ -864,40 +864,40 @@ function CustomerInfoPanel({
         {/* Last activity */}
         {conv.lastActivity && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">กิจกรรมล่าสุด</p>
-            <div className="bg-gray-800 rounded-xl p-3 space-y-1">
-              <p className="text-xs text-gray-400">
+            <p className="text-xs font-bold theme-text-secondary uppercase tracking-wider">กิจกรรมล่าสุด</p>
+            <div className="theme-bg-card rounded-xl p-3 space-y-1">
+              <p className="text-xs theme-text-secondary">
                 {new Date(conv.lastActivity).toLocaleString("th-TH", {
                   day: "numeric", month: "long", year: "2-digit",
                   hour: "2-digit", minute: "2-digit",
                 })}
               </p>
-              <p className="text-xs text-gray-300 line-clamp-2">{conv.lastMessage}</p>
+              <p className="text-xs theme-text-secondary line-clamp-2">{conv.lastMessage}</p>
             </div>
           </div>
         )}
 
         {/* Quick Actions */}
         <div className="space-y-1.5">
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quick Actions</p>
+          <p className="text-xs font-bold theme-text-secondary uppercase tracking-wider">Quick Actions</p>
           <div className="space-y-1">
             <a
               href={`/dashboard/crm`}
-              className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs text-gray-300 transition"
+              className="flex items-center gap-2 w-full px-3 py-2 theme-bg-card hover:theme-bg-hover rounded-xl text-xs theme-text-secondary transition"
             >
               <span>👥</span>
               <span>ดูโปรไฟล์ CRM</span>
             </a>
             <a
               href={`/dashboard/tasks`}
-              className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs text-gray-300 transition"
+              className="flex items-center gap-2 w-full px-3 py-2 theme-bg-card hover:theme-bg-hover rounded-xl text-xs theme-text-secondary transition"
             >
               <span>📋</span>
               <span>สร้าง Task</span>
             </a>
             <a
               href={`/dashboard`}
-              className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs text-gray-300 transition"
+              className="flex items-center gap-2 w-full px-3 py-2 theme-bg-card hover:theme-bg-hover rounded-xl text-xs theme-text-secondary transition"
             >
               <span>📊</span>
               <span>ดู Dashboard</span>
@@ -907,13 +907,13 @@ function CustomerInfoPanel({
 
         {/* Platform source info */}
         <div className="space-y-1.5">
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">แหล่งที่มา</p>
-          <div className="bg-gray-800 rounded-xl p-3">
+          <p className="text-xs font-bold theme-text-secondary uppercase tracking-wider">แหล่งที่มา</p>
+          <div className="theme-bg-card rounded-xl p-3">
             <div className="flex items-center gap-2 mb-1.5">
               {platformBadge(platform)}
               <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
             </div>
-            <p className="text-[11px] text-gray-500 font-mono break-all">{conv.id}</p>
+            <p className="text-xs theme-text-muted font-mono break-all">{conv.id}</p>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoClient, type Db } from "mongodb";
 import { randomUUID } from "crypto";
 
@@ -17,18 +18,48 @@ async function getAuthDB(): Promise<Db> {
   return authDb;
 }
 
+// Demo user — GUID เจ้าของ = "12345", email = "demo@smlsoft.com"
+const DEMO_USER = {
+  id: "12345",
+  name: "Demo User",
+  email: "demo@smlsoft.com",
+  image: "",
+};
+
 // Skip auth ถ้าไม่มี GOOGLE_CLIENT_ID (dev mode)
 const DEV_MODE = !process.env.GOOGLE_CLIENT_ID;
 
+// สร้าง providers list
+const providers: any[] = [
+  // Demo login — ทดลองใช้งานโดยไม่ต้อง Google account
+  CredentialsProvider({
+    id: "credentials",
+    name: "Demo",
+    credentials: {
+      email: { label: "Email", type: "text" },
+    },
+    async authorize(credentials) {
+      if (credentials?.email === "demo@smlsoft.com") {
+        return DEMO_USER;
+      }
+      return null;
+    },
+  }),
+];
+
+// เพิ่ม Google ถ้ามี config
+if (!DEV_MODE) {
+  providers.push(
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    })
+  );
+}
+
 const handler = NextAuth({
-  providers: DEV_MODE
-    ? []
-    : [
-        GoogleProvider({
-          clientId: process.env.GOOGLE_CLIENT_ID!,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        }),
-      ],
+  providers,
+  session: { strategy: "jwt" },
 
   secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-me-in-production",
 
@@ -59,8 +90,8 @@ const handler = NextAuth({
           return true;
         }
 
-        // user ใหม่ — สร้าง GUID
-        const userId = randomUUID();
+        // user ใหม่ — Demo user ใช้ GUID "12345", คนอื่นใช้ random
+        const userId = user.email === "demo@smlsoft.com" ? "12345" : randomUUID();
 
         await db.collection("users").insertOne({
           _id: userId as any,
@@ -112,7 +143,7 @@ const handler = NextAuth({
           lineConfig: { channelAccessToken: "", channelSecret: "" },
           fbConfig: { pageAccessToken: "", appSecret: "", verifyToken: "" },
           telegramChatId: null,
-          setupComplete: false,
+          setupComplete: user.email === "demo@smlsoft.com" ? true : false,
           createdAt: new Date(),
         });
 
@@ -166,8 +197,8 @@ const handler = NextAuth({
   },
 
   pages: {
-    signIn: "/dashboard/login",
-    error: "/dashboard/login",
+    signIn: "/login",
+    error: "/login",
   },
 });
 

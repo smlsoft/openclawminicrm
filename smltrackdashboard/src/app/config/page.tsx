@@ -77,14 +77,14 @@ export default function ConfigPage() {
   // ---- Password Gate ----
   if (!authed) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+      <div className="min-h-screen theme-bg flex items-center justify-center">
+        <div className="theme-bg-secondary border theme-border rounded-2xl p-8 w-full max-w-sm shadow-2xl">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">
+            <div className="w-16 h-16 theme-bg-card rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">
               🔒
             </div>
-            <h1 className="text-xl font-bold text-white">OpenClaw Mini CRM Config</h1>
-            <p className="text-sm text-gray-400 mt-1">กรอกรหัสผ่านเพื่อเข้าถึง</p>
+            <h1 className="text-xl font-bold theme-text">OpenClaw Mini CRM Config</h1>
+            <p className="text-sm theme-text-secondary mt-1">กรอกรหัสผ่านเพื่อเข้าถึง</p>
           </div>
           <div className="space-y-4">
             <input
@@ -93,7 +93,7 @@ export default function ConfigPage() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAuth()}
               placeholder="รหัสผ่าน"
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              className="w-full px-4 py-3 theme-input border theme-border rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
               autoFocus
             />
             {authError && (
@@ -114,45 +114,45 @@ export default function ConfigPage() {
 
   // ---- Config Panel ----
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="border-b border-gray-800 px-6 py-4 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+    <div className="min-h-screen theme-bg theme-text">
+      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="pl-10 md:pl-0">
           <h1 className="text-base font-bold">🔗 ช่องทางเชื่อมต่อ</h1>
-          <p className="text-xs text-gray-400">ตั้งค่า LINE, Facebook, Instagram, Telegram</p>
+          <p className="text-xs theme-text-secondary">ตั้งค่า LINE, Facebook, Instagram, Telegram</p>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto p-6 space-y-6">
 
         {/* MongoDB Atlas */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-green-900/50 rounded-xl flex items-center justify-center text-xl">🍃</div>
             <div>
               <h2 className="text-base font-semibold">MongoDB Atlas</h2>
-              <p className="text-xs text-gray-400">เชื่อมต่อฐานข้อมูล</p>
+              <p className="text-xs theme-text-secondary">เชื่อมต่อฐานข้อมูล</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Connection URI</label>
+              <label className="text-xs theme-text-secondary mb-1 block">Connection URI</label>
               <input
                 type="password"
                 value={mongoUri}
                 onChange={(e) => setMongoUri(e.target.value)}
                 placeholder="mongodb+srv://user:pass@cluster.mongodb.net"
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
+                className="w-full px-4 py-2.5 theme-input border theme-border rounded-xl text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Database Name</label>
+              <label className="text-xs theme-text-secondary mb-1 block">Database Name</label>
               <input
                 type="text"
                 value={mongoDb}
                 onChange={(e) => setMongoDb(e.target.value)}
                 placeholder="smlclaw"
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
+                className="w-full px-4 py-2.5 theme-input border theme-border rounded-xl text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
               />
             </div>
             <button
@@ -172,11 +172,11 @@ export default function ConfigPage() {
                   <div className="flex items-center gap-2 text-green-400 font-medium">
                     <span>✅</span> เชื่อมต่อสำเร็จ!
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
-                    <div>Database: <span className="text-white font-mono">{String(mongoResult.database)}</span></div>
-                    <div>Documents: <span className="text-white font-mono">{String(mongoResult.documentCount)}</span></div>
-                    <div>Storage: <span className="text-white font-mono">{String(mongoResult.storageMB)} MB</span></div>
-                    <div>Collections: <span className="text-white font-mono">{String((mongoResult.collections as string[])?.length || 0)}</span></div>
+                  <div className="grid grid-cols-2 gap-2 text-xs theme-text-secondary">
+                    <div>Database: <span className="theme-text font-mono">{String(mongoResult.database)}</span></div>
+                    <div>Documents: <span className="theme-text font-mono">{String(mongoResult.documentCount)}</span></div>
+                    <div>Storage: <span className="theme-text font-mono">{String(mongoResult.storageMB)} MB</span></div>
+                    <div>Collections: <span className="theme-text font-mono">{String((mongoResult.collections as string[])?.length || 0)}</span></div>
                   </div>
                   {Array.isArray(mongoResult.collections) && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
@@ -196,24 +196,24 @@ export default function ConfigPage() {
         </section>
 
         {/* LINE OA */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-xl">💬</div>
             <div>
               <h2 className="text-base font-semibold">LINE Official Account</h2>
-              <p className="text-xs text-gray-400">ทดสอบการเชื่อมต่อ LINE OA</p>
+              <p className="text-xs theme-text-secondary">ทดสอบการเชื่อมต่อ LINE OA</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Channel Access Token</label>
+              <label className="text-xs theme-text-secondary mb-1 block">Channel Access Token</label>
               <input
                 type="password"
                 value={lineToken}
                 onChange={(e) => setLineToken(e.target.value)}
                 placeholder="Channel Access Token จาก LINE Developers"
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-mono"
+                className="w-full px-4 py-2.5 theme-input border theme-border rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-mono"
               />
             </div>
             <button
@@ -241,11 +241,11 @@ export default function ConfigPage() {
                         className="w-12 h-12 rounded-full border-2 border-emerald-700"
                       />
                     )}
-                    <div className="text-xs text-gray-300 space-y-1">
-                      <div>ชื่อบอท: <span className="text-white font-semibold">{String(lineResult.botName)}</span></div>
-                      <div>Bot ID: <span className="text-white font-mono">{String(lineResult.botId)}</span></div>
+                    <div className="text-xs theme-text-secondary space-y-1">
+                      <div>ชื่อบอท: <span className="theme-text font-semibold">{String(lineResult.botName)}</span></div>
+                      <div>Bot ID: <span className="theme-text font-mono">{String(lineResult.botId)}</span></div>
                       {typeof lineResult.premium === "string" && (
-                        <div>Premium ID: <span className="text-white font-mono">{String(lineResult.premium)}</span></div>
+                        <div>Premium ID: <span className="theme-text font-mono">{String(lineResult.premium)}</span></div>
                       )}
                     </div>
                   </div>

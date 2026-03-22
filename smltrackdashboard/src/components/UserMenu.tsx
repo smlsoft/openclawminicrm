@@ -16,7 +16,7 @@ export default function UserMenu() {
   // ถ้าไม่มี GOOGLE_CLIENT_ID configured → ไม่แสดง menu
   if (status === "loading") {
     return (
-      <div className="w-7 h-7 rounded-full bg-gray-700 animate-pulse" />
+      <div className="w-7 h-7 rounded-full theme-bg-card animate-pulse" />
     );
   }
 
@@ -40,20 +40,20 @@ export default function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-gray-800 transition"
+        className="flex items-center gap-2 rounded-lg px-2 py-1 hover:theme-bg-hover transition"
       >
         {user?.image ? (
           <img
             src={user.image}
             alt={user.name || ""}
-            className="w-7 h-7 rounded-full object-cover border border-gray-700"
+            className="w-7 h-7 rounded-full object-cover border theme-border"
           />
         ) : (
           <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white">
             {initials}
           </div>
         )}
-        <span className="text-xs text-gray-300 hidden sm:block max-w-[100px] truncate">
+        <span className="text-sm theme-text-secondary hidden sm:block max-w-[100px] truncate">
           {user?.name || user?.email}
         </span>
       </button>
@@ -66,19 +66,19 @@ export default function UserMenu() {
             onClick={() => setOpen(false)}
           />
           {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-56 theme-bg-secondary border theme-border rounded-xl shadow-xl z-50 overflow-hidden">
             {/* User info */}
-            <div className="px-4 py-3 border-b border-gray-800">
-              <p className="text-sm font-medium text-white truncate">
+            <div className="px-4 py-3 border-b theme-border">
+              <p className="text-sm font-medium theme-text truncate">
                 {user?.name || "ผู้ใช้"}
               </p>
-              <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+              <p className="text-xs theme-text-secondary truncate">{user?.email}</p>
               <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">
                 {(user as any)?.plan === "pro" ? "Pro" : "Free"}
               </span>
             </div>
             {/* Nav links */}
-            <div className="border-t border-gray-800">
+            <div className="border-t theme-border">
               {[
                 { href: "/dashboard/settings", icon: "⚙️", label: "Settings" },
                 { href: "/dashboard/connections", icon: "🔗", label: "Connections" },
@@ -88,7 +88,7 @@ export default function UserMenu() {
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm theme-text-secondary hover:theme-bg-hover hover:theme-text transition"
                 >
                   <span className="text-base">{icon}</span>
                   {label}
@@ -96,11 +96,11 @@ export default function UserMenu() {
               ))}
             </div>
             {/* Sign out */}
-            <div className="border-t border-gray-800">
+            <div className="border-t theme-border">
               <button
                 onClick={() => {
                   setOpen(false);
-                  signOut({ callbackUrl: "/dashboard/login" });
+                  signOut({ callbackUrl: "/login" });
                 }}
                 className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
               >

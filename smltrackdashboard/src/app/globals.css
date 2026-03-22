@@ -110,6 +110,26 @@ html.theme-transition *::after {
 .theme-text-secondary { color: var(--text-secondary); }
 .theme-text-muted { color: var(--text-muted); }
 
+/* Input styling */
+.theme-input {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.theme-input::placeholder {
+  color: var(--text-muted);
+}
+.theme-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+/* Divide color utility */
+.theme-divide > * + * {
+  border-color: var(--border);
+}
+
 /* ============================================
    Light theme — Tailwind class overrides
    ============================================ */
