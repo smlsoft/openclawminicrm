@@ -93,9 +93,9 @@ function StepCard({ step }: { step: Step }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden transition-all">
+    <div className="theme-bg-secondary border theme-border rounded-xl overflow-hidden transition-all">
       <button
-        className="w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-gray-800/50 transition"
+        className="w-full flex items-start gap-4 px-5 py-4 text-left hover:theme-bg-hover transition"
         onClick={() => setOpen((v) => !v)}
       >
         <div className="w-10 h-10 rounded-xl bg-indigo-900/40 border border-indigo-700/40 flex items-center justify-center text-xl shrink-0 mt-0.5">
@@ -105,21 +105,21 @@ function StepCard({ step }: { step: Step }) {
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-indigo-400 font-semibold">ขั้นตอนที่ {step.number}</span>
           </div>
-          <p className="text-sm font-semibold text-white mt-0.5">{step.title}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{step.summary}</p>
+          <p className="text-sm font-semibold theme-text mt-0.5">{step.title}</p>
+          <p className="text-xs theme-text-secondary mt-0.5">{step.summary}</p>
         </div>
-        <span className="text-gray-500 text-xs mt-1 shrink-0 pt-1">{open ? "▲" : "▼"}</span>
+        <span className="theme-text-muted text-xs mt-1 shrink-0 pt-1">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <div className="border-t border-gray-800 px-5 py-4">
+        <div className="border-t theme-border px-5 py-4">
           <ol className="space-y-2">
             {step.details.map((detail, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="w-5 h-5 rounded-full bg-indigo-900/60 border border-indigo-700/50 text-indigo-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
                 </span>
-                <span className="text-sm text-gray-300 leading-relaxed">{detail}</span>
+                <span className="text-sm theme-text-secondary leading-relaxed">{detail}</span>
               </li>
             ))}
           </ol>
@@ -155,8 +155,8 @@ export default function GuidePage() {
           ))}
         </div>
 
-        <div className="mt-6 p-4 bg-gray-900 border border-gray-800 rounded-xl">
-          <p className="text-xs text-gray-500 text-center leading-relaxed">
+        <div className="mt-6 p-4 theme-bg-secondary border theme-border rounded-xl">
+          <p className="text-xs theme-text-muted text-center leading-relaxed">
             มีปัญหา? ติดต่อ Line: @smlclaw หรือดูโค้ดที่ GitHub<br />
             <span className="text-indigo-400">https://github.com/smltrack</span>
           </p>

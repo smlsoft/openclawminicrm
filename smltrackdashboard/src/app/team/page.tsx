@@ -114,22 +114,22 @@ export default function TeamPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen theme-bg flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen theme-bg theme-text">
       {/* Header */}
-      <header className="border-b border-gray-800 px-6 py-4 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-gray-400 hover:text-white transition text-sm">&larr; Dashboard</Link>
-          <div className="w-px h-5 bg-gray-700" />
+          <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; Dashboard</Link>
+          <div className="w-px h-5 theme-border" />
           <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-sm">👥</div>
           <h1 className="text-lg font-bold">ทีม</h1>
-          <span className="ml-2 text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full border border-gray-700">
+          <span className="ml-2 text-xs theme-bg-card theme-text-secondary px-2 py-0.5 rounded-full border theme-border">
             {members.length} คน
           </span>
         </div>
@@ -138,12 +138,12 @@ export default function TeamPage() {
       <main className="max-w-2xl mx-auto p-6 space-y-6">
 
         {/* Invite */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-800">
+        <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-5 pb-4 border-b theme-border">
             <div className="w-10 h-10 bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl">✉️</div>
             <div>
               <h2 className="font-semibold">เชิญสมาชิก</h2>
-              <p className="text-xs text-gray-500">เชิญทีมงานด้วย Email</p>
+              <p className="text-xs theme-text-muted">เชิญทีมงานด้วย Email</p>
             </div>
           </div>
 
@@ -155,12 +155,12 @@ export default function TeamPage() {
                 onChange={(e) => { setInviteEmail(e.target.value); setInviteResult(null); }}
                 placeholder="email@example.com"
                 onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="flex-1 px-4 py-2.5 theme-input border text-sm rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
               />
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "responder" | "reviewer" | "viewer")}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="px-3 py-2.5 theme-input border text-sm rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
               >
                 <option value="viewer">Viewer</option>
                 <option value="reviewer">Reviewer</option>
@@ -169,7 +169,7 @@ export default function TeamPage() {
               <button
                 onClick={handleInvite}
                 disabled={inviting || !inviteEmail.trim()}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-xl text-sm font-medium transition"
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl text-sm font-medium transition"
               >
                 {inviting ? "กำลังส่ง..." : "เชิญ"}
               </button>
@@ -180,7 +180,7 @@ export default function TeamPage() {
               {Object.entries(ROLES).filter(([k]) => k !== "admin").map(([key, r]) => (
                 <div key={key} className="flex items-center gap-1.5">
                   <RoleBadge role={key} />
-                  <span className="text-xs text-gray-600">= {r.desc}</span>
+                  <span className="text-xs theme-text-muted">= {r.desc}</span>
                 </div>
               ))}
             </div>
@@ -194,29 +194,29 @@ export default function TeamPage() {
         </section>
 
         {/* Members list */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-xl">👥</div>
+        <section className="theme-bg-secondary border theme-border rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b theme-border flex items-center gap-3">
+            <div className="w-10 h-10 theme-bg-card rounded-xl flex items-center justify-center text-xl">👥</div>
             <div>
               <h2 className="font-semibold">สมาชิกทีม</h2>
-              <p className="text-xs text-gray-500">{members.length} คน</p>
+              <p className="text-xs theme-text-muted">{members.length} คน</p>
             </div>
           </div>
 
           {members.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-500 text-sm">ยังไม่มีสมาชิก</p>
-              <p className="text-gray-600 text-xs mt-1">เชิญสมาชิกด้วยฟอร์มด้านบน</p>
+              <p className="theme-text-muted text-sm">ยังไม่มีสมาชิก</p>
+              <p className="theme-text-muted text-xs mt-1">เชิญสมาชิกด้วยฟอร์มด้านบน</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-800">
+            <div className="theme-divide divide-y">
               {members.map((member) => (
                 <div key={member._id} className="px-6 py-4 flex items-center gap-4">
                   {/* Avatar */}
                   {member.image ? (
-                    <img src={member.image} alt={member.name} className="w-10 h-10 rounded-full border border-gray-700 shrink-0" />
+                    <img src={member.image} alt={member.name} className="w-10 h-10 rounded-full border theme-border shrink-0" />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-lg border border-gray-700 shrink-0">
+                    <div className="w-10 h-10 theme-bg-card rounded-full flex items-center justify-center text-lg border theme-border shrink-0">
                       👤
                     </div>
                   )}
@@ -224,13 +224,13 @@ export default function TeamPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-white truncate">{member.name || member.email}</p>
+                      <p className="text-sm font-medium theme-text truncate">{member.name || member.email}</p>
                       {member.isCurrentUser && (
                         <span className="text-xs text-indigo-400 bg-indigo-900/30 border border-indigo-800/50 px-1.5 py-0.5 rounded-full">คุณ</span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{member.email}</p>
-                    <p className="text-xs text-gray-700 mt-0.5">
+                    <p className="text-xs theme-text-muted truncate">{member.email}</p>
+                    <p className="text-xs theme-text-muted mt-0.5">
                       เข้าร่วม {new Date(member.addedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
@@ -240,7 +240,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       {confirmRemove === member.userId ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">ยืนยันลบ?</span>
+                          <span className="text-xs theme-text-secondary">ยืนยันลบ?</span>
                           <button
                             onClick={() => handleRemove(member.userId)}
                             disabled={removing === member.userId}
@@ -250,7 +250,7 @@ export default function TeamPage() {
                           </button>
                           <button
                             onClick={() => setConfirmRemove(null)}
-                            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs text-gray-400 transition"
+                            className="px-3 py-1.5 theme-bg-card hover:theme-bg-hover rounded-lg text-xs theme-text-secondary transition"
                           >
                             ยกเลิก
                           </button>
@@ -261,7 +261,7 @@ export default function TeamPage() {
                             value={member.role}
                             onChange={(e) => handleRoleChange(member.userId, e.target.value)}
                             disabled={roleChanging === member.userId}
-                            className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500 transition disabled:opacity-50"
+                            className="px-3 py-1.5 theme-input border text-xs rounded-lg focus:outline-none focus:border-indigo-500 transition disabled:opacity-50"
                           >
                             {Object.entries(ROLES).map(([key, r]) => (
                               <option key={key} value={key}>{r.label}</option>
@@ -269,7 +269,7 @@ export default function TeamPage() {
                           </select>
                           <button
                             onClick={() => setConfirmRemove(member.userId)}
-                            className="w-8 h-8 flex items-center justify-center bg-gray-800 hover:bg-red-950 border border-gray-700 hover:border-red-800 rounded-lg text-gray-500 hover:text-red-400 transition text-sm"
+                            className="w-8 h-8 flex items-center justify-center theme-bg-card hover:bg-red-950 border theme-border hover:border-red-800 rounded-lg theme-text-muted hover:text-red-400 transition text-sm"
                           >
                             ✕
                           </button>
