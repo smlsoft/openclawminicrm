@@ -141,10 +141,10 @@ export default function TasksPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-gray-700 p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
+          <div className="w-full max-w-md rounded-2xl border theme-border p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-lg">➕ สร้างงานใหม่</h2>
-              <button onClick={() => { setShowModal(false); setForm({ ...EMPTY_FORM }); }} className="text-gray-400 hover:text-white text-xl">&times;</button>
+              <button onClick={() => { setShowModal(false); setForm({ ...EMPTY_FORM }); }} className="theme-text-muted hover:theme-text text-xl">&times;</button>
             </div>
 
             <div className="space-y-3">
@@ -152,19 +152,19 @@ export default function TasksPage() {
                 <label className="block text-[11px] theme-text-muted mb-1">ชื่องาน *</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                   placeholder="ติดตามใบเสนอราคา..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
               </div>
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">ชื่อลูกค้า</label>
                 <input type="text" value={form.customerName} onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
                   placeholder="สมชาย..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] theme-text-muted mb-1">ความสำคัญ</label>
                   <select value={form.priority} onChange={(e) => setForm((p) => ({ ...p, priority: e.target.value as any }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text">
+                    className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text">
                     <option value="high">🔴 ด่วน</option>
                     <option value="medium">🟡 ปกติ</option>
                     <option value="low">🟢 ต่ำ</option>
@@ -173,26 +173,26 @@ export default function TasksPage() {
                 <div>
                   <label className="block text-[11px] theme-text-muted mb-1">กำหนดส่ง</label>
                   <input type="date" value={form.dueDate} onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                    className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
                 </div>
               </div>
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">ผู้รับผิดชอบ</label>
                 <input type="text" value={form.assignee} onChange={(e) => setForm((p) => ({ ...p, assignee: e.target.value }))}
                   placeholder="พนักงาน A..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
               </div>
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">หมายเหตุ</label>
                 <textarea value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} rows={3}
                   placeholder="รายละเอียดเพิ่มเติม..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text resize-none" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text resize-none" />
               </div>
             </div>
 
             <div className="flex gap-3 pt-2">
               <button onClick={() => { setShowModal(false); setForm({ ...EMPTY_FORM }); }}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-700 text-sm theme-text-muted hover:theme-text transition">
+                className="flex-1 px-4 py-2 rounded-lg border theme-border text-sm theme-text-muted hover:theme-text transition">
                 ยกเลิก
               </button>
               <button onClick={handleCreate} disabled={saving || !form.title.trim()}
@@ -266,7 +266,7 @@ export default function TasksPage() {
                 <div key={task._id}
                   className={`rounded-xl border transition ${
                     overdue ? "border-red-500/40 bg-red-950/20" :
-                    isCompleted ? "border-gray-800 opacity-60" :
+                    isCompleted ? "theme-border opacity-60" :
                     "theme-border"
                   }`}
                   style={{ background: overdue ? undefined : "var(--bg-card)" }}>
@@ -309,7 +309,7 @@ export default function TasksPage() {
                       </div>
                     </div>
 
-                    <span className={`text-gray-500 text-xs mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`}>▼</span>
+                    <span className={`theme-text-muted text-xs mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`}>▼</span>
                   </div>
 
                   {/* Expanded Detail */}
@@ -331,7 +331,7 @@ export default function TasksPage() {
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                                   task.status === s
                                     ? `${cfg.color} border-current ring-1 ring-current`
-                                    : "theme-bg border-gray-700 theme-text-muted hover:border-gray-500"
+                                    : "theme-bg theme-border theme-text-muted hover:theme-border"
                                 }`}>
                                 {cfg.label}
                               </button>

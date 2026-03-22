@@ -64,7 +64,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   pricing: "text-emerald-400",
   followup: "text-amber-400",
   closing: "text-purple-400",
-  custom: "text-gray-400",
+  custom: "theme-text-secondary",
 };
 
 const SENTIMENT_LABELS: Record<string, string> = {
@@ -206,7 +206,7 @@ export default function IPhoneChat({
               {(group.analysisLogsCount || 0) > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowHistory(!showHistory); if (!showHistory) fetchLogs(); }}
-                  className="bg-gray-700/80 hover:bg-gray-600 rounded px-1.5 py-0.5 text-[9px] text-gray-300 transition"
+                  className="theme-bg-card hover:theme-bg-hover rounded px-1.5 py-0.5 text-[9px] theme-text-secondary transition"
                   title="ดูประวัติการวิเคราะห์"
                 >📊 {group.analysisLogsCount}</button>
               )}
@@ -341,13 +341,13 @@ export default function IPhoneChat({
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="font-medium theme-text">{t.title}</span>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[9px] ${CATEGORY_COLORS[t.category] || "text-gray-400"}`}>
+                        <span className={`text-[9px] ${CATEGORY_COLORS[t.category] || "theme-text-secondary"}`}>
                           {CATEGORY_LABELS[t.category] || t.category}
                         </span>
                         {copiedId === t._id ? (
                           <span className="text-[9px] text-emerald-400 font-bold">✓ คัดลอก</span>
                         ) : (
-                          <span className="text-[9px] text-gray-500">📋</span>
+                          <span className="text-[9px] theme-text-muted">📋</span>
                         )}
                       </div>
                     </div>
@@ -369,7 +369,7 @@ export default function IPhoneChat({
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition ${
               showTemplates
                 ? "bg-amber-500/30 text-amber-300 border border-amber-500/30"
-                : "bg-gray-700/60 text-gray-400 hover:bg-gray-600/60 hover:text-gray-200"
+                : "theme-bg-card theme-text-secondary hover:theme-bg-hover hover:theme-text"
             }`}
             title="Quick Reply Templates"
           >

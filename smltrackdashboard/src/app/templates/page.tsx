@@ -96,10 +96,10 @@ export default function TemplatesPage() {
       {/* Add Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-700 p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
+          <div className="w-full max-w-lg rounded-2xl border theme-border p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-lg">⚡ เพิ่ม Template ใหม่</h2>
-              <button onClick={() => { setShowForm(false); setForm({ ...EMPTY_FORM }); }} className="text-gray-400 hover:text-white text-xl">&times;</button>
+              <button onClick={() => { setShowForm(false); setForm({ ...EMPTY_FORM }); }} className="theme-text-muted hover:theme-text text-xl">&times;</button>
             </div>
 
             <div className="space-y-3">
@@ -107,14 +107,14 @@ export default function TemplatesPage() {
                 <label className="block text-[11px] theme-text-muted mb-1">ชื่อ Template *</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                   placeholder="ทักทายลูกค้าใหม่"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
               </div>
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">หมวดหมู่</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map((c) => (
                     <button key={c.value} onClick={() => setForm((p) => ({ ...p, category: c.value }))}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium border transition ${form.category === c.value ? `${c.bg} ${c.color}` : "border-gray-700 text-gray-500 hover:border-gray-500"}`}>
+                      className={`px-3 py-1 rounded-lg text-xs font-medium border transition ${form.category === c.value ? `${c.bg} ${c.color}` : "theme-border theme-text-muted hover:theme-border"}`}>
                       {c.label}
                     </button>
                   ))}
@@ -124,13 +124,13 @@ export default function TemplatesPage() {
                 <label className="block text-[11px] theme-text-muted mb-1">ข้อความ *</label>
                 <textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={5}
                   placeholder="สวัสดีค่ะ ขอบคุณที่สนใจสินค้าของเรา มีอะไรให้ช่วยเหลือคะ?"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text resize-none" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text resize-none" />
               </div>
             </div>
 
             <div className="flex gap-3 pt-2">
               <button onClick={() => { setShowForm(false); setForm({ ...EMPTY_FORM }); }}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-700 text-sm theme-text-muted hover:theme-text transition">
+                className="flex-1 px-4 py-2 rounded-lg border theme-border text-sm theme-text-muted hover:theme-text transition">
                 ยกเลิก
               </button>
               <button onClick={handleCreate} disabled={saving || !form.title.trim() || !form.content.trim()}

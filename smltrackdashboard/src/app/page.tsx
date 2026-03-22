@@ -211,12 +211,12 @@ export default function Home() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setFilters(new Set())}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filters.size === 0 ? "bg-white text-black" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filters.size === 0 ? "bg-white text-black" : "theme-bg-card theme-text-secondary hover:theme-bg-hover"}`}
               >ทั้งหมด</button>
 
               {/* ความพอใจลูกค้า */}
-              <div className="flex items-center gap-1 bg-gray-900/80 rounded-lg px-2 py-1 border border-gray-700">
-                <span className="text-[10px] text-gray-500 mr-1">ลูกค้า</span>
+              <div className="flex items-center gap-1 theme-bg-secondary rounded-lg px-2 py-1 border theme-border">
+                <span className="text-[10px] theme-text-muted mr-1">ลูกค้า</span>
                 {([
                   { color: "green" as const, label: "ปกติ", emoji: "😊" },
                   { color: "yellow" as const, label: "ติดตาม", emoji: "😐" },
@@ -241,8 +241,8 @@ export default function Home() {
               </div>
 
               {/* โอกาสซื้อ */}
-              <div className="flex items-center gap-1 bg-gray-900/80 rounded-lg px-2 py-1 border border-gray-700">
-                <span className="text-[10px] text-gray-500 mr-1">ซื้อ</span>
+              <div className="flex items-center gap-1 theme-bg-secondary rounded-lg px-2 py-1 border theme-border">
+                <span className="text-[10px] theme-text-muted mr-1">ซื้อ</span>
                 {([
                   { color: "green" as const, label: "ไม่สนใจ", emoji: "🟢" },
                   { color: "yellow" as const, label: "สนใจ", emoji: "🟡" },
@@ -273,7 +273,7 @@ export default function Home() {
                 onChange={(e) => setAutoSort(e.target.checked)}
                 className="w-4 h-4 accent-blue-500 rounded"
               />
-              <span className="text-xs text-gray-300">Auto Sort</span>
+              <span className="text-xs theme-text-secondary">Auto Sort</span>
             </label>
             <Link href="/crm" className="px-3 py-1.5 bg-cyan-900/50 hover:bg-cyan-800/50 border border-cyan-700/50 rounded-lg text-xs text-cyan-300 hover:text-white transition">👥 CRM</Link>
             <Link href="/tasks" className="px-3 py-1.5 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-700/50 rounded-lg text-xs text-blue-300 hover:text-white transition">📋 งาน</Link>
@@ -291,9 +291,9 @@ export default function Home() {
 
       {/* Platform Filter Tabs */}
       <div className="border-b theme-border px-4 py-2 flex items-center gap-2" style={{ background: "var(--bg-primary)" }}>
-        <span className="text-[11px] text-gray-500 mr-1 shrink-0">Platform:</span>
+        <span className="text-[11px] theme-text-muted mr-1 shrink-0">Platform:</span>
         {([
-          { value: "all", label: "ทั้งหมด", badgeClass: "bg-gray-700 text-gray-200 hover:bg-gray-600", activeClass: "bg-white text-black" },
+          { value: "all", label: "ทั้งหมด", badgeClass: "theme-bg-card theme-text-secondary hover:theme-bg-hover", activeClass: "bg-white text-black" },
           { value: "line", label: "LINE", badgeClass: "bg-green-900/40 text-green-400 hover:bg-green-800/50 border border-green-800/50", activeClass: "bg-green-600 text-white border border-green-500" },
           { value: "facebook", label: "Facebook", badgeClass: "bg-blue-900/40 text-blue-400 hover:bg-blue-800/50 border border-blue-800/50", activeClass: "bg-blue-600 text-white border border-blue-500" },
           { value: "instagram", label: "Instagram", badgeClass: "bg-pink-900/40 text-pink-400 hover:bg-pink-800/50 border border-pink-800/50", activeClass: "bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-pink-500" },
@@ -310,7 +310,7 @@ export default function Home() {
               className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${isActive ? activeClass : badgeClass}`}
             >
               {label}
-              <span className={`text-[10px] px-1 rounded-full ${isActive ? "bg-white/20" : "bg-gray-700/60"}`}>{count}</span>
+              <span className={`text-[10px] px-1 rounded-full ${isActive ? "bg-white/20" : "theme-bg-card"}`}>{count}</span>
             </button>
           );
         })}

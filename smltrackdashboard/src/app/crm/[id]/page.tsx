@@ -170,10 +170,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       {/* Task Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-gray-700 p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
+          <div className="w-full max-w-md rounded-2xl border theme-border p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-lg">📋 สร้างงานติดตาม</h2>
-              <button onClick={() => setShowTaskModal(false)} className="text-gray-400 hover:text-white text-xl">&times;</button>
+              <button onClick={() => setShowTaskModal(false)} className="theme-text-muted hover:theme-text text-xl">&times;</button>
             </div>
             <p className="text-xs theme-text-muted">ลูกค้า: {firstName || lastName ? `${firstName} ${lastName}`.trim() : customer.name}</p>
             <div className="space-y-3">
@@ -181,13 +181,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <label className="block text-[11px] theme-text-muted mb-1">ชื่องาน *</label>
                 <input type="text" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)}
                   placeholder="ติดตามใบเสนอราคา, โทรหา, นัดประชุม..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] theme-text-muted mb-1">ความสำคัญ</label>
                   <select value={taskPriority} onChange={(e) => setTaskPriority(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text">
+                    className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text">
                     <option value="high">🔴 ด่วน</option>
                     <option value="medium">🟡 ปกติ</option>
                     <option value="low">🟢 ต่ำ</option>
@@ -196,19 +196,19 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div>
                   <label className="block text-[11px] theme-text-muted mb-1">กำหนดส่ง</label>
                   <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text" />
+                    className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
                 </div>
               </div>
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">หมายเหตุ</label>
                 <textarea value={taskNotes} onChange={(e) => setTaskNotes(e.target.value)} rows={3}
                   placeholder="รายละเอียดเพิ่มเติม..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900 text-sm theme-text resize-none" />
+                  className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text resize-none" />
               </div>
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowTaskModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-700 text-sm theme-text-muted hover:theme-text transition">
+                className="flex-1 px-4 py-2 rounded-lg border theme-border text-sm theme-text-muted hover:theme-text transition">
                 ยกเลิก
               </button>
               <button onClick={handleCreateTask} disabled={taskSaving || !taskTitle.trim()}
@@ -249,7 +249,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               className="px-3 py-2 rounded-lg text-sm font-medium bg-cyan-900/50 hover:bg-cyan-800/50 border border-cyan-700/50 text-cyan-300 hover:text-white transition">
               ➕ งานติดตาม
             </button>
-            <Link href="/tasks" className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white transition">
+            <Link href="/tasks" className="px-3 py-2 rounded-lg text-sm font-medium theme-bg-card hover:theme-bg-hover border theme-border theme-text-secondary hover:theme-text transition">
               📋 งานทั้งหมด
             </Link>
             <button

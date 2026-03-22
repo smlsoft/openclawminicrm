@@ -120,17 +120,17 @@ export default function CrmPage() {
             <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
               <p className="text-[11px] text-blue-400 mb-1">💼 Pipeline รวม</p>
               <p className="text-xl font-bold text-blue-300">{totalPipelineValue > 0 ? formatTHB(totalPipelineValue) : "-"}</p>
-              <p className="text-[10px] text-gray-500 mt-1">สนใจ, เสนอราคา, ต่อรอง, ติดตาม</p>
+              <p className="text-[10px] theme-text-muted mt-1">สนใจ, เสนอราคา, ต่อรอง, ติดตาม</p>
             </div>
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
               <p className="text-[11px] text-emerald-400 mb-1">✅ ปิดการขายได้</p>
               <p className="text-xl font-bold text-emerald-300">{wonValue > 0 ? formatTHB(wonValue) : "-"}</p>
-              <p className="text-[10px] text-gray-500 mt-1">{customers.filter((c) => c.pipelineStage === "closed_won").length} ราย</p>
+              <p className="text-[10px] theme-text-muted mt-1">{customers.filter((c) => c.pipelineStage === "closed_won").length} ราย</p>
             </div>
             <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
               <p className="text-[11px] text-red-400 mb-1">❌ ปิดไม่ได้</p>
               <p className="text-xl font-bold text-red-300">{lostValue > 0 ? formatTHB(lostValue) : "-"}</p>
-              <p className="text-[10px] text-gray-500 mt-1">{customers.filter((c) => c.pipelineStage === "closed_lost").length} ราย</p>
+              <p className="text-[10px] theme-text-muted mt-1">{customers.filter((c) => c.pipelineStage === "closed_lost").length} ราย</p>
             </div>
           </div>
         )}
@@ -217,7 +217,7 @@ export default function CrmPage() {
                         {c.dealValue && c.dealValue > 0 ? (
                           <span className="text-xs font-medium text-emerald-400">{formatTHB(c.dealValue)}</span>
                         ) : (
-                          <span className="text-gray-600 text-xs">-</span>
+                          <span className="theme-text-muted text-xs">-</span>
                         )}
                       </td>
                       <td className="py-3 px-2 text-center">
