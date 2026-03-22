@@ -1,154 +1,284 @@
-# OpenClaw Mini CRM — AI Chat Intelligence for LINE OA
+# OpenClaw Mini CRM 🦐
 
-> ระบบ AI วิเคราะห์แชทอัจฉริยะ สำหรับธุรกิจที่ใช้ LINE OA
-> ฟังทุกห้อง วิเคราะห์ทุกข้อความ แนะนำทุกโอกาส — อัตโนมัติ 100%
+### ระบบ Mini CRM อัจฉริยะ ฟรี 100% สำหรับธุรกิจไทย
+### ฟังทุกแชท วิเคราะห์ทุกข้อความ แนะนำทุกโอกาส — อัตโนมัติ
 
 ---
 
-## OpenClaw Mini CRM ทำอะไรได้?
+## ทำไมต้อง OpenClaw Mini CRM?
 
-### ฟังทุกแชท วิเคราะห์ทุกข้อความ
+> ลูกค้าทักมาทาง LINE, Facebook, Instagram พร้อมกัน
+> พนักงานตอบช้า ลูกค้าหลุด เจ้าของไม่รู้ตัว
+> ข้อมูลกระจาย ไม่มีระบบ ไม่รู้ว่าใครสนใจซื้อ ใครกำลังจะหนี
 
-- เชื่อมต่อ LINE OA → ฟังข้อความจากทุกกลุ่มและแชทส่วนตัว real-time
-- **ทุกข้อความ** ที่เข้ามา → AI วิเคราะห์อัตโนมัติทันที:
+**OpenClaw Mini CRM แก้ทุกปัญหานี้ — ฟรี ไม่มีค่าใช้จ่าย**
+
+---
+
+## คุณสมบัติทั้งหมด
+
+### 1. 💬 Unified Inbox — รวมแชท 3 ช่องทางในจอเดียว
+
+| ช่องทาง | รับข้อความ | ตอบจาก Web | น้องกุ้งตอบแทน |
+|---------|-----------|-----------|---------------|
+| LINE OA | รองรับ | รองรับ (Push API) | รองรับ (Reply API — ฟรี!) |
+| Facebook Messenger | รองรับ | รองรับ (Send API — ฟรี) | รองรับ (Send API — ฟรี!) |
+| Instagram DM | รองรับ | รองรับ (Send API — ฟรี) | รองรับ (Send API — ฟรี!) |
+
+- **Inbox จอเดียว** — พนักงานเปิดมาเห็นทุกแชท ตอบได้ทันที
+- ส่งข้อความ, รูปภาพ, ไฟล์ จาก Web ได้เลย
+- Quick Reply — ข้อความสำเร็จรูป กดเลือกแล้วส่งทันที
+- แยก tab ดูทีละช่องทาง หรือดูรวมก็ได้
+- Customer Info sidebar — เห็นข้อมูลลูกค้าขณะแชท
+- Auto-refresh ทุก 5 วินาที — real-time
+
+---
+
+### 2. 🤖 AI วิเคราะห์ทุกข้อความ — อัตโนมัติ 100%
+
+ทุกข้อความที่ลูกค้าส่งเข้ามา AI วิเคราะห์ให้ทันที:
 
 | วิเคราะห์ | ผลลัพธ์ | ตัวอย่าง |
 |-----------|---------|---------|
 | ความพอใจลูกค้า | ปกติ / ติดตาม / ไม่พอใจ | "ลูกค้าเริ่มไม่พอใจเรื่องจัดส่งช้า" |
-| โอกาสซื้อ | ไม่สนใจ / เริ่มสนใจ / สนใจซื้อ! | "ลูกค้าถามราคาและขอใบเสนอราคา" |
-| แท็กอัตโนมัติ | tags | ถามราคา, สนใจสินค้า, ร้องเรียน, นัดหมาย |
-| Sales Pipeline | stages | new → interested → quoting → negotiating → closed |
+| โอกาสซื้อ | ไม่สนใจ / เริ่มสนใจ / สนใจมาก! | "ลูกค้าถามราคาและขอใบเสนอราคา" |
+| แท็กอัตโนมัติ | tags | ถามราคา, สนใจสินค้า, ร้องเรียน |
+| Sales Pipeline | stages | ใหม่ → สนใจ → เสนอราคา → ปิดการขาย |
+
+**ไม่ต้องทำอะไรเลย — AI ทำให้หมด**
 
 ---
 
-### น้องกุ้ง — AI Advisor (OpenClaw)
+### 3. 🦐 น้องกุ้ง — AI Advisor 5 บทบาท + Deep Loop Analysis
 
-**วิเคราะห์ข้อมูลทุกห้อง ทุก 1 ชั่วโมง ผ่าน OpenClaw AI Gateway:**
+น้องกุ้งทำงาน **24/7 อัตโนมัติ** ไม่ต้องสั่ง:
 
-- ดึงแชทใหม่จาก Agent API → วิเคราะห์ด้วย AI → เก็บ advice ใน MongoDB
-- เฉพาะ sources ที่มีการเปลี่ยนแปลง (ประหยัด token)
-- CRM analysis ทุก 6 ชม. (follow-up, ลูกค้าหลุด)
-- รองรับ 20+ messaging channels (Telegram, LINE, Slack, etc.)
+| บทบาท | ทำงาน | หน้าที่ |
+|-------|-------|---------|
+| 🚨 **Problem Solver** | ทุก 1 ชม. | วิเคราะห์ปัญหาลูกค้า → หาต้นเหตุ → 5 ทางออก → เลือกดีสุด → action steps |
+| 💰 **Sales Hunter** | ทุก 1 ชม. | หาลูกค้าที่อยากซื้อ → กลยุทธ์ปิดการขายแบบไทย |
+| 👥 **Team Coach** | ทุก 6 ชม. | วิเคราะห์ทีม → แผนพัฒนารายบุคคล |
+| 📊 **Weekly Strategist** | จันทร์ 08:00 | สรุปสัปดาห์ → กลยุทธ์สัปดาห์หน้า → Monday Action |
+| ❤️ **Health Monitor** | ทุก 3 ชม. | Health Score 0-100 → ตรวจจับลูกค้าเสี่ยงก่อนหาย |
 
-| Priority | เมื่อไหร่ | ตัวอย่าง |
-|----------|---------|---------|
-| **Critical** | ลูกค้าไม่พอใจ / ตอบช้ามาก | "ลูกค้า X ร้องเรียน ควรโทรติดตามทันที" |
-| **Warning** | sentiment เริ่มแย่ | "ห้อง Y ลูกค้าเริ่มไม่พอใจ ควรเข้าไปดูแล" |
-| **Opportunity** | โอกาสขายสูง | "ลูกค้า Z สนใจซื้อมาก ควรเสนอราคา" |
-| **Info** | สถิติทั่วไป | "วันนี้มี 150 ข้อความ ห้อง A คุยเยอะสุด" |
-
----
-
-### KPI พนักงาน — ใครทำงาน ใครไม่ทำ
-
-| KPI | วัดจาก |
-|-----|-------|
-| **เวลาตอบเฉลี่ย** | ข้อความลูกค้า → พนักงานตอบ (เร็ว/กลาง/ช้า) |
-| **จำนวนลูกค้าที่ดูแล** | นับ sourceId ที่มี interaction |
-| **อัตราปิดการขาย** | pipeline สนใจ → ปิดได้ / ปิดทั้งหมด |
-| **ลูกค้าหลุด** | เคยคุยแล้วหายไป > 7 วัน |
-| **เสี่ยงหลุด** | ไม่มีข้อความ 3-7 วัน |
-
----
-
-### AI Cost Tracker — ดูค่าใช้จ่าย AI แบบละเอียด
-
-- ทุก AI call ถูก track: provider, model, feature, tokens, cost
-- แสดงผลใน Dashboard: วันนี้ / เดือนนี้ / แยกฟีเจอร์ / แยก provider
-- ราคาโดยประมาณเป็น THB
-
----
-
-### อื่นๆ
-
-- **Vision AI** — ส่งรูป → AI บรรยายเป็นภาษาไทย
-- **ตรวจจับตอบช้า** — alert เมื่อพนักงานตอบช้า > 30 นาที
-- **CRM อัตโนมัติ** — สร้างจากแชท ไม่ต้องกรอกเอง
-- **RAG** — จำแชทเก่าได้ (Vector + Keyword + Recent)
-- **MCP ERP** — เชื่อม ERP 61 tools (สต็อก, ยอดขาย, KPI)
-
----
-
-## Architecture
-
+**Deep Loop Analysis:**
 ```
-LINE OA
-  |
-  v
-Cloudflare Tunnel (smlclaw.satistang.com)
-  |
-  v
-+------------------ Docker Desktop --------------------+
-|                                                       |
-|  +-----------------+                                  |
-|  |  OpenClaw        |  <- AI Advisor (แกนหลัก)        |
-|  |  Port: 18789     |  <- cron ทุก 1 ชม.             |
-|  +--------+---------+                                 |
-|           | curl API                                  |
-|           v                                           |
-|  +-----------------+   +------------------+           |
-|  |  Agent (proxy/) |   |  Dashboard       |           |
-|  |  Node.js        |   |  Next.js         |           |
-|  |  Port: 3000     |   |  Port: 3002      |           |
-|  |  - LINE webhook |<--|  - แชท iPhone    |           |
-|  |  - AI + RAG     |   |  - CRM / KPI     |           |
-|  |  - MCP ERP      |   |  - Advice / Cost  |           |
-|  +--------+---------+  +------------------+           |
-|           |                                           |
-|  +--------+---------+                                 |
-|  |  Cloudflare       |-> Internet                     |
-|  +-------------------+                                |
-+-------------------------------------------------------+
-            |
-            v
-      MongoDB Atlas (Cloud)
+ปัญหา → ต้นเหตุ → 3-5 ทางออก → เลือกดีสุด → Action Steps ทำได้ทันที
+    ↑                                                      ↓
+    └──── ถ้ายังไม่ชัด วนซ้ำจนได้ข้อสรุป ────────────────────┘
 ```
 
-| Container | Folder | Port | หน้าที่ |
-|-----------|--------|------|---------|
-| smltrack-openclaw | `openclaw/` | 18789 | AI Advisor — cron, cost tracking |
-| smltrack-agent | `proxy/` | 3000 | LINE webhook, AI chatbot, RAG, MCP |
-| smltrack-dashboard | `smltrackdashboard/` | 3002 | Web Dashboard |
-| smltrack-tunnel | cloudflared | — | เปิดให้เข้าจาก Internet |
+ถ้าพบ CRITICAL → **ส่ง Telegram แจ้งเตือนทันที!**
 
 ---
 
-## AI ที่ใช้ (ฟรีทั้งหมด)
+### 4. 🦐 น้องกุ้งตอบแทนอัตโนมัติ
+
+น้องกุ้งตอบแชทลูกค้าแทนพนักงานได้ — **ฟรี ไม่เสียเงิน!**
+
+| Mode | พฤติกรรม |
+|------|---------|
+| **ปิด** | หูทิพย์ — ฟังอย่างเดียว ไม่ตอบ (default) |
+| **อัตโนมัติ** | ตอบทุกข้อความอัตโนมัติ (ยกเว้นพนักงาน) |
+| **เรียกชื่อ** | ตอบเมื่อลูกค้าเรียก "น้องกุ้ง" |
+| **Keyword** | ตอบเมื่อมี keyword ที่กำหนด เช่น "ราคา", "สั่ง" |
+
+- LINE: ใช้ Reply API → **ฟรี!** (ไม่ใช่ Push ไม่เสียเงิน)
+- Facebook/Instagram: ใช้ Send API → **ฟรี!**
+- ตั้งค่าแยกต่อห้อง/ลูกค้า ได้
+
+---
+
+### 5. 📱 คุยกับน้องกุ้งผ่าน Telegram
+
+เจ้าของธุรกิจถามน้องกุ้งผ่าน Telegram ได้ตลอด:
 
 ```
-OpenRouter Nemotron (free)
-  -> OpenRouter Llama 3.3-70B (free)
-    -> OpenRouter Trinity (free)
-      -> SambaNova (Qwen3-235B)
-        -> Groq (Llama 3.3-70B)
-          -> Cerebras (Qwen3-235B)
-            -> Gemini Flash
+คุณ: "สรุปแชทวันนี้"
+🦐: "วันนี้มี 45 ข้อความ จาก 8 ห้อง
+     ห้อง VIP คุยเยอะสุด (15 msg)
+     ลูกค้า 2 รายถามราคา → โอกาสขาย
+     ⚠️ ห้อง A ตอบช้า 45 นาที ควรติดตาม"
+
+คุณ: "ลูกค้าไหนต้องติดตาม?"
+🦐: "1. คุณนิดา — ถามราคา 3 ครั้ง ยังไม่ได้เสนอราคา
+     2. คุณสมชาย — ไม่พอใจเรื่องจัดส่ง ควรโทรขอโทษ
+     3. ร้าน XYZ — หายไป 5 วัน เสี่ยงหลุด"
 ```
 
-ตัวไหน rate limit → cooldown 30 นาทีแล้วข้ามทันที
+---
+
+### 6. 👥 CRM อัตโนมัติ — ไม่ต้องกรอกข้อมูลเอง
+
+- ลูกค้าทักมา → ระบบสร้างข้อมูลลูกค้าอัตโนมัติ
+- ดึงรูป + ชื่อจาก LINE/Facebook/Instagram อัตโนมัติ
+- AI ให้คะแนน sentiment + โอกาสซื้อ อัตโนมัติ
+- Pipeline: ใหม่ → สนใจ → เสนอราคา → ต่อรอง → ปิดการขาย
+- มูลค่า Deal + วันที่คาดว่าจะปิด + เหตุผลปิดได้/ไม่ได้
 
 ---
 
-## Dashboard
+### 7. 📈 KPI พนักงาน — รู้ว่าใครทำงาน ใครไม่ทำ
 
-| หน้า | URL | หน้าที่ |
-|------|-----|---------|
-| หน้าหลัก | `/dashboard` | แชทแบบ iPhone + filters |
-| CRM | `/dashboard/crm` | ข้อมูลลูกค้า + pipeline |
-| KPI | `/dashboard/kpi` | พนักงาน + ปิดการขาย + ลูกค้าหลุด |
-| น้องกุ้ง | `/dashboard/advice` | คำแนะนำ AI ทุก 1 ชม. |
-| AI Cost | `/dashboard/costs` | ค่าใช้จ่าย AI แบบละเอียด |
-| Config | `/dashboard/config` | ตั้งค่าระบบ |
+| KPI | วัดอะไร |
+|-----|---------|
+| เวลาตอบเฉลี่ย | พนักงานตอบลูกค้าเร็วแค่ไหน (เร็ว/กลาง/ช้า) |
+| จำนวนลูกค้าที่ดูแล | แต่ละคนดูแลลูกค้ากี่ราย |
+| อัตราปิดการขาย | ปิดได้กี่ % จากทั้งหมด |
+| ลูกค้าหลุด | เคยคุยแล้วหายไป > 7 วัน |
+| เสี่ยงหลุด | ไม่มีข้อความ 3-7 วัน (เตือนก่อนหลุด!) |
+| รายได้ | Pipeline รวม / ปิดได้ / ปิดไม่ได้ |
 
 ---
 
-## Quick Start
+### 8. 📋 งานและติดตาม — ไม่ลืมลูกค้าอีกต่อไป
+
+- สร้างงานติดตามผูกกับลูกค้า
+- ตั้ง priority: ด่วน / ปกติ / ต่ำ
+- ตั้ง deadline → ระบบเตือนเมื่อถึงเวลา
+- มอบหมายให้พนักงาน
+- ดูงานเลยกำหนดได้ทันที (highlight สีแดง)
+
+---
+
+### 9. ⚡ Quick Reply — ตอบลูกค้าเร็วขึ้น
+
+- สร้างข้อความสำเร็จรูป (ทักทาย, ราคา, ติดตาม, ปิดการขาย)
+- กดเลือก → ส่งทันที จาก Inbox
+- นับจำนวนครั้งที่ใช้ → รู้ว่า template ไหนเวิร์ก
+
+---
+
+### 10. 💰 AI Cost Tracker — รู้ค่าใช้จ่าย AI ทุกบาท
+
+- ทุก AI call ถูก track: provider, model, tokens, cost
+- แสดงผลแบบละเอียด: วันนี้ / เดือนนี้ / แยกฟีเจอร์ / แยก provider
+- แสดงเป็นบาท
+
+---
+
+### 11. 👔 ทีมงาน — ทำงานร่วมกันได้
+
+| Role | สิทธิ์ |
+|------|-------|
+| **Admin** | ทำได้ทุกอย่าง + จัดการทีม |
+| **Responder** | ดูแชท + ตอบลูกค้า + สร้างงาน |
+| **Reviewer** | ดูรายงาน + KPI + Advice |
+| **Viewer** | ดูอย่างเดียว |
+
+เชิญคนเข้าทีมด้วย email — กดปุ่มเดียว
+
+---
+
+### 12. 👁️ Vision AI — อ่านรูปเป็นข้อความ
+
+ลูกค้าส่งรูป → AI บรรยายเป็นภาษาไทยอัตโนมัติ → ค้นหาได้ + วิเคราะห์ต่อ
+
+---
+
+### 13. 🔗 เชื่อม ERP ผ่าน MCP
+
+เชื่อมต่อระบบ ERP ได้ 61 คำสั่ง:
+เช็คสต็อก, ยอดขาย, KPI, ลูกหนี้/เจ้าหนี้, สินค้าขายดี
+AI เรียกใช้อัตโนมัติเมื่อลูกค้าถามข้อมูลธุรกิจ
+
+---
+
+## หน้าจอทั้งหมด (14 หน้า)
+
+| หน้า | หน้าที่ |
+|------|---------|
+| 💬 **Inbox** | รวมแชท LINE/FB/IG — ตอบได้จากจอเดียว |
+| 📊 **Dashboard** | แชทแบบ iPhone + filter platform |
+| 👥 **CRM** | ลูกค้า + pipeline + deal value |
+| 📈 **KPI** | พนักงาน + ปิดการขาย + รายได้ |
+| 🦐 **น้องกุ้ง** | AI Advice 5 บทบาท + Deep Analysis |
+| 💰 **AI Cost** | ค่าใช้จ่าย AI แบบละเอียด |
+| 📋 **งานติดตาม** | task + priority + deadline |
+| ⚡ **Templates** | ข้อความสำเร็จรูป |
+| 🔗 **เชื่อมต่อ** | LINE/FB/IG/Telegram สถานะ |
+| ⚙️ **ตั้งค่า** | MongoDB URI, AI keys, bot config |
+| 👔 **ทีมงาน** | เชิญคน + role |
+| 📖 **คู่มือ** | step-by-step |
+| 🔐 **Login** | Google OAuth |
+| 🚀 **Onboarding** | Setup wizard 5 ขั้นตอน |
+
+---
+
+## ราคา — ฟรี 100%
+
+| รายการ | ราคา |
+|--------|------|
+| OpenClaw Mini CRM | **ฟรี** |
+| MongoDB Atlas (ฐานข้อมูล) | **ฟรี** (M0 512MB) |
+| AI (OpenRouter free models) | **ฟรี** |
+| LINE OA | **ฟรี** |
+| Facebook / Instagram | **ฟรี** |
+| Telegram (น้องกุ้ง) | **ฟรี** |
+| **รวม** | **฿0 / เดือน** |
+
+> **ข้อมูลเป็นของคุณ 100%** — เก็บใน MongoDB Atlas ของคุณเอง
+> ไม่ต้องกลัวข้อมูลหาย ไม่ต้องกลัวโดน lock-in
+
+---
+
+## เริ่มใช้งาน — 5 นาที
+
+```
+1. เปิด crm.satistang.com
+2. Login ด้วย Google
+3. ทำตาม setup wizard (ใส่ MongoDB URI + AI key)
+4. เชื่อม LINE OA / Facebook / Instagram
+5. เชื่อม Telegram กับน้องกุ้ง
+6. เสร็จ! ระบบเริ่มฟังแชท + วิเคราะห์ + ตอบแทนอัตโนมัติ
+```
+
+---
+
+## เปรียบเทียบกับ CRM อื่นในไทย
+
+| | OpenClaw Mini CRM | R-CRM | Oho Chat | Zoho CRM |
+|---|---|---|---|---|
+| **ราคา** | **ฟรี** | ฿1,590/เดือน | ฿990/เดือน | ฿500/เดือน |
+| **LINE** | รองรับ | รองรับ | รองรับ | ไม่รองรับ |
+| **Facebook** | รองรับ | ไม่รองรับ | รองรับ | รองรับ |
+| **Instagram** | รองรับ | ไม่รองรับ | รองรับ | ไม่รองรับ |
+| **Unified Inbox** | รองรับ | ไม่มี | รองรับ | ไม่มี |
+| **AI วิเคราะห์แชท** | อัตโนมัติ | ไม่มี | ไม่มี | ไม่มี |
+| **AI ตอบแทน** | น้องกุ้ง (ฟรี) | ไม่มี | Chatbot (จ่ายเพิ่ม) | ไม่มี |
+| **AI Advisor 5 บทบาท** | น้องกุ้ง 24/7 | ไม่มี | ไม่มี | ไม่มี |
+| **Deep Loop Analysis** | รองรับ | ไม่มี | ไม่มี | ไม่มี |
+| **Telegram bot** | น้องกุ้ง | ไม่มี | ไม่มี | ไม่มี |
+| **Health Score** | 0-100 อัตโนมัติ | ไม่มี | ไม่มี | ไม่มี |
+| **ข้อมูลเป็นของคุณ** | MongoDB ของคุณเอง | เก็บในระบบเขา | เก็บในระบบเขา | เก็บในระบบเขา |
+| **ภาษาไทย** | 100% | 100% | 100% | ไม่ครบ |
+| **Open Source** | ใช่ (MIT) | ไม่ใช่ | ไม่ใช่ | ไม่ใช่ |
+
+---
+
+## Tech Stack
+
+| ส่วน | เทคโนโลยี |
+|------|-----------|
+| AI Advisor | OpenClaw + OpenRouter (Qwen3-235B) |
+| AI Bot | น้องกุ้ง 🦐 (5 บทบาท + Deep Loop Analysis) |
+| Agent | Node.js + Express |
+| Dashboard | Next.js + Tailwind CSS |
+| Database | MongoDB Atlas (คุณเป็นเจ้าของ) |
+| Auth | Google OAuth (NextAuth) |
+| Deploy | Docker + Hetzner VPS |
+| AI Providers | OpenRouter / SambaNova / Groq / Cerebras / Gemini (ฟรี) |
+| Channels | LINE / Facebook / Instagram / Telegram |
+
+---
+
+## Quick Start (สำหรับ Developer)
 
 ```bash
-git clone https://github.com/smlsoft/smltrack.git
-cd smltrack
-copy .env.example .env
-# แก้ไขค่าใน .env (ดู docs/INSTALL.md)
+git clone https://github.com/smlsoft/openclawminicrm.git
+cd openclawminicrm
+cp .env.example .env
+# แก้ไขค่าใน .env
 docker compose up -d --build
 # เข้า: http://localhost:3002/dashboard
 ```
@@ -157,28 +287,24 @@ docker compose up -d --build
 
 ---
 
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| AI Advisor | OpenClaw (AI Gateway + Cron) |
-| AI Agent | Node.js + Express |
-| Dashboard | Next.js + Tailwind CSS |
-| Database | MongoDB Atlas (Free M0) |
-| Tunnel | Cloudflare Named Tunnel |
-| Deploy | Docker Desktop (ทุก service) |
-| AI | OpenRouter / SambaNova / Groq / Cerebras / Gemini |
-| ERP | bc-erp MCP Server (SSE) |
-
----
-
-## เอกสารเพิ่มเติม
+## เอกสาร
 
 | เอกสาร | เนื้อหา |
 |--------|---------|
 | [คู่มือติดตั้ง](docs/INSTALL.md) | ติดตั้งทั้งระบบบน Docker Desktop |
-| [Docker Desktop](docs/setup-docker.md) | ติดตั้ง Docker Desktop |
+| [Deploy Hetzner](docs/DEPLOY-HETZNER.md) | Deploy production บน Hetzner VPS |
 | [MongoDB Atlas](docs/setup-mongodb.md) | สมัคร MongoDB Atlas (ฟรี) |
 | [LINE Messaging API](docs/setup-line.md) | สร้าง LINE Channel |
 | [AI Providers](docs/setup-ai-providers.md) | สมัคร AI Providers (ฟรีทั้งหมด) |
-| [Cloudflare Tunnel](docs/setup-cloudflare-tunnel.md) | ตั้งค่า Cloudflare Tunnel (ฟรี) |
+| [Cloudflare Tunnel](docs/setup-cloudflare-tunnel.md) | ตั้งค่า Cloudflare Tunnel |
+
+---
+
+## ติดต่อ
+
+- Web: [crm.satistang.com](https://crm.satistang.com)
+- GitHub: [github.com/smlsoft/openclawminicrm](https://github.com/smlsoft/openclawminicrm)
+
+---
+
+**OpenClaw Mini CRM 🦐 — ฟรี ไม่จำกัด ข้อมูลเป็นของคุณ AI ทำงานแทนคุณ 24/7**
