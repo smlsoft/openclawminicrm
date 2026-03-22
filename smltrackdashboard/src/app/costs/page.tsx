@@ -71,7 +71,7 @@ export default function CostsPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { const i = setInterval(fetchData, 30000); return () => clearInterval(i); }, [fetchData]);
 
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="text-gray-400 animate-pulse">Loading...</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">Loading...</div></div>;
 
   const today = data?.today || { totalTokens: 0, totalCost: 0, calls: 0, inputTokens: 0, outputTokens: 0 };
   const month = data?.month || { totalTokens: 0, totalCost: 0, calls: 0 };
@@ -84,10 +84,10 @@ export default function CostsPage() {
 
   return (
     <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b border-gray-800 px-6 py-4 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="pl-10 md:pl-0">
           <h1 className="text-base font-bold">💰 AI Cost Tracker</h1>
-          <p className="text-xs text-gray-400">ค่าใช้จ่าย AI แบบละเอียด</p>
+          <p className="text-xs theme-text-secondary">ค่าใช้จ่าย AI แบบละเอียด</p>
         </div>
       </header>
 
@@ -102,29 +102,29 @@ export default function CostsPage() {
             { label: "เดือนนี้ (Cost)", value: formatCost(month.totalCost), icon: "📅", sub: formatThb(month.totalCost) },
             { label: "เดือนนี้ (Calls)", value: month.calls.toLocaleString(), icon: "🔢", sub: formatTokens(month.totalTokens) + " tokens" },
           ].map((c) => (
-            <div key={c.label} className="rounded-xl border border-gray-800 bg-gray-900/50 p-3">
+            <div key={c.label} className="rounded-xl border theme-border theme-bg-secondary p-3">
               <div className="flex items-center justify-between">
                 <span className="text-xl">{c.icon}</span>
                 <span className="text-lg font-bold">{c.value}</span>
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">{c.label}</p>
-              {c.sub && <p className="text-[10px] text-gray-500">{c.sub}</p>}
+              <p className="text-[11px] theme-text-secondary mt-1">{c.label}</p>
+              {c.sub && <p className="text-[10px] theme-text-muted">{c.sub}</p>}
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Daily Chart */}
-          <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">📈 Token ใช้ต่อวัน (7 วัน)</h2>
+          <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">📈 Token ใช้ต่อวัน (7 วัน)</h2>
             {daily.length === 0 ? (
-              <p className="text-gray-600 text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
+              <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
               <div className="space-y-2">
                 {daily.map((d) => (
                   <div key={d._id} className="flex items-center gap-2">
-                    <span className="text-[11px] text-gray-400 w-16 shrink-0">{d._id.substring(5)}</span>
-                    <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
+                    <span className="text-[11px] theme-text-secondary w-16 shrink-0">{d._id.substring(5)}</span>
+                    <div className="flex-1 theme-bg-card rounded-full h-6 overflow-hidden">
                       <div
                         className="bg-blue-500 h-6 rounded-full flex items-center px-2 text-[10px] font-bold text-white"
                         style={{ width: `${(d.totalTokens / maxDailyTokens) * 100}%`, minWidth: d.totalTokens > 0 ? 40 : 0 }}
@@ -132,7 +132,7 @@ export default function CostsPage() {
                         {formatTokens(d.totalTokens)}
                       </div>
                     </div>
-                    <span className="text-[10px] text-gray-500 w-14 text-right">{formatCost(d.totalCost)}</span>
+                    <span className="text-[10px] theme-text-muted w-14 text-right">{formatCost(d.totalCost)}</span>
                   </div>
                 ))}
               </div>
@@ -140,21 +140,21 @@ export default function CostsPage() {
           </section>
 
           {/* By Feature */}
-          <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">🏷️ ค่าใช้จ่ายตามฟีเจอร์</h2>
+          <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🏷️ ค่าใช้จ่ายตามฟีเจอร์</h2>
             {byFeature.length === 0 ? (
-              <p className="text-gray-600 text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
+              <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
               <div className="space-y-2">
                 {byFeature.map((f) => (
-                  <div key={f._id} className="flex items-center justify-between p-2 rounded-lg bg-gray-800/50">
+                  <div key={f._id} className="flex items-center justify-between p-2 rounded-lg theme-bg-card">
                     <div>
                       <p className="text-sm font-medium">{FEATURE_LABELS[f._id] || f._id}</p>
-                      <p className="text-[10px] text-gray-500">{f.calls} calls &middot; avg {formatTokens(Math.round(f.avgTokens))} tokens/call</p>
+                      <p className="text-[10px] theme-text-muted">{f.calls} calls &middot; avg {formatTokens(Math.round(f.avgTokens))} tokens/call</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">{formatTokens(f.totalTokens)}</p>
-                      <p className="text-[10px] text-gray-500">{formatCost(f.totalCost)}</p>
+                      <p className="text-[10px] theme-text-muted">{formatCost(f.totalCost)}</p>
                     </div>
                   </div>
                 ))}
@@ -165,26 +165,26 @@ export default function CostsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* By Provider */}
-          <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">🤖 ค่าใช้จ่ายตาม AI Provider</h2>
+          <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🤖 ค่าใช้จ่ายตาม AI Provider</h2>
             {byProvider.length === 0 ? (
-              <p className="text-gray-600 text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
+              <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[11px] text-gray-500 border-b border-gray-800">
+                    <tr className="text-left text-[11px] theme-text-muted border-b theme-border">
                       <th className="pb-2">Provider</th>
                       <th className="pb-2 text-right">Calls</th>
                       <th className="pb-2 text-right">Tokens</th>
                       <th className="pb-2 text-right">Cost</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800/50">
+                  <tbody className="theme-divide divide-y">
                     {byProvider.map((p) => (
-                      <tr key={p._id} className="hover:bg-gray-900/50">
+                      <tr key={p._id} className="hover:theme-bg-hover">
                         <td className="py-2 font-medium">{p._id}</td>
-                        <td className="py-2 text-right text-gray-400">{p.calls}</td>
+                        <td className="py-2 text-right theme-text-secondary">{p.calls}</td>
                         <td className="py-2 text-right">{formatTokens(p.totalTokens)}</td>
                         <td className="py-2 text-right">
                           <span className={p.totalCost > 0 ? "text-amber-400 font-bold" : "text-emerald-400"}>
@@ -200,20 +200,20 @@ export default function CostsPage() {
           </section>
 
           {/* Recent Calls */}
-          <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 text-gray-300">🕐 AI Calls ล่าสุด</h2>
+          <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🕐 AI Calls ล่าสุด</h2>
             {recent.length === 0 ? (
-              <p className="text-gray-600 text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
+              <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
               <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
                 {recent.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between text-[11px] p-1.5 rounded bg-gray-800/30">
+                  <div key={i} className="flex items-center justify-between text-[11px] p-1.5 rounded theme-bg-card">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-12 shrink-0">{formatDate(r.createdAt)}</span>
+                      <span className="theme-text-muted w-12 shrink-0">{formatDate(r.createdAt)}</span>
                       <span className="font-medium truncate max-w-[120px]">{FEATURE_LABELS[r.feature] || r.feature}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">{formatTokens(r.totalTokens)}</span>
+                      <span className="theme-text-secondary">{formatTokens(r.totalTokens)}</span>
                       <span className={r.costUsd > 0 ? "text-amber-400" : "text-emerald-400"}>{formatCost(r.costUsd)}</span>
                     </div>
                   </div>
