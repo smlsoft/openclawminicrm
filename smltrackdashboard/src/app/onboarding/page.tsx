@@ -130,7 +130,7 @@ export default function OnboardingPage() {
   const userImage = session?.user?.image;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div className="min-h-screen theme-bg theme-text flex flex-col">
       {/* Background glow */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-500/8 rounded-full blur-3xl" />
@@ -138,7 +138,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Progress bar */}
-      <div className="relative z-10 w-full h-1 bg-gray-800">
+      <div className="relative z-10 w-full h-1 theme-bg-card">
         <div
           className="h-full bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
+      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b theme-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-base shadow-lg shadow-indigo-500/20">
             💬
@@ -162,7 +162,7 @@ export default function OnboardingPage() {
                   ? "bg-indigo-400 scale-125"
                   : s < step
                   ? "bg-indigo-600"
-                  : "bg-gray-700"
+                  : "bg-[var(--border)]"
               }`}
             />
           ))}
@@ -186,12 +186,12 @@ export default function OnboardingPage() {
                 )}
                 <h1 className="text-3xl font-bold">ยินดีต้อนรับ!</h1>
                 <p className="text-xl text-indigo-300 mt-1">{userName}</p>
-                <p className="text-sm text-gray-400 mt-1">{userEmail}</p>
+                <p className="text-sm theme-text-secondary mt-1">{userEmail}</p>
               </div>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left space-y-4">
-                <h2 className="font-semibold text-white">ตั้งค่า OpenClaw Mini CRM ของคุณ</h2>
-                <p className="text-sm text-gray-400 leading-relaxed">
+              <div className="theme-bg-secondary border theme-border rounded-2xl p-6 text-left space-y-4">
+                <h2 className="font-semibold theme-text">ตั้งค่า OpenClaw Mini CRM ของคุณ</h2>
+                <p className="text-sm theme-text-secondary leading-relaxed">
                   ระบบนี้ฟรีทั้งหมด คุณใช้ MongoDB Atlas และ AI API key ของตัวเองได้เลย
                   ทำตามขั้นตอน 4 ขั้นตอนนี้เพื่อเริ่มต้น:
                 </p>
@@ -204,8 +204,8 @@ export default function OnboardingPage() {
                     <div key={label} className="flex items-start gap-3">
                       <span className="text-lg mt-0.5">{icon}</span>
                       <div>
-                        <p className="text-sm font-medium text-white">{label}</p>
-                        <p className="text-xs text-gray-500">{desc}</p>
+                        <p className="text-sm font-medium theme-text">{label}</p>
+                        <p className="text-xs theme-text-muted">{desc}</p>
                       </div>
                     </div>
                   ))}
@@ -227,15 +227,15 @@ export default function OnboardingPage() {
               <div>
                 <p className="text-xs text-indigo-400 font-medium uppercase tracking-wider mb-1">ขั้นตอนที่ 2 / 4</p>
                 <h2 className="text-2xl font-bold">เชื่อมฐานข้อมูล</h2>
-                <p className="text-sm text-gray-400 mt-1">ใช้ MongoDB Atlas M0 (ฟรี) ของคุณเองสำหรับเก็บข้อมูลแชท</p>
+                <p className="text-sm theme-text-secondary mt-1">ใช้ MongoDB Atlas M0 (ฟรี) ของคุณเองสำหรับเก็บข้อมูลแชท</p>
               </div>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-gray-800">
+              <div className="theme-bg-secondary border theme-border rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b theme-border">
                   <div className="w-10 h-10 bg-green-900/40 rounded-xl flex items-center justify-center text-xl">🍃</div>
                   <div>
                     <p className="font-semibold">MongoDB Atlas</p>
-                    <p className="text-xs text-gray-500">atlas.mongodb.com</p>
+                    <p className="text-xs theme-text-muted">atlas.mongodb.com</p>
                   </div>
                   <a
                     href="https://www.mongodb.com/atlas/database"
@@ -248,22 +248,22 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-400 mb-1.5 block">Connection String (mongodb+srv://...)</label>
+                  <label className="text-xs theme-text-secondary mb-1.5 block">Connection String (mongodb+srv://...)</label>
                   <input
                     type="text"
                     value={mongoUri}
                     onChange={(e) => { setMongoUri(e.target.value); setMongoTest(null); }}
                     placeholder="mongodb+srv://user:password@cluster.mongodb.net/smltrack"
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
+                    className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition font-mono"
                     autoComplete="off"
                   />
-                  <p className="text-xs text-gray-600 mt-1">วาง Connection String จาก Atlas → Connect → Drivers</p>
+                  <p className="text-xs theme-text-muted mt-1">วาง Connection String จาก Atlas → Connect → Drivers</p>
                 </div>
 
                 <button
                   onClick={testMongo}
                   disabled={mongoTesting || !mongoUri.trim()}
-                  className="px-5 py-2.5 bg-green-700 hover:bg-green-600 disabled:bg-gray-800 disabled:text-gray-600 rounded-xl text-sm font-medium transition"
+                  className="px-5 py-2.5 bg-green-700 hover:bg-green-600 disabled:opacity-50 rounded-xl text-sm font-medium transition"
                 >
                   {mongoTesting ? "กำลังทดสอบ..." : "🔌 ทดสอบการเชื่อมต่อ"}
                 </button>
@@ -273,9 +273,9 @@ export default function OnboardingPage() {
                     {mongoTest.ok ? (
                       <div className="space-y-2">
                         <p className="text-green-400 font-medium">✅ เชื่อมต่อสำเร็จ!</p>
-                        <div className="flex gap-4 text-xs text-gray-300">
-                          <span>เอกสาร: <span className="text-white">{mongoTest.documentCount ?? 0}</span></span>
-                          <span>Collections: <span className="text-white">{mongoTest.collections?.length ?? 0}</span></span>
+                        <div className="flex gap-4 text-xs theme-text-secondary">
+                          <span>เอกสาร: <span className="theme-text">{mongoTest.documentCount ?? 0}</span></span>
+                          <span>Collections: <span className="theme-text">{mongoTest.collections?.length ?? 0}</span></span>
                         </div>
                         {mongoTest.collections && mongoTest.collections.length > 0 && (
                           <div className="flex flex-wrap gap-1">
@@ -295,20 +295,20 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-5 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm font-medium transition"
+                  className="px-5 py-3 theme-bg-card hover:theme-bg-hover rounded-xl text-sm font-medium transition"
                 >
                   ← ย้อนกลับ
                 </button>
                 <button
                   onClick={() => saveAndNext(3)}
                   disabled={saving || !mongoUri.trim()}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 rounded-xl text-sm font-semibold transition"
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl text-sm font-semibold transition"
                 >
                   {saving ? "กำลังบันทึก..." : "ถัดไป →"}
                 </button>
               </div>
               {!mongoUri.trim() && (
-                <p className="text-xs text-center text-gray-600">กรุณากรอก MongoDB URI ก่อนไปต่อ</p>
+                <p className="text-xs text-center theme-text-muted">กรุณากรอก MongoDB URI ก่อนไปต่อ</p>
               )}
             </div>
           )}
@@ -319,10 +319,10 @@ export default function OnboardingPage() {
               <div>
                 <p className="text-xs text-indigo-400 font-medium uppercase tracking-wider mb-1">ขั้นตอนที่ 3 / 4</p>
                 <h2 className="text-2xl font-bold">ตั้งค่า AI</h2>
-                <p className="text-sm text-gray-400 mt-1">ใช้ AI key ของคุณเอง — OpenRouter จำเป็น, ตัวอื่นเสริม</p>
+                <p className="text-sm theme-text-secondary mt-1">ใช้ AI key ของคุณเอง — OpenRouter จำเป็น, ตัวอื่นเสริม</p>
               </div>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5">
+              <div className="theme-bg-secondary border theme-border rounded-2xl p-6 space-y-5">
                 {/* OpenRouter — required */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
@@ -339,14 +339,14 @@ export default function OnboardingPage() {
                     value={openrouterKey}
                     onChange={(e) => setOpenrouterKey(e.target.value)}
                     placeholder="sk-or-v1-..."
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-mono"
+                    className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-mono"
                     autoComplete="off"
                   />
-                  <p className="text-xs text-gray-600 mt-1">ใช้สำหรับ LINE reply + AI Advisor (Qwen3-235B)</p>
+                  <p className="text-xs theme-text-muted mt-1">ใช้สำหรับ LINE reply + AI Advisor (Qwen3-235B)</p>
                 </div>
 
-                <div className="border-t border-gray-800 pt-4">
-                  <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider">เสริม — fallback providers (ฟรี)</p>
+                <div className="border-t theme-border pt-4">
+                  <p className="text-xs theme-text-muted mb-3 uppercase tracking-wider">เสริม — fallback providers (ฟรี)</p>
                   <div className="space-y-3">
                     {[
                       { label: "🟣 Groq API Key", value: groqKey, setter: setGroqKey, placeholder: "gsk_...", link: "https://console.groq.com/keys" },
@@ -356,7 +356,7 @@ export default function OnboardingPage() {
                     ].map(({ label, value, setter, placeholder, link }) => (
                       <div key={label}>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="text-xs text-gray-400">{label}</label>
+                          <label className="text-xs theme-text-secondary">{label}</label>
                           <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-500 hover:text-indigo-400 transition">รับฟรี →</a>
                         </div>
                         <input
@@ -364,7 +364,7 @@ export default function OnboardingPage() {
                           value={value}
                           onChange={(e) => setter(e.target.value)}
                           placeholder={placeholder}
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700/50 rounded-xl text-white text-xs placeholder-gray-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition font-mono"
+                          className="w-full px-4 py-2 theme-input border rounded-xl text-xs focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition font-mono"
                           autoComplete="off"
                         />
                       </div>
@@ -376,20 +376,20 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(2)}
-                  className="px-5 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm font-medium transition"
+                  className="px-5 py-3 theme-bg-card hover:theme-bg-hover rounded-xl text-sm font-medium transition"
                 >
                   ← ย้อนกลับ
                 </button>
                 <button
                   onClick={() => saveAndNext(4)}
                   disabled={saving || !openrouterKey.trim()}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 rounded-xl text-sm font-semibold transition"
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl text-sm font-semibold transition"
                 >
                   {saving ? "กำลังบันทึก..." : "ถัดไป →"}
                 </button>
               </div>
               {!openrouterKey.trim() && (
-                <p className="text-xs text-center text-gray-600">กรุณากรอก OpenRouter API Key ก่อน</p>
+                <p className="text-xs text-center theme-text-muted">กรุณากรอก OpenRouter API Key ก่อน</p>
               )}
             </div>
           )}
@@ -400,38 +400,38 @@ export default function OnboardingPage() {
               <div>
                 <p className="text-xs text-indigo-400 font-medium uppercase tracking-wider mb-1">ขั้นตอนที่ 4 / 4</p>
                 <h2 className="text-2xl font-bold">เชื่อมช่องทาง</h2>
-                <p className="text-sm text-gray-400 mt-1">ข้ามได้ ตั้งค่าทีหลังใน Settings ก็ได้</p>
+                <p className="text-sm theme-text-secondary mt-1">ข้ามได้ ตั้งค่าทีหลังใน Settings ก็ได้</p>
               </div>
 
               <div className="space-y-4">
                 {/* LINE */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
+                <div className="theme-bg-secondary border theme-border rounded-2xl p-5 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-green-900/40 rounded-xl flex items-center justify-center text-lg">💬</div>
                     <div>
                       <p className="font-semibold text-sm">LINE Official Account</p>
-                      <p className="text-xs text-gray-500">LINE Developers Console</p>
+                      <p className="text-xs theme-text-muted">LINE Developers Console</p>
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Channel Access Token</label>
+                    <label className="text-xs theme-text-muted mb-1 block">Channel Access Token</label>
                     <input
                       type="password"
                       value={lineToken}
                       onChange={(e) => { setLineToken(e.target.value); setLineTest(null); }}
                       placeholder="Channel Access Token"
-                      className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition font-mono"
+                      className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition font-mono"
                       autoComplete="off"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Channel Secret</label>
+                    <label className="text-xs theme-text-muted mb-1 block">Channel Secret</label>
                     <input
                       type="password"
                       value={lineSecret}
                       onChange={(e) => setLineSecret(e.target.value)}
                       placeholder="Channel Secret"
-                      className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition font-mono"
+                      className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition font-mono"
                       autoComplete="off"
                     />
                   </div>
@@ -439,7 +439,7 @@ export default function OnboardingPage() {
                     <button
                       onClick={testLine}
                       disabled={lineTesting}
-                      className="px-4 py-2 bg-green-800 hover:bg-green-700 disabled:bg-gray-800 rounded-lg text-xs font-medium transition"
+                      className="px-4 py-2 bg-green-800 hover:bg-green-700 disabled:opacity-50 rounded-lg text-xs font-medium transition"
                     >
                       {lineTesting ? "กำลังทดสอบ..." : "ทดสอบ LINE OA"}
                     </button>
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
                           {lineTest.pictureUrl && <img src={lineTest.pictureUrl} alt="bot" className="w-8 h-8 rounded-full" />}
                           <div>
                             <p className="text-green-400 font-medium">✅ {lineTest.botName}</p>
-                            <p className="text-gray-400">{lineTest.botId}</p>
+                            <p className="theme-text-secondary">{lineTest.botId}</p>
                           </div>
                         </div>
                       ) : (
@@ -462,45 +462,45 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Facebook / Instagram */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
+                <div className="theme-bg-secondary border theme-border rounded-2xl p-5 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-blue-900/40 rounded-xl flex items-center justify-center text-lg">📘</div>
                     <div>
                       <p className="font-semibold text-sm">Facebook / Instagram</p>
-                      <p className="text-xs text-gray-500">Meta Business Suite</p>
+                      <p className="text-xs theme-text-muted">Meta Business Suite</p>
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Page Access Token</label>
+                    <label className="text-xs theme-text-muted mb-1 block">Page Access Token</label>
                     <input
                       type="password"
                       value={fbToken}
                       onChange={(e) => setFbToken(e.target.value)}
                       placeholder="EAAxxxxxxxx..."
-                      className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition font-mono"
+                      className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition font-mono"
                       autoComplete="off"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">App Secret</label>
+                      <label className="text-xs theme-text-muted mb-1 block">App Secret</label>
                       <input
                         type="password"
                         value={fbSecret}
                         onChange={(e) => setFbSecret(e.target.value)}
                         placeholder="App Secret"
-                        className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50 transition font-mono"
+                        className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-blue-500/50 transition font-mono"
                         autoComplete="off"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Verify Token</label>
+                      <label className="text-xs theme-text-muted mb-1 block">Verify Token</label>
                       <input
                         type="text"
                         value={fbVerify}
                         onChange={(e) => setFbVerify(e.target.value)}
                         placeholder="ตั้งเองได้เลย"
-                        className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50 transition"
+                        className="w-full px-4 py-2.5 theme-input border rounded-xl text-sm focus:outline-none focus:border-blue-500/50 transition"
                         autoComplete="off"
                       />
                     </div>
@@ -511,7 +511,7 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(3)}
-                  className="px-5 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm font-medium transition"
+                  className="px-5 py-3 theme-bg-card hover:theme-bg-hover rounded-xl text-sm font-medium transition"
                 >
                   ← ย้อนกลับ
                 </button>
@@ -525,7 +525,7 @@ export default function OnboardingPage() {
               </div>
               <button
                 onClick={() => saveAndNext(5)}
-                className="w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition"
+                className="w-full py-2 text-xs theme-text-muted hover:theme-text-secondary transition"
               >
                 ข้ามขั้นตอนนี้ก่อน →
               </button>
@@ -540,11 +540,11 @@ export default function OnboardingPage() {
                   🎉
                 </div>
                 <h2 className="text-3xl font-bold">เสร็จแล้ว!</h2>
-                <p className="text-gray-400 mt-2">ระบบพร้อมใช้งานแล้ว</p>
+                <p className="theme-text-secondary mt-2">ระบบพร้อมใช้งานแล้ว</p>
               </div>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left space-y-3">
-                <p className="text-sm font-semibold text-white mb-3">สรุปการตั้งค่า</p>
+              <div className="theme-bg-secondary border theme-border rounded-2xl p-6 text-left space-y-3">
+                <p className="text-sm font-semibold theme-text mb-3">สรุปการตั้งค่า</p>
                 {[
                   { icon: "🍃", label: "MongoDB Atlas", status: mongoUri ? "✅ เชื่อมแล้ว" : "⚠️ ยังไม่ได้ตั้งค่า", ok: !!mongoUri },
                   { icon: "🤖", label: "OpenRouter API Key", status: openrouterKey ? "✅ ตั้งค่าแล้ว" : "⚠️ ยังไม่ได้ตั้งค่า", ok: !!openrouterKey },
@@ -554,9 +554,9 @@ export default function OnboardingPage() {
                   <div key={label} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span>{icon}</span>
-                      <span className="text-sm text-gray-300">{label}</span>
+                      <span className="text-sm theme-text-secondary">{label}</span>
                     </div>
-                    <span className={`text-xs font-medium ${ok ? "text-green-400" : "text-gray-500"}`}>{status}</span>
+                    <span className={`text-xs font-medium ${ok ? "text-green-400" : "theme-text-muted"}`}>{status}</span>
                   </div>
                 ))}
               </div>
