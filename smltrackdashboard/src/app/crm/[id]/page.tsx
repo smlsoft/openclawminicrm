@@ -4,6 +4,12 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface PlatformIds {
+  line?: string;
+  facebook?: string;
+  instagram?: string;
+}
+
 interface Customer {
   _id: string;
   name: string;
@@ -14,6 +20,9 @@ interface Customer {
   phone?: string;
   email?: string;
   lineId?: string;
+  facebookId?: string;
+  instagramId?: string;
+  platformIds?: PlatformIds;
   address?: string;
   notes?: string;
   avatarUrl?: string;
@@ -73,6 +82,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [lineId, setLineId] = useState("");
+  const [facebookId, setFacebookId] = useState("");
+  const [instagramId, setInstagramId] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -89,6 +100,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [taskNotes, setTaskNotes] = useState("");
   const [taskSaving, setTaskSaving] = useState(false);
   const [taskSaved, setTaskSaved] = useState(false);
+  // Merge
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [mergeSearch, setMergeSearch] = useState("");
+  const [mergeResults, setMergeResults] = useState<Customer[]>([]);
+  const [merging, setMerging] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<Customer | null>(null);
 
   useEffect(() => {
     fetch(`/dashboard/api/customers/${id}`)
@@ -102,7 +119,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           setPosition(d.position || "");
           setPhone(d.phone || "");
           setEmail(d.email || "");
-          setLineId(d.lineId || "");
+          setLineId(d.lineId || d.platformIds?.line || "");
+          setFacebookId(d.facebookId || d.platformIds?.facebook || "");
+          setInstagramId(d.instagramId || d.platformIds?.instagram || "");
           setAddress(d.address || "");
           setNotes(d.notes || "");
           setAvatarUrl(d.avatarUrl || "");
@@ -124,7 +143,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         firstName, lastName, company, position,
-        phone, email, lineId, address, notes, avatarUrl,
+        phone, email, lineId, facebookId, instagramId, address, notes, avatarUrl,
         customTags: customTags.split(",").map((t) => t.trim()).filter(Boolean),
         dealValue: dealValue !== "" ? parseFloat(dealValue) : undefined,
         expectedCloseDate: expectedCloseDate || undefined,
@@ -158,6 +177,33 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     setTaskSaved(true);
     setTaskTitle(""); setTaskDueDate(""); setTaskPriority("medium"); setTaskNotes("");
     setTimeout(() => { setTaskSaved(false); setShowTaskModal(false); }, 1200);
+  };
+
+  // Merge search
+  const handleMergeSearch = async (q: string) => {
+    setMergeSearch(q);
+    if (q.length < 2) { setMergeResults([]); return; }
+    try {
+      const r = await fetch(`/dashboard/api/customers?q=${encodeURIComponent(q)}`);
+      const data = await r.json();
+      // ไม่แสดงตัวเอง
+      setMergeResults((data || []).filter((c: Customer) => c._id !== id).slice(0, 5));
+    } catch { setMergeResults([]); }
+  };
+
+  const handleMerge = async (targetId: string) => {
+    if (!confirm("รวมลูกค้า 2 คนนี้เป็นคนเดียวกัน?\nข้อมูลจะรวมมาที่ลูกค้าปัจจุบัน และลบอีกรายออก")) return;
+    setMerging(true);
+    try {
+      await fetch("/dashboard/api/customers/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ primaryId: id, secondaryId: targetId }),
+      });
+      // reload
+      window.location.reload();
+    } catch {}
+    setMerging(false);
   };
 
   if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">Loading...</div></div>;
@@ -333,11 +379,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text" style={{ background: "var(--bg-primary)" }} />
             </div>
             <div>
-              <label className="block text-[11px] theme-text-muted mb-1">LINE ID</label>
-              <input type="text" value={lineId} onChange={(e) => setLineId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text" style={{ background: "var(--bg-primary)" }} />
-            </div>
-            <div>
               <label className="block text-[11px] theme-text-muted mb-1">รูปภาพ (URL)</label>
               <input type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)}
                 placeholder="https://..."
@@ -363,6 +404,56 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
               placeholder="บันทึกเพิ่มเติม..."
               className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text resize-none" style={{ background: "var(--bg-primary)" }} />
+          </div>
+
+          {/* Channel IDs Section */}
+          <div className="mt-6 pt-4 border-t theme-border">
+            <h3 className="text-xs font-bold theme-text-muted mb-3 uppercase tracking-wide">🔗 ช่องทาง (Platform IDs)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] theme-text-muted mb-1">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> LINE</span>
+                </label>
+                <input type="text" value={lineId} onChange={(e) => setLineId(e.target.value)}
+                  placeholder="Uxxxxxxxxxx"
+                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+              </div>
+              <div>
+                <label className="block text-[11px] theme-text-muted mb-1">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Facebook</span>
+                </label>
+                <input type="text" value={facebookId} onChange={(e) => setFacebookId(e.target.value)}
+                  placeholder="fb_xxxxxxxxxx"
+                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+              </div>
+              <div>
+                <label className="block text-[11px] theme-text-muted mb-1">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 inline-block" /> Instagram</span>
+                </label>
+                <input type="text" value={instagramId} onChange={(e) => setInstagramId(e.target.value)}
+                  placeholder="ig_xxxxxxxxxx"
+                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+              </div>
+            </div>
+            {(customer.rooms || []).length > 0 && (
+              <div className="mt-3">
+                <p className="text-[10px] theme-text-muted mb-1">ห้องสนทนาที่เชื่อมอยู่ ({customer.rooms.length})</p>
+                <div className="flex flex-wrap gap-1">
+                  {customer.rooms.map((r) => {
+                    const pl = r.startsWith("fb_") ? "FB" : r.startsWith("ig_") ? "IG" : "LINE";
+                    const plColor = pl === "FB" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : pl === "IG" ? "bg-pink-500/10 text-pink-400 border-pink-500/20" : "bg-green-500/10 text-green-400 border-green-500/20";
+                    return <span key={r} className={`text-[10px] px-2 py-0.5 rounded-lg border font-mono ${plColor}`}>{pl}: {r.substring(0, 16)}{r.length > 16 ? "..." : ""}</span>;
+                  })}
+                </div>
+              </div>
+            )}
+            <div className="mt-3">
+              <button onClick={() => setShowMergeModal(true)}
+                className="text-xs px-3 py-1.5 rounded-lg bg-amber-900/30 text-amber-400 border border-amber-700/30 hover:bg-amber-800/40 transition">
+                🔀 รวมลูกค้า (Merge)
+              </button>
+              <p className="text-[10px] theme-text-muted mt-1">รวมลูกค้าจากช่องทางอื่นที่เป็นคนเดียวกัน</p>
+            </div>
           </div>
 
           {/* Deal Value Section */}
@@ -414,6 +505,65 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </main>
+
+      {/* Merge Modal */}
+      {showMergeModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl border theme-border p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-lg">🔀 รวมลูกค้า</h2>
+              <button onClick={() => setShowMergeModal(false)} className="theme-text-muted hover:theme-text text-xl">&times;</button>
+            </div>
+            <p className="text-xs theme-text-secondary">
+              ค้นหาลูกค้าอีกคนที่เป็นคนเดียวกัน แล้วรวมข้อมูลมาที่ <strong>{firstName || customer.name}</strong>
+            </p>
+            <input
+              type="text"
+              value={mergeSearch}
+              onChange={(e) => handleMergeSearch(e.target.value)}
+              placeholder="พิมพ์ชื่อลูกค้า..."
+              className="w-full px-3 py-2 rounded-lg theme-input border text-sm"
+              autoFocus
+            />
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {mergeResults.map((c) => (
+                <div key={c._id} className="flex items-center justify-between p-2 rounded-lg hover:theme-bg-hover transition">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {c.avatarUrl ? (
+                      <img src={c.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        {(c.firstName || c.name).substring(0, 2)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{c.firstName ? `${c.firstName} ${c.lastName || ""}`.trim() : c.name}</p>
+                      <div className="flex items-center gap-1">
+                        {(c.rooms || []).map((r) => {
+                          const pl = r.startsWith("fb_") ? "FB" : r.startsWith("ig_") ? "IG" : "LINE";
+                          const color = pl === "FB" ? "bg-blue-500" : pl === "IG" ? "bg-pink-500" : "bg-green-500";
+                          return <span key={r} className={`w-2 h-2 rounded-full ${color}`} title={`${pl}: ${r}`} />;
+                        })}
+                        <span className="text-[10px] theme-text-muted ml-1">{c.totalMessages} msg</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleMerge(c._id)}
+                    disabled={merging}
+                    className="shrink-0 px-3 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition disabled:opacity-50"
+                  >
+                    {merging ? "..." : "รวม"}
+                  </button>
+                </div>
+              ))}
+              {mergeSearch.length >= 2 && mergeResults.length === 0 && (
+                <p className="text-center text-xs theme-text-muted py-4">ไม่พบลูกค้า</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

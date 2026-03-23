@@ -1452,6 +1452,16 @@ pipelineStage: new=ใหม่, interested=สนใจ, quoting=เสนอ�
         } catch {}
       }
 
+      // platformIds — เก็บ ID ของแต่ละ platform แยก
+      const platformIdUpdate = {};
+      if (platform === "line" && lineUserId) {
+        platformIdUpdate["platformIds.line"] = lineUserId;
+      } else if (platform === "facebook" && userId) {
+        platformIdUpdate["platformIds.facebook"] = userId;
+      } else if (platform === "instagram" && userId) {
+        platformIdUpdate["platformIds.instagram"] = userId;
+      }
+
       await database.collection("customers").updateOne(
         { name: userName },
         {
@@ -1461,11 +1471,12 @@ pipelineStage: new=ใหม่, interested=สนใจ, quoting=เสนอ�
             lastPurchaseIntent: skill.purchaseIntent,
             pipelineStage,
             ...lineProfile,
+            ...platformIdUpdate,
             updatedAt: new Date(),
           },
           $addToSet: { tags: { $each: tags }, rooms: sourceId },
           $inc: { totalMessages: 1 },
-          $setOnInsert: { createdAt: new Date(), firstName: "", lastName: "", company: "", position: "", phone: "", email: "", address: "", notes: "", customTags: [] },
+          $setOnInsert: { createdAt: new Date(), firstName: "", lastName: "", company: "", position: "", phone: "", email: "", address: "", notes: "", customTags: [], platformIds: {} },
         },
         { upsert: true }
       );

@@ -21,7 +21,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     items: [
       { href: "/inbox", icon: "💬", label: "Inbox" },
-      { href: "/dashboard", icon: "📊", label: "Dashboard" },
+      { href: "/", icon: "📊", label: "Dashboard" },
       { href: "/crm", icon: "👥", label: "CRM" },
       { href: "/kpi", icon: "📈", label: "KPI" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
@@ -53,7 +53,7 @@ function NavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => voi
   const pathname = usePathname();
   // Match exact for /dashboard and /inbox, prefix for others
   const isActive =
-    href === "/dashboard"
+    href === "/"
       ? pathname === "/dashboard" || pathname === "/"
       : href === "/inbox"
       ? pathname === "/inbox" || pathname.startsWith("/inbox/")

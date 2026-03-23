@@ -5,7 +5,7 @@
   },
   "agents": {
     "defaults": {
-      "model": "openrouter/qwen/qwen3-235b-a22b",
+      "model": "findfreeai/auto",
       "compaction": {
         "mode": "safeguard"
       }
@@ -14,7 +14,7 @@
   "tools": {
     "web": {
       "fetch": {
-        "enabled": true
+        "enabled": false
       }
     },
     "exec": {
@@ -51,8 +51,28 @@
       ]
     },
     "auth": {
-      "mode": "token",
-      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+      "mode": "password",
+      "password": "1234"
+    }
+  },
+  "models": {
+    "providers": {
+      "findfreeai": {
+        "baseUrl": "http://host.docker.internal:8900/v1",
+        "apiKey": "${FINDFREEAI_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "auto",
+            "name": "FindFreeAI Auto",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      }
     }
   },
   "skills": {

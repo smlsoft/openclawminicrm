@@ -31,7 +31,7 @@ export async function PUT(
     // อนุญาตให้แก้ไขเฉพาะ fields ที่กำหนด
     const allowed = [
       "firstName", "lastName", "company", "position", "phone", "email",
-      "lineId", "address", "notes", "customTags", "avatarUrl",
+      "lineId", "facebookId", "instagramId", "address", "notes", "customTags", "avatarUrl",
       "dealValue", "expectedCloseDate", "winLossReason",
     ];
     const updates: any = { updatedAt: new Date() };

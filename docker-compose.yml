@@ -21,6 +21,7 @@ services:
       - SAMBANOVA_API_KEY=${SAMBANOVA_API_KEY:-}
       - CEREBRAS_API_KEY=${CEREBRAS_API_KEY:-}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - FINDFREEAI_API_KEY=any
     command: ["node", "openclaw.mjs", "gateway", "--bind", "lan", "--port", "18789"]
     depends_on:
       - agent
