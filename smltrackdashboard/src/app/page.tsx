@@ -275,6 +275,7 @@ export default function Home() {
               />
               <span className="text-xs theme-text-secondary">Auto Sort</span>
             </label>
+            <Link href="/chat" className="px-3 py-1.5 bg-indigo-900/50 hover:bg-indigo-800/50 border border-indigo-700/50 rounded-lg text-xs text-indigo-300 hover:text-white transition">🗨️ แชท</Link>
             <Link href="/crm" className="px-3 py-1.5 bg-cyan-900/50 hover:bg-cyan-800/50 border border-cyan-700/50 rounded-lg text-xs text-cyan-300 hover:text-white transition">👥 CRM</Link>
             <Link href="/tasks" className="px-3 py-1.5 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-700/50 rounded-lg text-xs text-blue-300 hover:text-white transition">📋 งาน</Link>
             <Link href="/kpi" className="px-3 py-1.5 bg-purple-900/50 hover:bg-purple-800/50 border border-purple-700/50 rounded-lg text-xs text-purple-300 hover:text-white transition">📊 KPI</Link>

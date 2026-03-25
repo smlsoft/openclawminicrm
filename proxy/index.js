@@ -6,7 +6,136 @@
 const express = require("express");
 const http = require("http");
 const { MongoClient } = require("mongodb");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const app = express();
+
+// === Reply Token Cache (LINE Reply API ฟรี → ใช้ก่อน Push) ===
+// replyToken มีอายุ ~30 วินาที เก็บไว้ใช้ตอน admin ตอบ
+const replyTokenCache = new Map(); // sourceId → { token, expiresAt }
+const REPLY_TOKEN_TTL_MS = 25000; // 25 วินาที (LINE ให้ 30s แต่เผื่อ latency)
+
+function cacheReplyToken(sourceId, replyToken) {
+  if (!replyToken || !sourceId) return;
+  replyTokenCache.set(sourceId, {
+    token: replyToken,
+    expiresAt: Date.now() + REPLY_TOKEN_TTL_MS,
+  });
+}
+
+function getReplyToken(sourceId) {
+  const entry = replyTokenCache.get(sourceId);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    replyTokenCache.delete(sourceId);
+    return null;
+  }
+  replyTokenCache.delete(sourceId); // ใช้ได้ครั้งเดียว
+  return entry.token;
+}
+
+// ลบ token หมดอายุทุก 60 วินาที
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of replyTokenCache) {
+    if (now > v.expiresAt) replyTokenCache.delete(k);
+  }
+}, 60000);
+
+// === 5-Minute Auto-Reply Timer (เฉพาะ 1-on-1 LINE OA) ===
+// ถ้า admin ไม่ตอบภายใน 5 นาที → AI ตอบแทน (บอกว่าเป็น AI)
+const pendingAutoReply = new Map(); // sourceId → { timer, text, userName }
+const AUTO_REPLY_DELAY_MS = 5 * 60 * 1000; // 5 นาที
+
+function scheduleAutoReply(sourceId, userName, messageText, sourceType) {
+  // ตอบเฉพาะ 1-on-1 (sourceType === "user") ไม่ตอบในกลุ่ม
+  if (sourceType !== "user") return;
+  // ลบ timer เก่าถ้ามี (ลูกค้าส่งข้อความใหม่ → reset timer)
+  cancelAutoReply(sourceId);
+  const timer = setTimeout(async () => {
+    pendingAutoReply.delete(sourceId);
+    try {
+      await doAutoReply(sourceId, userName, messageText);
+    } catch (e) {
+      console.error("[Auto-Reply] Error:", e.message);
+    }
+  }, AUTO_REPLY_DELAY_MS);
+  pendingAutoReply.set(sourceId, { timer, text: messageText, userName });
+}
+
+function cancelAutoReply(sourceId) {
+  const pending = pendingAutoReply.get(sourceId);
+  if (pending) {
+    clearTimeout(pending.timer);
+    pendingAutoReply.delete(sourceId);
+  }
+}
+
+async function doAutoReply(sourceId, userName, customerMessage) {
+  // ตรวจสอบว่า admin ตอบไปแล้วหรือยัง (เช็คจาก DB)
+  const db = getDB();
+  const lastMsg = await db.collection("messages")
+    .findOne({ sourceId }, { sort: { createdAt: -1 } });
+  // ถ้าข้อความล่าสุดเป็นของ staff/assistant → admin ตอบแล้ว ไม่ต้องตอบ
+  if (lastMsg && lastMsg.role === "assistant") {
+    console.log(`[Auto-Reply] Admin ตอบแล้ว → skip ${sourceId.substring(0, 8)}`);
+    return;
+  }
+
+  console.log(`[Auto-Reply] 5 นาทีไม่มีคนตอบ → AI ตอบแทน ${sourceId.substring(0, 8)}`);
+
+  // เรียก AI
+  const messages = [
+    {
+      role: "system",
+      content: `คุณเป็นผู้ช่วยอัตโนมัติของร้าน ตอบสั้นๆ สุภาพ เป็นภาษาไทย
+ตอนนี้ทีมงานไม่ว่างชั่วคราว คุณช่วยตอบไปก่อน
+ห้ามสัญญาเรื่องราคา/โปรโมชั่น ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
+ตอบไม่เกิน 2 ประโยค`
+    },
+    { role: "user", content: customerMessage },
+  ];
+
+  const reply = await callLightAI(messages, { maxTokens: 200, timeout: 15000 }).catch(() => null);
+  if (!reply) return;
+
+  // เพิ่มข้อความบอกว่าเป็น AI
+  const fullReply = `🤖 ตอบอัตโนมัติ:\n${reply}\n\n💬 ทีมงานจะตอบกลับเร็วๆ นี้ค่ะ`;
+
+  // ส่ง Push (replyToken หมดอายุไปแล้วแน่นอน หลัง 5 นาที)
+  const lineMessages = [{ type: "text", text: fullReply }];
+  const sent = await sendLinePush(sourceId, lineMessages);
+
+  if (sent) {
+    await saveMsg(sourceId, {
+      role: "assistant",
+      userName: "🤖 AI อัตโนมัติ",
+      content: fullReply,
+      messageType: "text",
+      isAutoReply: true,
+    }, "line");
+    console.log(`[Auto-Reply] ✅ AI ตอบแทนสำเร็จ → ${sourceId.substring(0, 8)}`);
+  }
+}
+
+// === Image Upload Directory ===
+const UPLOAD_DIR = path.join(__dirname, "uploads");
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: UPLOAD_DIR,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname) || ".jpg";
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (req, file, cb) => {
+    const allowed = /^image\/(jpeg|jpg|png|gif|webp)$/;
+    cb(null, allowed.test(file.mimetype));
+  },
+});
 
 // === Reverse Proxy: /dashboard* → dashboard container ===
 const DASHBOARD_HOST = process.env.DASHBOARD_HOST || "dashboard";
@@ -1851,6 +1980,17 @@ app.post("/webhook", express.raw({ type: "*/*" }), async (req, res) => {
     }
     getBotConfig(sourceId, { type: source.type, groupName: contactName }).catch(() => {});
 
+    // === Cache replyToken สำหรับ admin ตอบ (Reply API ฟรี!) ===
+    if (event.replyToken) {
+      cacheReplyToken(sourceId, event.replyToken);
+    }
+
+    // === 5-นาที Auto-Reply Timer (เฉพาะ 1-on-1 LINE OA) ===
+    if (source.type === "user" && msg.text) {
+      const uName = await getUserName(source).catch(() => "ลูกค้า");
+      scheduleAutoReply(sourceId, uName, msg.text, source.type);
+    }
+
     // === เก็บข้อความ + น้องกุ้งตอบแทน (ถ้าเปิด) ===
     try {
       await processEvent(event);
@@ -2617,23 +2757,107 @@ app.get("/api/costs", async (req, res) => {
   }
 });
 
-// === Inbox: Send Message (LINE Push / Meta) ===
+// === Inbox: Send Message (Reply-first → Push-fallback) ===
 
-// ส่งข้อความหา LINE user/group แบบ proactive (push message)
-async function sendLinePush(to, text, imageUrl) {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  if (!token) {
-    console.warn("[Inbox] LINE_CHANNEL_ACCESS_TOKEN not set — cannot push");
-    return false;
-  }
+// สร้าง LINE message objects จาก payload
+// รองรับ: text, image, video, audio, location, sticker, template, flex, quickReply
+function buildLineMessages({ text, imageUrl, videoUrl, audioUrl, audioDuration, location, sticker, template, flex, quickReply }) {
   const messages = [];
-  if (text) messages.push({ type: "text", text });
+  if (text) {
+    const textMsg = { type: "text", text };
+    // quickReply แนบกับข้อความสุดท้าย (LINE API rule)
+    messages.push(textMsg);
+  }
   if (imageUrl) {
     messages.push({
       type: "image",
       originalContentUrl: imageUrl,
       previewImageUrl: imageUrl,
     });
+  }
+  if (videoUrl) {
+    messages.push({
+      type: "video",
+      originalContentUrl: videoUrl,
+      previewImageUrl: imageUrl || videoUrl, // ใช้ imageUrl เป็น thumbnail ถ้ามี
+    });
+  }
+  if (audioUrl) {
+    messages.push({
+      type: "audio",
+      originalContentUrl: audioUrl,
+      duration: audioDuration || 60000, // default 60 วินาที
+    });
+  }
+  if (location && location.latitude && location.longitude) {
+    messages.push({
+      type: "location",
+      title: location.title || "ตำแหน่งที่ตั้ง",
+      address: location.address || "",
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+  }
+  if (sticker && sticker.packageId && sticker.stickerId) {
+    messages.push({
+      type: "sticker",
+      packageId: String(sticker.packageId),
+      stickerId: String(sticker.stickerId),
+    });
+  }
+  if (template) {
+    messages.push({
+      type: "template",
+      altText: template.altText || "ข้อความ template",
+      template: template.content || template,
+    });
+  }
+  if (flex) {
+    messages.push({
+      type: "flex",
+      altText: flex.altText || "ข้อความ Flex",
+      contents: flex.contents || flex,
+    });
+  }
+  // แนบ quickReply กับข้อความสุดท้าย
+  if (quickReply && quickReply.items && messages.length > 0) {
+    messages[messages.length - 1].quickReply = { items: quickReply.items };
+  }
+  return messages;
+}
+
+// ส่งด้วย Reply API (ฟรี!) — ใช้ replyToken ที่ cache ไว้
+async function sendLineReply(replyToken, messages) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token || !replyToken) return false;
+  try {
+    const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ replyToken, messages }),
+    });
+    if (res.ok) {
+      console.log("[Inbox] ✅ Reply API สำเร็จ (ฟรี!)");
+      return true;
+    }
+    const errText = await res.text().catch(() => "");
+    console.log(`[Inbox] Reply API ล้มเหลว (${res.status}) — fallback to Push`);
+    return false;
+  } catch (e) {
+    console.log("[Inbox] Reply API error:", e.message, "— fallback to Push");
+    return false;
+  }
+}
+
+// ส่งด้วย Push API (เสียเงิน) — fallback
+async function sendLinePush(to, messages) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    console.warn("[Inbox] LINE_CHANNEL_ACCESS_TOKEN not set — cannot push");
+    return false;
   }
   if (messages.length === 0) return false;
   try {
@@ -2650,6 +2874,7 @@ async function sendLinePush(to, text, imageUrl) {
       console.error("[Inbox] LINE push error:", res.status, errText);
       return false;
     }
+    console.log("[Inbox] ✅ Push API สำเร็จ");
     return true;
   } catch (e) {
     console.error("[Inbox] sendLinePush error:", e.message);
@@ -2657,27 +2882,58 @@ async function sendLinePush(to, text, imageUrl) {
   }
 }
 
+// Strategy: Reply-first → Push-fallback (ประหยัดค่าใช้จ่าย)
+async function sendLineMessage(sourceId, payload) {
+  const messages = buildLineMessages(payload);
+  if (messages.length === 0) return { sent: false, method: "none" };
+
+  // 1) ลอง Reply API ก่อน (ฟรี!)
+  const cachedToken = getReplyToken(sourceId);
+  if (cachedToken) {
+    const replySent = await sendLineReply(cachedToken, messages);
+    if (replySent) return { sent: true, method: "reply" };
+  }
+
+  // 2) Fallback → Push API
+  const pushSent = await sendLinePush(sourceId, messages);
+  return { sent: pushSent, method: pushSent ? "push" : "failed" };
+}
+
 // POST /api/inbox/send — ส่งข้อความจาก Dashboard ไปหาลูกค้า
+// รองรับ: text, imageUrl, sticker { packageId, stickerId }
 app.post("/api/inbox/send", express.json(), async (req, res) => {
-  const { sourceId, platform, text, imageUrl, staffName } = req.body;
+  const {
+    sourceId, platform, text, imageUrl, videoUrl, audioUrl, audioDuration,
+    location, sticker, template, flex, quickReply, staffName
+  } = req.body;
 
   if (!sourceId || !platform) {
     return res.status(400).json({ error: "sourceId and platform required" });
   }
-  if (!text && !imageUrl) {
-    return res.status(400).json({ error: "text or imageUrl required" });
+  const hasContent = text || imageUrl || videoUrl || audioUrl || location || sticker || template || flex;
+  if (!hasContent) {
+    return res.status(400).json({ error: "ต้องมีเนื้อหาอย่างน้อย 1 อย่าง" });
   }
 
   const senderName = staffName || "พนักงาน";
   let sent = false;
+  let method = "push";
+
+  // Admin ตอบแล้ว → ยกเลิก auto-reply timer
+  cancelAutoReply(sourceId);
 
   try {
     if (platform === "line") {
-      sent = await sendLinePush(sourceId, text, imageUrl);
+      const payload = { text, imageUrl, videoUrl, audioUrl, audioDuration, location, sticker, template, flex, quickReply };
+      const result = await sendLineMessage(sourceId, payload);
+      sent = result.sent;
+      method = result.method;
     } else if (platform === "facebook" || platform === "instagram") {
-      // strip prefix for Meta recipient id
       const recipientId = sourceId.replace(/^(fb_|ig_)/, "");
-      sent = await sendMetaMessage(recipientId, text);
+      if (text) {
+        sent = await sendMetaMessage(recipientId, text);
+        method = "push";
+      }
     } else {
       return res.status(400).json({ error: `platform '${platform}' not supported` });
     }
@@ -2686,23 +2942,161 @@ app.post("/api/inbox/send", express.json(), async (req, res) => {
       return res.status(502).json({ error: "ส่งข้อความไม่สำเร็จ — ตรวจสอบ token และการตั้งค่า" });
     }
 
-    // บันทึกข้อความที่พนักงานส่งลง MongoDB
+    // กำหนด messageType + content สำหรับเก็บ
+    let messageType = "text";
+    let content = text || "";
+    if (sticker) { messageType = "sticker"; content = content || `[sticker:${sticker.packageId}/${sticker.stickerId}]`; }
+    else if (videoUrl) { messageType = "video"; content = content || "[วิดีโอ]"; }
+    else if (audioUrl) { messageType = "audio"; content = content || "[เสียง]"; }
+    else if (location) { messageType = "location"; content = content || `[ตำแหน่ง: ${location.title || ""}]`; }
+    else if (imageUrl && !text) { messageType = "image"; }
+    else if (template) { messageType = "template"; content = content || "[ข้อความ template]"; }
+    else if (flex) { messageType = "flex"; content = content || "[Flex Message]"; }
+
+    // บันทึกข้อความลง MongoDB
     await saveMsg(
       sourceId,
       {
         role: "assistant",
         userName: senderName,
-        content: text || "",
-        messageType: imageUrl ? "image" : "text",
+        content,
+        messageType,
         imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        audioUrl: audioUrl || null,
+        location: location || null,
+        sticker: sticker || null,
+        sendMethod: method,
       },
       platform
     );
 
-    console.log(`[Inbox] ✅ ส่งสำเร็จ → ${platform}:${sourceId} โดย ${senderName}`);
-    res.json({ ok: true });
+    console.log(`[Inbox] ✅ ส่ง${method === "reply" ? "(ฟรี)" : "(push)"} → ${platform}:${sourceId.substring(0, 8)} โดย ${senderName}`);
+    res.json({ ok: true, method });
   } catch (e) {
     console.error("[Inbox] /api/inbox/send error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/inbox/upload — อัพโหลดรูปภาพสำหรับส่ง
+app.post("/api/inbox/upload", upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "ไม่มีไฟล์รูปภาพ" });
+  }
+  // สร้าง public URL (ผ่าน nginx/proxy)
+  const baseUrl = process.env.BASE_URL || `https://crm.satistang.com`;
+  const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+  res.json({ ok: true, imageUrl, filename: req.file.filename });
+});
+
+// Serve uploaded images
+app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "7d" }));
+
+// === AI Suggest Reply — แนะนำคำตอบ + เหตุผลให้ Admin ===
+app.post("/api/inbox/suggest", express.json(), async (req, res) => {
+  const { sourceId } = req.body;
+  if (!sourceId) return res.status(400).json({ error: "sourceId required" });
+
+  try {
+    const db = getDB();
+
+    // ดึง 15 ข้อความล่าสุด
+    const recentMsgs = await db.collection("messages")
+      .find({ sourceId })
+      .sort({ createdAt: -1 })
+      .limit(15)
+      .project({ role: 1, userName: 1, content: 1, messageType: 1, createdAt: 1 })
+      .toArray();
+
+    if (recentMsgs.length === 0) {
+      return res.json({ suggestions: [] });
+    }
+
+    recentMsgs.reverse(); // เรียงจากเก่า→ใหม่
+
+    // ดึงข้อมูล customer (ถ้ามี)
+    const customer = await db.collection("customers")
+      .findOne({ rooms: sourceId })
+      .catch(() => null);
+
+    // ดึง sentiment ล่าสุด
+    const analytics = await db.collection("chat_analytics")
+      .findOne({ sourceId })
+      .catch(() => null);
+
+    // สร้าง context
+    const chatHistory = recentMsgs.map(m =>
+      `[${m.role === "user" ? m.userName || "ลูกค้า" : "พนักงาน"}]: ${m.content || `[${m.messageType}]`}`
+    ).join("\n");
+
+    const customerInfo = customer
+      ? `\nข้อมูลลูกค้า: ${customer.name || "ไม่ทราบชื่อ"}${customer.pipelineStage ? `, สถานะ: ${customer.pipelineStage}` : ""}${customer.tags?.length ? `, แท็ก: ${customer.tags.join(",")}` : ""}`
+      : "";
+
+    const sentimentInfo = analytics
+      ? `\nSentiment: ${analytics.customerSentiment?.level || "ไม่ทราบ"}, Purchase Intent: ${analytics.purchaseIntent?.level || "ไม่ทราบ"}`
+      : "";
+
+    const aiMessages = [
+      {
+        role: "system",
+        content: `คุณเป็นที่ปรึกษาการขายและบริการลูกค้า วิเคราะห์บทสนทนาแล้วแนะนำคำตอบให้พนักงาน
+
+ตอบเป็น JSON format:
+{
+  "suggestions": [
+    {
+      "text": "ข้อความที่แนะนำ (ภาษาไทย สุภาพ เป็นธรรมชาติ)",
+      "reason": "เหตุผลสั้นๆ ว่าทำไมควรตอบแบบนี้",
+      "tone": "friendly|professional|urgent|empathetic",
+      "priority": "high|medium|low"
+    }
+  ],
+  "analysis": "สรุปสถานการณ์ 1 ประโยค"
+}
+
+กฏ:
+- แนะนำ 2-3 คำตอบ เรียงตามลำดับเหมาะสม
+- ข้อความต้องกระชับ ไม่เกิน 3 ประโยค
+- วิเคราะห์อารมณ์ลูกค้า + ความต้องการ
+- ถ้าลูกค้าถามราคา → แนะนำถามรายละเอียดก่อน แล้วค่อยเสนอ
+- ถ้าลูกค้าร้องเรียน → แนะนำเห็นใจก่อน แล้วค่อยแก้ปัญหา
+- ถ้าลูกค้าสนใจซื้อ → แนะนำปิดการขาย
+- ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น`
+      },
+      {
+        role: "user",
+        content: `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}\n\nแนะนำคำตอบให้พนักงาน:`
+      }
+    ];
+
+    const reply = await callLightAI(aiMessages, { maxTokens: 500, timeout: 20000 }).catch(() => null);
+
+    if (!reply) {
+      return res.json({ suggestions: [], analysis: "ไม่สามารถวิเคราะห์ได้" });
+    }
+
+    // Parse JSON จาก AI response
+    try {
+      // ลอง parse ทั้งก้อนก่อน
+      let parsed = null;
+      const jsonMatch = reply.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      }
+      if (parsed && parsed.suggestions) {
+        return res.json(parsed);
+      }
+    } catch {}
+
+    // ถ้า parse ไม่ได้ → ส่ง raw text เป็น suggestion เดียว
+    res.json({
+      suggestions: [{ text: reply.trim(), reason: "AI แนะนำ", tone: "friendly", priority: "medium" }],
+      analysis: ""
+    });
+  } catch (e) {
+    console.error("[Suggest] Error:", e.message);
     res.status(500).json({ error: e.message });
   }
 });

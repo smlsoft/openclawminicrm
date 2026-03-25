@@ -20,6 +20,7 @@ interface NavGroup {
 const NAV_GROUPS: NavGroup[] = [
   {
     items: [
+      { href: "/chat", icon: "🗨️", label: "แชท" },
       { href: "/inbox", icon: "💬", label: "Inbox" },
       { href: "/", icon: "📊", label: "Dashboard" },
       { href: "/crm", icon: "👥", label: "CRM" },
@@ -57,6 +58,8 @@ function NavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => voi
       ? pathname === "/dashboard" || pathname === "/"
       : href === "/inbox"
       ? pathname === "/inbox" || pathname.startsWith("/inbox/")
+      : href === "/chat"
+      ? pathname === "/chat" || pathname.startsWith("/chat/")
       : pathname.startsWith(href);
 
   return (

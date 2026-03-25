@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDB } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 
-// Dashboard proxy: forward send request to Agent, then save to DB
+// Dashboard proxy: forward send request to Agent
+// รองรับ: text, imageUrl, videoUrl, audioUrl, location, sticker, template, flex, quickReply
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sourceId, platform, text, imageUrl, staffName } = body;
+    const { sourceId, platform } = body;
 
     if (!sourceId || !platform) {
       return NextResponse.json({ error: "sourceId and platform required" }, { status: 400 });
     }
-    if (!text && !imageUrl) {
-      return NextResponse.json({ error: "text or imageUrl required" }, { status: 400 });
-    }
 
-    // Forward to Agent (proxy) which has the actual LINE/Meta tokens
+    // Forward ทั้ง body ไปให้ Agent (proxy) ซึ่งมี LINE/Meta tokens
     const agentUrl = process.env.AGENT_URL || "http://localhost:3000";
     const agentRes = await fetch(`${agentUrl}/api/inbox/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sourceId, platform, text, imageUrl, staffName }),
+      body: JSON.stringify(body),
     });
 
     if (!agentRes.ok) {
@@ -29,7 +26,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errText }, { status: agentRes.status });
     }
 
-    return NextResponse.json({ ok: true });
+    const result = await agentRes.json().catch(() => ({ ok: true }));
+    return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
