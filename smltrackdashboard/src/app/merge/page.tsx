@@ -84,6 +84,8 @@ export default function MergePage() {
   const [resultsB, setResultsB] = useState<Customer[]>([]);
   const [selectedA, setSelectedA] = useState<Customer | null>(null);
   const [selectedB, setSelectedB] = useState<Customer | null>(null);
+  const [searchedA, setSearchedA] = useState(false);
+  const [searchedB, setSearchedB] = useState(false);
 
   useEffect(() => {
     if (authStatus === "unauthenticated") router.replace("/dashboard/login");
@@ -105,7 +107,7 @@ export default function MergePage() {
 
   // Manual search
   const searchCustomers = async (q: string, side: "A" | "B") => {
-    if (side === "A") setManualSearchA(q); else setManualSearchB(q);
+    if (side === "A") { setManualSearchA(q); setSearchedA(false); } else { setManualSearchB(q); setSearchedB(false); }
     if (q.length < 2) { side === "A" ? setResultsA([]) : setResultsB([]); return; }
     try {
       const res = await fetch(`/dashboard/api/customers?q=${encodeURIComponent(q)}`);
@@ -113,6 +115,7 @@ export default function MergePage() {
       const exclude = side === "A" ? selectedB?._id : selectedA?._id;
       const filtered = (data || []).filter((c: Customer) => c._id !== exclude).slice(0, 8);
       side === "A" ? setResultsA(filtered) : setResultsB(filtered);
+      side === "A" ? setSearchedA(true) : setSearchedB(true);
     } catch {}
   };
 
@@ -235,13 +238,18 @@ export default function MergePage() {
                     {resultsA.map(c => (
                       <button
                         key={c._id}
-                        onClick={() => { setSelectedA(c); setResultsA([]); }}
+                        onClick={() => { setSelectedA(c); setResultsA([]); setSearchedA(false); }}
                         className="w-full text-left p-2 hover:theme-bg-hover transition"
                       >
                         <CustomerCard c={c} size="small" />
                       </button>
                     ))}
                   </div>
+                )}
+                {!selectedA && searchedA && resultsA.length === 0 && manualSearchA.length >= 2 && (
+                  <p className="text-[11px] text-red-400 px-2 py-2 theme-bg-card rounded-lg border border-red-800/30">
+                    ไม่พบลูกค้าที่ชื่อ "{manualSearchA}" — ลองค้นหาด้วยชื่อ เบอร์โทร หรือ email
+                  </p>
                 )}
               </div>
 
@@ -266,13 +274,18 @@ export default function MergePage() {
                     {resultsB.map(c => (
                       <button
                         key={c._id}
-                        onClick={() => { setSelectedB(c); setResultsB([]); }}
+                        onClick={() => { setSelectedB(c); setResultsB([]); setSearchedB(false); }}
                         className="w-full text-left p-2 hover:theme-bg-hover transition"
                       >
                         <CustomerCard c={c} size="small" />
                       </button>
                     ))}
                   </div>
+                )}
+                {!selectedB && searchedB && resultsB.length === 0 && manualSearchB.length >= 2 && (
+                  <p className="text-[11px] text-red-400 px-2 py-2 theme-bg-card rounded-lg border border-red-800/30">
+                    ไม่พบลูกค้าที่ชื่อ "{manualSearchB}" — ลองค้นหาด้วยชื่อ เบอร์โทร หรือ email
+                  </p>
                 )}
               </div>
             </div>
