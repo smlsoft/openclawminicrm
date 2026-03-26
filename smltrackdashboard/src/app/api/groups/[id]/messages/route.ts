@@ -5,6 +5,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t0 = Date.now();
   try {
     const { id: sourceId } = await params;
     const db = await getDB();
@@ -24,6 +25,8 @@ export async function GET(
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray();
+
+    console.log(`[/api/groups/messages] sourceId=${sourceId.substring(0,10)}... limit=${limit} count=${messages.length} time=${Date.now() - t0}ms`);
 
     return NextResponse.json(messages.reverse().map((m) => ({
       ...m,

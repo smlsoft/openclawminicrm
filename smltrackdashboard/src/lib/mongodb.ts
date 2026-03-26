@@ -15,6 +15,25 @@ export async function getDB(): Promise<Db> {
   client = new MongoClient(uri);
   await client.connect();
   db = client.db(dbName);
+
+  // Ensure indexes (runs once on first connect — idempotent)
+  try {
+    await Promise.all([
+      db.collection("messages").createIndex({ sourceId: 1, createdAt: -1 }),
+      db.collection("messages").createIndex({ sourceId: 1 }),
+      db.collection("groups_meta").createIndex({ sourceId: 1 }),
+      db.collection("chat_analytics").createIndex({ sourceId: 1 }),
+      db.collection("customers").createIndex({ teamId: 1, updatedAt: -1 }),
+      db.collection("user_emails").createIndex({ email: 1 }, { unique: true }),
+      db.collection("user_emails").createIndex({ userId: 1 }),
+      db.collection("team_members").createIndex({ teamId: 1 }),
+      db.collection("team_members").createIndex({ userId: 1 }),
+    ]);
+    console.log("[MongoDB] Indexes ensured");
+  } catch (e) {
+    console.warn("[MongoDB] Index creation warning:", (e as Error).message);
+  }
+
   return db;
 }
 
