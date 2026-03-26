@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface Customer {
@@ -21,6 +22,7 @@ interface Customer {
   lastPurchaseIntent: { score: number; level: string; reason?: string } | null;
   dealValue?: number;
   expectedCloseDate?: string;
+  assignedTo?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -56,10 +58,12 @@ function Badge({ level, label }: { level: string; label: string }) {
 type FilterStage = string;
 
 export default function CrmPage() {
+  const { data: session } = useSession();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [stageFilter, setStageFilter] = useState<FilterStage>("all");
   const [search, setSearch] = useState("");
+  const [showMyOnly, setShowMyOnly] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -76,6 +80,11 @@ export default function CrmPage() {
   const filtered = customers.filter((c) => {
     if (stageFilter !== "all" && c.pipelineStage !== stageFilter) return false;
     if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.tags.some((t) => t.includes(search))) return false;
+    if (showMyOnly && session?.user) {
+      const myIds = [session.user.name, session.user.email].filter(Boolean).map((s) => s!.toLowerCase());
+      const assigned = (c.assignedTo || []).map((s) => s.toLowerCase());
+      if (!assigned.some((a) => myIds.includes(a))) return false;
+    }
     return true;
   });
 
@@ -158,7 +167,15 @@ export default function CrmPage() {
             value={search} onChange={(e) => setSearch(e.target.value)}
             className="px-4 py-2 rounded-lg text-sm border theme-border theme-bg-card theme-text w-64"
           />
-          <button onClick={() => { setStageFilter("all"); setSearch(""); }}
+          <button
+            onClick={() => setShowMyOnly((v) => !v)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              showMyOnly ? "bg-indigo-600 text-white" : "theme-bg-card theme-text-secondary hover:theme-bg-hover"
+            }`}
+          >
+            {showMyOnly ? "👤 ลูกค้าของฉัน" : "👥 ทั้งหมด"}
+          </button>
+          <button onClick={() => { setStageFilter("all"); setSearch(""); setShowMyOnly(false); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${stageFilter === "all" && !search ? "bg-white text-black" : "theme-bg-card theme-text-secondary"}`}>
             ทั้งหมด ({customers.length})
           </button>
