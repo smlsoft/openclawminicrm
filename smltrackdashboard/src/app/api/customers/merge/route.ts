@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
           avatarUrl: fillFrom("avatarUrl"),
           notes: [primary.notes, secondary.notes].filter(Boolean).join("\n---\n") || "",
           updatedAt: new Date(),
-          mergedFrom: [...(primary.mergedFrom || []), secondary.name],
+          mergedFrom: [...(primary.mergedFrom || []), secondary.firstName || secondary.name || "ลูกค้า"],
         },
       }
     );
