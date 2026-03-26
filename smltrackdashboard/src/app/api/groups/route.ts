@@ -46,27 +46,28 @@ export async function GET(request: NextRequest) {
     );
 
     // 4. Build lookup maps
+    const metaMap = new Map(allMeta.map((m) => [m.sourceId, m]));
     const analyticsMap = new Map(allAnalytics.map((a) => [a.sourceId, a]));
     const logMap = new Map(allLogCounts.map((l) => [l._id, l.count]));
     const msgMap = new Map(sourceIds.map((sid, i) => [sid, msgResults[i]]));
 
-    // 5. Assemble
-    const groups = allMeta.map((meta) => {
-      const sourceId = meta.sourceId;
+    // 5. Assemble — loop sourceIds (not allMeta which may be empty)
+    const groups = sourceIds.map((sourceId) => {
+      const meta = metaMap.get(sourceId);
       const analytics = analyticsMap.get(sourceId);
       const logCount = logMap.get(sourceId) || 0;
       const messages = msgMap.get(sourceId) || [];
       const lastMsg = messages[0];
-      const count = meta.messageCount || messages.length;
+      const count = messages.length;
 
       return {
         id: sourceId,
-        name: meta.groupName || sourceId,
-        sourceType: meta.sourceType || "unknown",
-        platform: meta.platform || "line",
+        name: meta?.groupName || sourceId,
+        sourceType: meta?.sourceType || "unknown",
+        platform: meta?.platform || "line",
         messageCount: count,
         lastMessage: lastMsg?.content?.substring(0, 50) || "",
-        lastActivity: lastMsg?.createdAt || meta.lastMessageAt || null,
+        lastActivity: lastMsg?.createdAt || meta?.lastMessageAt || null,
         sentiment: analytics?.overallSentiment || analytics?.sentiment || null,
         customerSentiment: analytics?.customerSentiment || null,
         staffSentiment: analytics?.staffSentiment || null,
