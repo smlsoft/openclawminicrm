@@ -3261,22 +3261,56 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
       return res.json({ suggestions: [], analysis: "ไม่สามารถวิเคราะห์ได้" });
     }
 
-    // Parse JSON จาก AI response
-    try {
-      // ลอง parse ทั้งก้อนก่อน
-      let parsed = null;
-      const jsonMatch = reply.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      }
-      if (parsed && parsed.suggestions) {
-        return res.json(parsed);
-      }
-    } catch {}
+    // Parse JSON จาก AI response (หลายวิธี)
+    let parsed = null;
 
-    // ถ้า parse ไม่ได้ → ส่ง raw text เป็น suggestion เดียว
+    // วิธี 1: ลอง parse ทั้งก้อน
+    try { parsed = JSON.parse(reply.trim()); } catch {}
+
+    // วิธี 2: ตัด markdown code block แล้ว parse
+    if (!parsed) {
+      try {
+        const codeBlock = reply.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlock) parsed = JSON.parse(codeBlock[1].trim());
+      } catch {}
+    }
+
+    // วิธี 3: หา JSON object ด้วย bracket matching
+    if (!parsed) {
+      try {
+        const start = reply.indexOf("{");
+        if (start >= 0) {
+          let depth = 0;
+          let end = start;
+          for (let i = start; i < reply.length; i++) {
+            if (reply[i] === "{") depth++;
+            if (reply[i] === "}") depth--;
+            if (depth === 0) { end = i + 1; break; }
+          }
+          parsed = JSON.parse(reply.substring(start, end));
+        }
+      } catch {}
+    }
+
+    if (parsed && Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
+      // ตรวจสอบ format แต่ละ suggestion
+      parsed.suggestions = parsed.suggestions.map(s => ({
+        text: s.text || "",
+        reason: s.reason || "AI แนะนำ",
+        tone: s.tone || "friendly",
+        priority: s.priority || "medium",
+      }));
+      return res.json(parsed);
+    }
+
+    // Fallback: ถ้า parse ไม่ได้เลย → แยก text ออกจาก JSON artifacts
+    const cleanText = reply
+      .replace(/```json\s*/g, "").replace(/```/g, "")
+      .replace(/\{[\s\S]*\}/g, "")
+      .trim();
+
     res.json({
-      suggestions: [{ text: reply.trim(), reason: "AI แนะนำ", tone: "friendly", priority: "medium" }],
+      suggestions: [{ text: cleanText || reply.substring(0, 200), reason: "AI แนะนำ", tone: "friendly", priority: "medium" }],
       analysis: ""
     });
   } catch (e) {

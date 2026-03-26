@@ -531,33 +531,54 @@ function ChatPanel({
                   urgent: "bg-red-900/40 text-red-400",
                   empathetic: "bg-purple-900/40 text-purple-400",
                 };
-                const priorityIcons: Record<string, string> = {
-                  high: "🔴",
-                  medium: "🟡",
-                  low: "🟢",
+                const toneLabels: Record<string, string> = {
+                  friendly: "เป็นมิตร", professional: "มืออาชีพ",
+                  urgent: "เร่งด่วน", empathetic: "เห็นอกเห็นใจ",
                 };
+                const priorityIcons: Record<string, string> = { high: "🔴", medium: "🟡", low: "🟢" };
                 return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setInputText(s.text);
-                      setShowSuggest(false);
-                      inputRef.current?.focus();
-                    }}
-                    className="w-full text-left theme-bg-card hover:theme-bg-hover rounded-lg px-3 py-2 transition group"
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
+                  <div key={i} className="theme-bg-card rounded-lg px-3 py-2 border theme-border">
+                    {/* Header: tone + priority */}
+                    <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="text-[10px]">{priorityIcons[s.priority] || "🟡"}</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded ${toneColors[s.tone] || toneColors.friendly}`}>
-                        {s.tone === "friendly" ? "เป็นมิตร" : s.tone === "professional" ? "มืออาชีพ" : s.tone === "urgent" ? "เร่งด่วน" : s.tone === "empathetic" ? "เห็นอกเห็นใจ" : s.tone}
+                        {toneLabels[s.tone] || s.tone}
                       </span>
-                      <span className="text-[9px] theme-text-muted opacity-0 group-hover:opacity-100 transition ml-auto">
-                        คลิกเพื่อใช้ →
-                      </span>
+                      <span className="text-[9px] theme-text-muted">ตัวเลือก {i + 1}</span>
                     </div>
-                    <p className="text-[12px] theme-text leading-relaxed">{s.text}</p>
-                    <p className="text-[10px] theme-text-muted mt-1">💡 {s.reason}</p>
-                  </button>
+
+                    {/* ข้อความแนะนำ */}
+                    <p className="text-[12px] theme-text leading-relaxed mb-1.5 whitespace-pre-wrap">{s.text}</p>
+
+                    {/* เหตุผล */}
+                    <p className="text-[10px] theme-text-muted mb-2">💡 <em>{s.reason}</em></p>
+
+                    {/* ปุ่ม: ใช้เลย + Copy */}
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => {
+                          setInputText(s.text);
+                          setShowSuggest(false);
+                          inputRef.current?.focus();
+                        }}
+                        className={`flex-1 text-center text-[11px] py-1.5 rounded-lg ${cfg.sendBg} text-white ${cfg.sendHover} transition font-medium`}
+                      >
+                        ใช้เลย →
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(s.text);
+                          // flash feedback
+                          const el = document.getElementById(`copy-${conv.id}-${i}`);
+                          if (el) { el.textContent = "✓ copied!"; setTimeout(() => { el.textContent = "📋 Copy"; }, 1500); }
+                        }}
+                        id={`copy-${conv.id}-${i}`}
+                        className="px-3 py-1.5 text-[11px] rounded-lg theme-bg-hover theme-text-secondary hover:theme-text transition"
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
