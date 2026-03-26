@@ -27,6 +27,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/kpi", icon: "📈", label: "KPI" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
       { href: "/costs", icon: "💰", label: "AI Cost" },
+      { href: "/km", icon: "📚", label: "Knowledge Base" },
     ],
   },
   {

@@ -85,14 +85,22 @@ async function doAutoReply(sourceId, userName, customerMessage) {
 
   console.log(`[Auto-Reply] 5 นาทีไม่มีคนตอบ → AI ตอบแทน ${sourceId.substring(0, 8)}`);
 
+  // ดึง Knowledge Base ที่เกี่ยวข้อง
+  const kbResults = await searchKB(customerMessage, 3).catch(() => []);
+  const kbContext = kbResults.length > 0
+    ? `\n\nข้อมูลจากฐานความรู้ที่เกี่ยวข้อง:\n${kbResults.map(k => `- ${k.title}: ${k.content.substring(0, 200)}`).join("\n")}`
+    : "";
+
   // เรียก AI
   const messages = [
     {
       role: "system",
       content: `คุณเป็นผู้ช่วยอัตโนมัติของร้าน ตอบสั้นๆ สุภาพ เป็นภาษาไทย
 ตอนนี้ทีมงานไม่ว่างชั่วคราว คุณช่วยตอบไปก่อน
-ห้ามสัญญาเรื่องราคา/โปรโมชั่น ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
-ตอบไม่เกิน 2 ประโยค`
+ใช้ข้อมูลจากฐานความรู้ในการตอบถ้ามี
+ห้ามสัญญาเรื่องราคา/โปรโมชั่นที่ไม่ได้อยู่ในฐานความรู้
+ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
+ตอบไม่เกิน 2 ประโยค${kbContext}`
     },
     { role: "user", content: customerMessage },
   ];
@@ -3251,7 +3259,15 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
       },
       {
         role: "user",
-        content: `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}\n\nแนะนำคำตอบให้พนักงาน:`
+        content: await (async () => {
+          // ดึง Knowledge Base ที่เกี่ยวข้อง
+          const lastCustomerMsg = recentMsgs.filter(m => m.role === "user").pop();
+          const kbResults = await searchKB(lastCustomerMsg?.content || chatHistory.substring(0, 200), 3).catch(() => []);
+          const kbContext = kbResults.length > 0
+            ? `\n\nข้อมูลจากฐานความรู้:\n${kbResults.map(k => `[${k.category || "KM"}] ${k.title}: ${k.content.substring(0, 300)}`).join("\n")}`
+            : "";
+          return `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}${kbContext}\n\nแนะนำคำตอบให้พนักงาน:`;
+        })()
       }
     ];
 
@@ -3315,6 +3331,225 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
     });
   } catch (e) {
     console.error("[Suggest] Error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// === Knowledge Base (KM) — Qdrant Cloud + MongoDB ===
+const KB_COLL = "knowledge_base"; // MongoDB เก็บ metadata
+const QDRANT_URL = process.env.QDRANT_URL || ""; // e.g. https://xxx.cloud.qdrant.io:6333
+const QDRANT_API_KEY = process.env.QDRANT_API_KEY || "";
+const QDRANT_COLLECTION = "knowledge_base";
+
+// Qdrant helper: เรียก Qdrant REST API
+async function qdrantRequest(method, path, body = null) {
+  if (!QDRANT_URL) throw new Error("QDRANT_URL not set");
+  const opts = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(QDRANT_API_KEY ? { "api-key": QDRANT_API_KEY } : {}),
+    },
+    signal: AbortSignal.timeout(10000),
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${QDRANT_URL}${path}`, opts);
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(`Qdrant ${method} ${path}: ${res.status} ${err.substring(0, 200)}`);
+  }
+  return res.json();
+}
+
+// สร้าง collection ใน Qdrant (ครั้งแรก)
+async function ensureQdrantCollection() {
+  if (!QDRANT_URL) return;
+  try {
+    await qdrantRequest("GET", `/collections/${QDRANT_COLLECTION}`);
+  } catch {
+    try {
+      await qdrantRequest("PUT", `/collections/${QDRANT_COLLECTION}`, {
+        vectors: { size: 768, distance: "Cosine" }, // Gemini embedding = 768 dims
+      });
+      console.log("[Qdrant] ✅ Collection สร้างแล้ว:", QDRANT_COLLECTION);
+    } catch (e) {
+      console.error("[Qdrant] Create collection error:", e.message);
+    }
+  }
+}
+
+// Upsert KB เข้า Qdrant
+async function upsertKBToQdrant(id, title, content, category, tags) {
+  if (!QDRANT_URL) return;
+  const embedding = await getEmbedding(`${title} ${content}`.substring(0, 2000));
+  if (!embedding) return;
+  await qdrantRequest("PUT", `/collections/${QDRANT_COLLECTION}/points`, {
+    points: [{
+      id: id.toString(),
+      vector: embedding,
+      payload: { title, content: content.substring(0, 5000), category, tags },
+    }],
+  });
+  console.log(`[Qdrant] ✅ Upsert: ${title.substring(0, 30)}`);
+}
+
+// ลบ KB จาก Qdrant
+async function deleteKBFromQdrant(id) {
+  if (!QDRANT_URL) return;
+  try {
+    await qdrantRequest("POST", `/collections/${QDRANT_COLLECTION}/points/delete`, {
+      points: [id.toString()],
+    });
+  } catch {}
+}
+
+// ค้นหา KB จาก Qdrant (semantic search)
+async function searchKB(queryText, limit = 5) {
+  // ลอง Qdrant ก่อน
+  if (QDRANT_URL) {
+    try {
+      const queryEmbed = await getEmbedding(queryText);
+      if (queryEmbed) {
+        const result = await qdrantRequest("POST", `/collections/${QDRANT_COLLECTION}/points/query`, {
+          query: queryEmbed,
+          limit,
+          with_payload: true,
+          score_threshold: 0.3,
+        });
+        const points = result.result?.points || result.result || [];
+        if (points.length > 0) {
+          return points.map(p => ({
+            _id: p.id,
+            title: p.payload?.title || "",
+            content: p.payload?.content || "",
+            category: p.payload?.category || "",
+            tags: p.payload?.tags || [],
+            score: p.score,
+          }));
+        }
+      }
+    } catch (e) {
+      console.error("[Qdrant] Search error:", e.message);
+    }
+  }
+
+  // Fallback: MongoDB keyword search
+  try {
+    const db = await getDB();
+    if (!db) return [];
+    const keywords = queryText.replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s]/g, "").trim();
+    if (keywords) {
+      return await db.collection(KB_COLL).find(
+        { active: true, $or: [
+          { content: { $regex: keywords.split(/\s+/).slice(0, 3).join("|"), $options: "i" } },
+          { title: { $regex: keywords.split(/\s+/).slice(0, 3).join("|"), $options: "i" } },
+        ]},
+        { projection: { title: 1, content: 1, category: 1, tags: 1 } }
+      ).limit(limit).toArray();
+    }
+  } catch {}
+  return [];
+}
+
+// Init Qdrant collection on startup
+ensureQdrantCollection().catch(() => {});
+
+// GET /api/km — รายการ KB ทั้งหมด
+app.get("/api/km", async (req, res) => {
+  try {
+    const db = await getDB();
+    const items = await db.collection(KB_COLL)
+      .find({}, { projection: { embedding: 0 } })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .toArray();
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/km — สร้าง KB ใหม่
+app.post("/api/km", express.json({ limit: "5mb" }), async (req, res) => {
+  const { title, content, category, tags } = req.body;
+  if (!title || !content) return res.status(400).json({ error: "title and content required" });
+
+  try {
+    const db = await getDB();
+    const doc = {
+      title: title.trim(),
+      content: content.trim(),
+      category: category || "general",
+      tags: Array.isArray(tags) ? tags : (tags || "").split(",").map(t => t.trim()).filter(Boolean),
+      active: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const result = await db.collection(KB_COLL).insertOne(doc);
+
+    // Upsert เข้า Qdrant (async)
+    upsertKBToQdrant(result.insertedId, title, content, category || "general", doc.tags).catch(e =>
+      console.error("[KB] Qdrant upsert error:", e.message)
+    );
+
+    console.log(`[KB] + เพิ่ม: ${title}`);
+    res.json({ ok: true, id: result.insertedId });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PATCH /api/km/:id — แก้ไข / เปิด-ปิด
+app.patch("/api/km/:id", express.json(), async (req, res) => {
+  const { ObjectId } = require("mongodb");
+  const { title, content, category, tags, active } = req.body;
+  try {
+    const db = await getDB();
+    const update = { updatedAt: new Date() };
+    if (title !== undefined) update.title = title.trim();
+    if (content !== undefined) update.content = content.trim();
+    if (category !== undefined) update.category = category;
+    if (tags !== undefined) update.tags = Array.isArray(tags) ? tags : tags.split(",").map(t => t.trim()).filter(Boolean);
+    if (active !== undefined) update.active = active;
+
+    await db.collection(KB_COLL).updateOne({ _id: new ObjectId(req.params.id) }, { $set: update });
+
+    // Re-embed Qdrant ถ้าแก้เนื้อหา
+    if (title !== undefined || content !== undefined) {
+      const doc = await db.collection(KB_COLL).findOne({ _id: new ObjectId(req.params.id) });
+      if (doc) {
+        upsertKBToQdrant(doc._id, doc.title, doc.content, doc.category, doc.tags).catch(() => {});
+      }
+    }
+
+    console.log(`[KB] ✏️ อัพเดท: ${req.params.id} ${active !== undefined ? (active ? "→ เปิด" : "→ ปิด") : ""}`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/km/:id — ลบ KB
+app.delete("/api/km/:id", express.json(), async (req, res) => {
+  const { ObjectId } = require("mongodb");
+  try {
+    const db = await getDB();
+    await db.collection(KB_COLL).deleteOne({ _id: new ObjectId(req.params.id) });
+    deleteKBFromQdrant(req.params.id).catch(() => {});
+    console.log(`[KB] 🗑️ ลบ: ${req.params.id}`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/km/search — ค้นหา KB (สำหรับ debug/test)
+app.post("/api/km/search", express.json(), async (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ error: "query required" });
+  try {
+    const results = await searchKB(query);
+    res.json(results);
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
