@@ -74,7 +74,7 @@ function cancelAutoReply(sourceId) {
 
 async function doAutoReply(sourceId, userName, customerMessage) {
   // ตรวจสอบว่า admin ตอบไปแล้วหรือยัง (เช็คจาก DB)
-  const db = getDB();
+  const db = await getDB();
   const lastMsg = await db.collection("messages")
     .findOne({ sourceId }, { sort: { createdAt: -1 } });
   // ถ้าข้อความล่าสุดเป็นของ staff/assistant → admin ตอบแล้ว ไม่ต้องตอบ
@@ -3183,7 +3183,7 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
   if (!sourceId) return res.status(400).json({ error: "sourceId required" });
 
   try {
-    const db = getDB();
+    const db = await getDB();
 
     // ดึง 15 ข้อความล่าสุด
     const recentMsgs = await db.collection("messages")
