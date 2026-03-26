@@ -37,6 +37,36 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// === [Security] PII Masking — ซ่อนข้อมูลส่วนบุคคลก่อนส่ง AI ===
+function maskPII(text) {
+  if (!text || typeof text !== "string") return text;
+  return text
+    .replace(/\b\d{1}[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d{1}\b/g, "[เลขบัตรประชาชน]")
+    .replace(/\b0[689]\d[\s-]?\d{3,4}[\s-]?\d{3,4}\b/g, "[เบอร์โทร]")
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[อีเมล]")
+    .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, "[เลขบัตร]")
+    .replace(/\b\d{10,15}\b/g, "[เลขบัญชี]");
+}
+
+// === [Security] Prompt Injection Protection — กรอง pattern อันตรายก่อนส่ง AI ===
+function sanitizeForAI(text) {
+  if (!text || typeof text !== "string") return text;
+  return text
+    .replace(/ignore\s+(all\s+)?previous\s+instructions?/gi, "[filtered]")
+    .replace(/forget\s+(all\s+)?previous\s+(instructions?|context)/gi, "[filtered]")
+    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "[filtered]")
+    .replace(/\bact\s+as\s+/gi, "[filtered]")
+    .replace(/pretend\s+(you\s+are|to\s+be)\s+/gi, "[filtered]")
+    .replace(/reveal\s+(your|the)\s+(system|initial)\s+prompt/gi, "[filtered]")
+    .replace(/what\s+(is|are)\s+your\s+(system|initial)\s+(prompt|instructions)/gi, "[filtered]");
+}
+
+// === [Security] Helper — sanitize + mask ก่อนส่ง AI ===
+function cleanForAI(text) {
+  return maskPII(sanitizeForAI(text));
+}
+
 // === Reply Token Cache (LINE Reply API ฟรี → ใช้ก่อน Push) ===
 // replyToken มีอายุ ~30 วินาที เก็บไว้ใช้ตอน admin ตอบ
 const replyTokenCache = new Map(); // sourceId → { token, expiresAt }
@@ -130,7 +160,7 @@ async function doAutoReply(sourceId, userName, customerMessage) {
 ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
 ตอบไม่เกิน 2 ประโยค${aiContext}`
     },
-    { role: "user", content: customerMessage },
+    { role: "user", content: cleanForAI(customerMessage) },
   ];
 
   const reply = await callLightAI(messages, { maxTokens: 200, timeout: 15000 }).catch(() => null);
@@ -1541,7 +1571,7 @@ async function aiReplyToLine(event, sourceId, userName, text, config) {
   const systemPrompt = config.systemPrompt || DEFAULT_PROMPT;
   const messages = [
     { role: "system", content: `${systemPrompt}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
-    { role: "user", content: text },
+    { role: "user", content: cleanForAI(text) },
   ];
 
   // เรียก AI (ใช้ LightAI ประหยัด token)
@@ -1578,7 +1608,7 @@ async function aiReplyToMeta(senderId, text, sourceId, platform) {
 
   const messages = [
     { role: "system", content: `${DEFAULT_PROMPT}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
-    { role: "user", content: text },
+    { role: "user", content: cleanForAI(text) },
   ];
 
   const reply = await callLightAI(messages, { maxTokens: 300, timeout: 15000 }).catch(() => null);
@@ -1729,7 +1759,7 @@ tags: เก็บ tag จาก skill เดิม + เพิ่มใหม�
 pipelineStage: new=ใหม่, interested=สนใจ, quoting=เสนอราคา, negotiating=ต่อรอง, closed_won=ปิดการขาย, closed_lost=ไม่ซื้อ, following_up=ติดตาม
 ค่อยๆ ปรับ score จาก skill เดิม ไม่กระโดดมาก`
       },
-      { role: "user", content: `${prevContext}\nข้อความใหม่: "${messageText.substring(0, 200)}"` },
+      { role: "user", content: `${prevContext}\nข้อความใหม่: "${cleanForAI(messageText.substring(0, 200))}"` },
     ], { json: true, maxTokens: 300 });
     if (!content) return;
 
@@ -3369,7 +3399,7 @@ app.post("/api/inbox/suggest", aiLimiter, express.json(), async (req, res) => {
           const lastCustomerMsg = recentMsgs.filter(m => m.role === "user").pop();
           const allSourceIds = customer?.rooms || [sourceId];
           const aiContext = await buildAIContext(sourceId, lastCustomerMsg?.content || chatHistory.substring(0, 200), allSourceIds);
-          return `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}${aiContext}\n\nแนะนำคำตอบให้พนักงาน:`;
+          return `บทสนทนา:\n${cleanForAI(chatHistory)}${customerInfo}${sentimentInfo}${aiContext}\n\nแนะนำคำตอบให้พนักงาน:`;
         })()
       }
     ];
@@ -3878,7 +3908,7 @@ async function compactMemory(sourceId, existingMem) {
     },
     {
       role: "user",
-      content: `Memory เดิม: ${prevSummary || "ยังไม่มี"}\n\nบทสนทนาล่าสุด:\n${chatSample}\n\nสรุป Memory ใหม่:`
+      content: `Memory เดิม: ${prevSummary || "ยังไม่มี"}\n\nบทสนทนาล่าสุด:\n${cleanForAI(chatSample)}\n\nสรุป Memory ใหม่:`
     },
   ];
 
@@ -3959,7 +3989,7 @@ async function learnSkillFromOutcome(sourceId, outcomeType) {
   "category": "sales|service|product|communication"
 }`
     },
-    { role: "user", content: chatSample },
+    { role: "user", content: cleanForAI(chatSample) },
   ];
 
   const reply = await callLightAI(aiMessages, { maxTokens: 200, timeout: 15000 }).catch(() => null);
