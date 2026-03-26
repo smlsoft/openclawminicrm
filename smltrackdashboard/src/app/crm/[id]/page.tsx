@@ -36,6 +36,7 @@ interface Customer {
   dealValue?: number;
   expectedCloseDate?: string;
   winLossReason?: string;
+  assignedTo?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +89,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [notes, setNotes] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [customTags, setCustomTags] = useState("");
+  const [assignInput, setAssignInput] = useState("");
   // Deal fields
   const [dealValue, setDealValue] = useState("");
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
@@ -204,6 +206,27 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       window.location.reload();
     } catch {}
     setMerging(false);
+  };
+
+  const saveAssignedTo = async (updated: string[]) => {
+    if (!customer) return;
+    await fetch(`/dashboard/api/customers/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedTo: updated }),
+    });
+    setCustomer({ ...customer, assignedTo: updated });
+  };
+
+  const handleAssign = async () => {
+    if (!assignInput.trim() || !customer) return;
+    await saveAssignedTo([...(customer.assignedTo || []), assignInput.trim()]);
+    setAssignInput("");
+  };
+
+  const removeStaff = async (index: number) => {
+    if (!customer) return;
+    await saveAssignedTo((customer.assignedTo || []).filter((_, i) => i !== index));
   };
 
   if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">Loading...</div></div>;
@@ -341,6 +364,35 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         )}
+
+        {/* Staff Assignment */}
+        <div className="rounded-xl border theme-border p-4" style={{ background: "var(--bg-card)" }}>
+          <h3 className="text-sm font-bold theme-text mb-2">👔 ผู้ดูแล</h3>
+          <div className="flex gap-1 flex-wrap mb-2">
+            {(customer.assignedTo || []).map((staff, i) => (
+              <span key={i} className="text-sm px-2 py-1 bg-indigo-900/40 text-indigo-300 rounded-lg flex items-center gap-1">
+                {staff}
+                <button onClick={() => removeStaff(i)} className="text-red-400 ml-1 hover:text-red-300">✕</button>
+              </span>
+            ))}
+            {(customer.assignedTo || []).length === 0 && (
+              <span className="text-sm theme-text-muted">ยังไม่มีผู้ดูแล</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={assignInput}
+              onChange={(e) => setAssignInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAssign()}
+              placeholder="พิมพ์ชื่อพนักงาน..."
+              className="border theme-border rounded-lg px-3 py-2 text-sm flex-1 theme-bg theme-text"
+              style={{ background: "var(--bg-primary)" }}
+            />
+            <button onClick={handleAssign} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition">
+              มอบหมาย
+            </button>
+          </div>
+        </div>
 
         {/* Form — ข้อมูลที่ user เพิ่มเติมเอง */}
         <div className="rounded-xl border theme-border p-6" style={{ background: "var(--bg-card)" }}>
