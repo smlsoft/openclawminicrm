@@ -1,7 +1,69 @@
+<div align="center">
+
 # OpenClaw Mini CRM 🦐
 
-### ระบบ CRM อัจฉริยะ ฟรี 100% สำหรับ SMEs ไทย
-### LINE · Facebook · Instagram รวมจอเดียว — AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า
+### AI Chat Intelligence — LINE · Facebook · Instagram
+
+**ระบบ CRM อัจฉริยะ ฟรี 100% สำหรับ SMEs ไทย**
+**รวมทุกแชทในจอเดียว — AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](docker-compose.prod.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](#tech-stack)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](#tech-stack)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](#tech-stack)
+[![LINE](https://img.shields.io/badge/LINE-Messaging_API-00C300?logo=line&logoColor=white)](#multi-platform)
+[![Facebook](https://img.shields.io/badge/Facebook-Graph_API-1877F2?logo=facebook&logoColor=white)](#multi-platform)
+[![Instagram](https://img.shields.io/badge/Instagram-Graph_API-E4405F?logo=instagram&logoColor=white)](#multi-platform)
+
+[Demo](https://crm.satistang.com/dashboard) · [Documentation](docs/INSTALL.md) · [Deploy Guide](docs/DEPLOY-HETZNER.md) · [Report Bug](https://github.com/smlsoft/openclawminicrm/issues)
+
+</div>
+
+---
+
+> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard, provides AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, and a 24/7 AI advisor ("น้องกุ้ง 🦐"). Fully self-hosted on Docker Compose + Hetzner VPS. Zero monthly cost.
+
+---
+
+## สารบัญ (Table of Contents)
+
+- [ปัญหาที่แก้ได้](#ปัญหาที่คุณเจอทุกวัน)
+- [OpenClaw แก้ยังไง](#openclaw-แก้ยังไง)
+- [ตัวอย่างการใช้งาน](#ตัวอย่างการใช้งานจริง)
+- [สิ่งที่ได้ — ภาพรวม](#สิ่งที่ได้--ภาพรวม)
+- [คุณสมบัติทั้งหมด](#คุณสมบัติทั้งหมด-รายละเอียด)
+  - [Multi-Panel Chat](#1--multi-panel-chat--เปิดหลายแชทพร้อมกัน)
+  - [AI วิเคราะห์ทุกข้อความ](#2--ai-วิเคราะห์ทุกข้อความ--อัตโนมัติ-100)
+  - [น้องกุ้ง AI Advisor](#3--น้องกุ้ง--ai-advisor-5-บทบาท)
+  - [AI แนะนำ + ตอบแทน](#4--ai-แนะนำคำตอบ--ตอบแทนอัตโนมัติ)
+  - [Knowledge Base](#5--knowledge-base--ฐานความรู้ร้าน)
+  - [AI Learning](#6--ai-learning--ยิ่งใช้ยิ่งฉลาด)
+  - [PDPA + Security](#61--ปกป้องข้อมูลลูกค้า-pdpa--security)
+  - [Human Handoff](#62--human-handoff--ส่งต่อให้คนจริง)
+  - [Churn Prediction](#63--churn-prediction--ทำนายลูกค้าที่กำลังจะหาย)
+  - [Smart Routing](#64--smart-routing--แยก-topic-อัตโนมัติ)
+  - [A/B Testing AI](#65--ab-testing-ai--ทดสอบสไตล์-ai-อัตโนมัติ)
+  - [Telegram Bot](#7--คุยกับน้องกุ้งผ่าน-telegram)
+  - [Cross-Platform Merge](#71--รวมลูกค้าข้าม-platform)
+  - [CRM อัตโนมัติ](#8--crm-อัตโนมัติ--ไม่ต้องกรอกข้อมูลเอง)
+  - [KPI พนักงาน](#9--kpi-พนักงาน)
+- [หน้าจอทั้งหมด (19 หน้า)](#หน้าจอทั้งหมด-19-หน้า)
+- [ราคา](#ราคา--ฟรี-100)
+- [Use Cases](#use-cases--ตัวอย่างการใช้จริง)
+- [ข้อดี](#ข้อดี)
+- [ข้อกังวล — ตอบตรงๆ](#ข้อกังวล--ตอบตรงๆ)
+- [สำหรับ Developer](#สำหรับ-developer)
+  - [Architecture](#architecture)
+  - [Tech Stack](#tech-stack)
+  - [Services](#services)
+  - [Quick Start](#quick-start)
+  - [API Endpoints](#key-api-endpoints-agent)
+  - [MongoDB Collections](#mongodb-collections)
+- [เอกสาร](#เอกสาร)
+- [Contributing](#contributing)
+- [License](#license)
+- [ติดต่อ](#ติดต่อ)
 
 ---
 
@@ -28,10 +90,10 @@
   │  • สนใจซื้อหรือยัง?                           │
   │  • ต้องรีบตอบไหม?                             │
   │                                              │
-  │  💡 AI แนะนำว่าควรตอบอะไร พร้อมเหตุผล        │
-  │  🤖 ไม่มีคนตอบ 5 นาที? AI ตอบให้!            │
-  │  📚 ดึงข้อมูลจากฐานความรู้ร้านตอบแม่นๆ       │
-  │  🧠 จำลูกค้าแต่ละคน ยิ่งใช้ยิ่งเก่ง           │
+  │  AI แนะนำว่าควรตอบอะไร พร้อมเหตุผล           │
+  │  ไม่มีคนตอบ 5 นาที? AI ตอบให้!               │
+  │  ดึงข้อมูลจากฐานความรู้ร้านตอบแม่นๆ          │
+  │  จำลูกค้าแต่ละคน ยิ่งใช้ยิ่งเก่ง              │
   └──────────────────────────────────────────────┘
      ↓
   เจ้าของเห็นทุกอย่าง: KPI พนักงาน, ลูกค้าเสี่ยง, โอกาสขาย
@@ -41,8 +103,8 @@
 
 **ร้านขายเครื่องกรองน้ำ:**
 1. ลูกค้าทักมา LINE ถาม "รุ่น A ราคาเท่าไหร่"
-2. AI ไฮไลท์ทันที: "🔴 สนใจซื้อ!"
-3. พนักงานเปิดแชท → กด 💡 AI แนะนำ:
+2. AI ไฮไลท์ทันที: "สนใจซื้อ!"
+3. พนักงานเปิดแชท → กด AI แนะนำ:
    - "รุ่น A ราคา 12,900 ผ่อน 0% 10 เดือน" (เหตุผล: ลูกค้าถามราคาตรงๆ ควรบอกชัด)
 4. พนักงานกด "ใช้เลย" → แก้นิดหน่อย → ส่ง
 5. ลูกค้าซื้อ → AI เรียนรู้: "ตอบราคาชัด + บอกผ่อน → ปิดการขายได้"
@@ -67,21 +129,23 @@
 | **รู้ว่าใครจะซื้อ** | AI ให้คะแนนลูกค้า: สนใจซื้อ / ไม่สนใจ / กำลังจะหนี |
 | **KPI พนักงาน** | รู้ว่าใครตอบเร็ว ใครตอบช้า ใครปิดการขายได้ |
 | **AI ที่ปรึกษา 24/7** | น้องกุ้ง 🦐 วิเคราะห์ธุรกิจให้ทุกชั่วโมง ส่ง Telegram แจ้งเตือน |
+| **ปกป้องข้อมูล PDPA** | PII Masking + Audit Log + Privacy Notice + Opt-out + Right to Delete |
+| **ทำนายลูกค้าหาย** | Churn Prediction เตือนก่อนลูกค้าหายไป |
 | **ฟรี 100%** | ไม่มีค่าใช้จ่ายรายเดือน ข้อมูลเป็นของคุณ |
 
 ---
 
 ## คุณสมบัติทั้งหมด (รายละเอียด)
 
-### 1. 🗨️ Multi-Panel Chat — เปิดหลายแชทพร้อมกัน
+### 1. Multi-Panel Chat — เปิดหลายแชทพร้อมกัน
 
 **เปิดได้สูงสุด 4 สนทนาพร้อมกัน** — LINE, Facebook, Instagram เรียงข้างกัน ไม่ต้องสลับแอป
 
 | ช่องทาง | สี | รับ | ตอบ | ส่งได้ |
 |---------|-----|-----|-----|--------|
-| 💚 LINE OA | เขียว | ✅ | ✅ | ข้อความ · รูป · สติกเกอร์ · วิดีโอ · เสียง · ตำแหน่ง · Flex |
-| 💙 Facebook | น้ำเงิน | ✅ | ✅ | ข้อความ · รูป (เร็วๆ นี้) |
-| 💜 Instagram | ม่วง-ชมพู | ✅ | ✅ | ข้อความ · รูป (เร็วๆ นี้) |
+| LINE OA | เขียว | ✅ | ✅ | ข้อความ · รูป · สติกเกอร์ · วิดีโอ · เสียง · ตำแหน่ง · Flex |
+| Facebook | น้ำเงิน | ✅ | ✅ | ข้อความ · รูป (เร็วๆ นี้) |
+| Instagram | ม่วง-ชมพู | ✅ | ✅ | ข้อความ · รูป (เร็วๆ นี้) |
 
 - **แยกสีตาม platform** — เห็นปุ๊บรู้เลยว่าคุยกับลูกค้าช่องทางไหน
 - **Reply-first** — ตอบ LINE ภายใน 25 วิ = **Reply API ฟรี!** หมดเวลา = fallback Push อัตโนมัติ
@@ -93,7 +157,7 @@
 
 ---
 
-### 2. 🤖 AI วิเคราะห์ทุกข้อความ — อัตโนมัติ 100%
+### 2. AI วิเคราะห์ทุกข้อความ — อัตโนมัติ 100%
 
 ทุกข้อความที่ลูกค้าส่งเข้ามา AI วิเคราะห์ให้ทันที:
 
@@ -108,23 +172,23 @@
 
 ---
 
-### 3. 🦐 น้องกุ้ง — AI Advisor 5 บทบาท
+### 3. น้องกุ้ง — AI Advisor 5 บทบาท
 
 น้องกุ้งทำงาน **24/7 อัตโนมัติ** ไม่ต้องสั่ง:
 
 | บทบาท | ทำงาน | หน้าที่ |
 |-------|-------|---------|
-| 🚨 **Problem Solver** | ทุก 1 ชม. | วิเคราะห์ปัญหาลูกค้า → หาต้นเหตุ → 5 ทางออก → เลือกดีสุด |
-| 💰 **Sales Hunter** | ทุก 1 ชม. | หาลูกค้าที่อยากซื้อ → กลยุทธ์ปิดการขาย |
-| 👥 **Team Coach** | ทุก 6 ชม. | วิเคราะห์ทีม → แผนพัฒนารายบุคคล |
-| 📊 **Weekly Strategist** | จันทร์ 08:00 | สรุปสัปดาห์ → กลยุทธ์สัปดาห์หน้า |
-| ❤️ **Health Monitor** | ทุก 3 ชม. | Health Score 0-100 → ตรวจจับลูกค้าเสี่ยงก่อนหาย |
+| **Problem Solver** | ทุก 1 ชม. | วิเคราะห์ปัญหาลูกค้า → หาต้นเหตุ → 5 ทางออก → เลือกดีสุด |
+| **Sales Hunter** | ทุก 1 ชม. | หาลูกค้าที่อยากซื้อ → กลยุทธ์ปิดการขาย |
+| **Team Coach** | ทุก 6 ชม. | วิเคราะห์ทีม → แผนพัฒนารายบุคคล |
+| **Weekly Strategist** | จันทร์ 08:00 | สรุปสัปดาห์ → กลยุทธ์สัปดาห์หน้า |
+| **Health Monitor** | ทุก 3 ชม. | Health Score 0-100 → ตรวจจับลูกค้าเสี่ยงก่อนหาย |
 
 ถ้าพบ CRITICAL → **ส่ง Telegram แจ้งเตือนทันที!**
 
 ---
 
-### 4. 💡 AI แนะนำคำตอบ + ตอบแทนอัตโนมัติ
+### 4. AI แนะนำคำตอบ + ตอบแทนอัตโนมัติ
 
 **น้องกุ้งตอบแทน (4 โหมด):**
 
@@ -148,25 +212,25 @@
 
 ---
 
-### 5. 📚 Knowledge Base — ฐานความรู้ร้าน
+### 5. Knowledge Base — ฐานความรู้ร้าน
 
 > **สำหรับเจ้าของกิจการ:** ใส่ข้อมูลร้านของคุณ → AI จะดึงไปตอบลูกค้าให้ถูกต้อง
 
 | ใส่อะไร | ตัวอย่าง | AI ใช้ยังไง |
 |---------|---------|-----------|
-| 📦 สินค้า | รุ่น A ราคา 12,900 กรอง 4 ขั้นตอน | ลูกค้าถามราคา → AI ตอบถูก |
-| 🏷️ โปรโมชั่น | มี.ค. ลด 20% เฉพาะรุ่น B | AI บอกโปรที่ยังไม่หมด |
-| 📋 นโยบาย | เปลี่ยนคืนภายใน 7 วัน ต้องมีกล่อง | ลูกค้าถามเรื่องคืน → AI ตอบถูก |
-| ❓ คำถามบ่อย | ใช้กับน้ำประปาได้ไหม? → ได้ | ลดภาระตอบซ้ำๆ |
-| 🚚 จัดส่ง | ส่งฟรีทั่วประเทศ Kerry 2-3 วัน | ลูกค้าถามจัดส่ง → AI ตอบได้เลย |
-| 💳 ชำระเงิน | โอน/PromptPay/ผ่อน 0% | ลูกค้าถาม "ผ่อนได้ไหม" → AI ตอบได้ |
+| สินค้า | รุ่น A ราคา 12,900 กรอง 4 ขั้นตอน | ลูกค้าถามราคา → AI ตอบถูก |
+| โปรโมชั่น | มี.ค. ลด 20% เฉพาะรุ่น B | AI บอกโปรที่ยังไม่หมด |
+| นโยบาย | เปลี่ยนคืนภายใน 7 วัน ต้องมีกล่อง | ลูกค้าถามเรื่องคืน → AI ตอบถูก |
+| คำถามบ่อย | ใช้กับน้ำประปาได้ไหม? → ได้ | ลดภาระตอบซ้ำๆ |
+| จัดส่ง | ส่งฟรีทั่วประเทศ Kerry 2-3 วัน | ลูกค้าถามจัดส่ง → AI ตอบได้เลย |
+| ชำระเงิน | โอน/PromptPay/ผ่อน 0% | ลูกค้าถาม "ผ่อนได้ไหม" → AI ตอบได้ |
 
 - **เปิด/ปิด** ได้ตลอด — โปรหมดกดปิด AI ไม่เอาไปใช้
 - **ยิ่งใส่ละเอียด AI ยิ่งตอบแม่น** — ราคา เงื่อนไข วันหมดอายุ ใส่ให้ครบ
 
 ---
 
-### 6. 🧠 AI Learning — ยิ่งใช้ยิ่งฉลาด
+### 6. AI Learning — ยิ่งใช้ยิ่งฉลาด
 
 > **สำหรับเจ้าของกิจการ:** AI จำลูกค้าทุกคน เรียนรู้จากทุกครั้งที่ลูกค้าซื้อ/ชม/ร้องเรียน แล้วปรับวิธีแนะนำให้ดีขึ้นเรื่อยๆ
 
@@ -178,68 +242,68 @@
 
 | เหตุการณ์ | AI เรียนรู้ | ใช้กับคนอื่นด้วย |
 |-----------|-----------|----------------|
-| ลูกค้าซื้อ 🛒 | "ตอบราคาชัด + บอกผ่อน → ปิดได้" | ✅ |
-| ลูกค้าชม 👍 | "ตอบเร็ว + ใส่ใจ → ประทับใจ" | ✅ |
-| ลูกค้าร้องเรียน 👎 | "ตอบช้า + ไม่ขอโทษ → ไม่พอใจ" | ✅ |
+| ลูกค้าซื้อ | "ตอบราคาชัด + บอกผ่อน → ปิดได้" | ✅ |
+| ลูกค้าชม | "ตอบเร็ว + ใส่ใจ → ประทับใจ" | ✅ |
+| ลูกค้าร้องเรียน | "ตอบช้า + ไม่ขอโทษ → ไม่พอใจ" | ✅ |
 
 **ปุ่ม 🧠 ในหน้าแชท** — ดู Memory + Skills ของลูกค้าแต่ละคน
 
 ---
 
-### 6.1 🔒 ปกป้องข้อมูลลูกค้า (PDPA + Security)
+### 6.1 ปกป้องข้อมูลลูกค้า (PDPA + Security)
 
 > **สำหรับเจ้าของกิจการ:** ข้อมูลลูกค้าถูกปกป้องตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล (PDPA) อัตโนมัติ
 
 | ระบบป้องกัน | ทำอะไร |
 |------------|--------|
-| 🔒 **PII Masking** | เบอร์โทร เลขบัตร email ถูก mask ก่อนส่ง AI — AI ไม่เห็นข้อมูลจริง |
-| 🛡️ **Prompt Injection** | ป้องกันลูกค้าหลอก AI ให้เปิดเผยข้อมูล (8 patterns) |
-| 📋 **Audit Log** | บันทึกทุก action ของพนักงาน — ใครทำอะไร เมื่อไหร่ |
-| 📜 **Privacy Notice** | แจ้ง PDPA อัตโนมัติเมื่อลูกค้าทักมาครั้งแรก |
-| ✋ **Opt-out** | ลูกค้าพิมพ์ "หยุด" → หยุดส่ง AI อัตโนมัติทันที |
-| 🗑️ **Right to Delete** | ลูกค้าพิมพ์ "ลบข้อมูล" → ระบบรับคำขอ ดำเนินการภายใน 30 วัน |
-| 📊 **Rate Limit** | จำกัดจำนวน request ป้องกัน spam (AI 10/นาที, ส่ง 30/นาที) |
-| 🖼️ **File Validation** | ตรวจ magic bytes ของรูปก่อนรับ — ป้องกันไฟล์อันตราย |
+| **PII Masking** | เบอร์โทร เลขบัตร email ถูก mask ก่อนส่ง AI — AI ไม่เห็นข้อมูลจริง |
+| **Prompt Injection** | ป้องกันลูกค้าหลอก AI ให้เปิดเผยข้อมูล (8 patterns) |
+| **Audit Log** | บันทึกทุก action ของพนักงาน — ใครทำอะไร เมื่อไหร่ |
+| **Privacy Notice** | แจ้ง PDPA อัตโนมัติเมื่อลูกค้าทักมาครั้งแรก |
+| **Opt-out** | ลูกค้าพิมพ์ "หยุด" → หยุดส่ง AI อัตโนมัติทันที |
+| **Right to Delete** | ลูกค้าพิมพ์ "ลบข้อมูล" → ระบบรับคำขอ ดำเนินการภายใน 30 วัน |
+| **Rate Limit** | จำกัดจำนวน request ป้องกัน spam (AI 10/นาที, ส่ง 30/นาที) |
+| **File Validation** | ตรวจ magic bytes ของรูปก่อนรับ — ป้องกันไฟล์อันตราย |
 
 ---
 
-### 6.2 🙋 Human Handoff — ส่งต่อให้คนจริง
+### 6.2 Human Handoff — ส่งต่อให้คนจริง
 
 > **สำหรับเจ้าของกิจการ:** ลูกค้าบอก "ขอคุยกับพนักงาน" → AI หยุดตอบ แจ้ง alert ให้ทีมงานทันที
 
 - ลูกค้าพิมพ์ "ขอคุยกับพนักงาน" / "ไม่ใช่ bot" → AI ส่งต่อทันที
-- แจ้ง 🔴 alert ใน Dashboard ให้พนักงาน
-- AI ตอบ "🙋 ส่งต่อให้ทีมงานแล้วค่ะ กรุณารอสักครู่"
+- แจ้ง alert ใน Dashboard ให้พนักงาน
+- AI ตอบ "ส่งต่อให้ทีมงานแล้วค่ะ กรุณารอสักครู่"
 
 ---
 
-### 6.3 📉 Churn Prediction — ทำนายลูกค้าที่กำลังจะหาย
+### 6.3 Churn Prediction — ทำนายลูกค้าที่กำลังจะหาย
 
 > **สำหรับเจ้าของกิจการ:** ระบบเตือนอัตโนมัติว่าลูกค้าคนไหนเสี่ยงหาย
 
 | ระดับ | เงื่อนไข | ความหมาย |
 |-------|---------|----------|
-| 🟡 ควรติดตาม | ไม่มีข้อความ 3-7 วัน | เริ่มเงียบ ควรทักไปก่อน |
-| 🔴 เสี่ยงหลุด | ไม่มีข้อความ 7-30 วัน | ใกล้หายแล้ว ต้องรีบตาม |
-| ⚫ อาจหายไปแล้ว | ไม่มีข้อความ 30+ วัน | ต้องหาทางดึงกลับ |
+| ควรติดตาม | ไม่มีข้อความ 3-7 วัน | เริ่มเงียบ ควรทักไปก่อน |
+| เสี่ยงหลุด | ไม่มีข้อความ 7-30 วัน | ใกล้หายแล้ว ต้องรีบตาม |
+| อาจหายไปแล้ว | ไม่มีข้อความ 30+ วัน | ต้องหาทางดึงกลับ |
 
 ---
 
-### 6.4 🔀 Smart Routing — แยก topic อัตโนมัติ
+### 6.4 Smart Routing — แยก topic อัตโนมัติ
 
 ข้อความลูกค้าถูกแยก topic อัตโนมัติ:
-- 💰 **sales** — ถามราคา/โปร/สนใจซื้อ
-- 🚚 **shipping** — ถามจัดส่ง/ติดตามพัสดุ
-- 🔧 **support** — แจ้งปัญหา/สินค้าเสีย
-- 🔄 **returns** — ขอคืน/เปลี่ยน
-- 🛒 **orders** — สั่งซื้อ/ชำระเงิน
-- 😤 **complaint** — ร้องเรียน
+- **sales** — ถามราคา/โปร/สนใจซื้อ
+- **shipping** — ถามจัดส่ง/ติดตามพัสดุ
+- **support** — แจ้งปัญหา/สินค้าเสีย
+- **returns** — ขอคืน/เปลี่ยน
+- **orders** — สั่งซื้อ/ชำระเงิน
+- **complaint** — ร้องเรียน
 
 ช่วยให้ admin จัดลำดับความสำคัญได้ง่ายขึ้น
 
 ---
 
-### 6.5 🧪 A/B Testing AI — ทดสอบสไตล์ AI อัตโนมัติ
+### 6.5 A/B Testing AI — ทดสอบสไตล์ AI อัตโนมัติ
 
 ระบบทดสอบ 2 สไตล์ AI ตอบลูกค้า:
 - **สไตล์ A:** ตอบสั้นกระชับ ไม่เกิน 2 ประโยค
@@ -249,7 +313,7 @@
 
 ---
 
-### 7. 📱 คุยกับน้องกุ้งผ่าน Telegram
+### 7. คุยกับน้องกุ้งผ่าน Telegram
 
 > **สำหรับเจ้าของกิจการ:** ถาม AI ผ่าน Telegram ได้ตลอดเวลา ไม่ต้องเปิดคอม
 
@@ -266,7 +330,7 @@
 
 ---
 
-### 7.1 🔀 รวมลูกค้าข้าม Platform
+### 7.1 รวมลูกค้าข้าม Platform
 
 > **สำหรับเจ้าของกิจการ:** ลูกค้าคนเดียวกันทักมา LINE + Facebook + Instagram = 3 records → ระบบช่วยหาแล้วรวมเป็นคนเดียว
 
@@ -279,14 +343,14 @@
 
 ---
 
-### 8. 👥 CRM อัตโนมัติ — ไม่ต้องกรอกข้อมูลเอง
+### 8. CRM อัตโนมัติ — ไม่ต้องกรอกข้อมูลเอง
 
 - ลูกค้าทักมา → ระบบสร้างข้อมูลลูกค้าอัตโนมัติ
 - ดึงรูป + ชื่อจาก LINE/Facebook/Instagram อัตโนมัติ
 - Pipeline: ใหม่ → สนใจ → เสนอราคา → ต่อรอง → ปิดการขาย
 - มูลค่า Deal + วันที่คาดว่าจะปิด
 
-### 9. 📈 KPI พนักงาน
+### 9. KPI พนักงาน
 
 | KPI | วัดอะไร |
 |-----|---------|
@@ -295,7 +359,7 @@
 | ลูกค้าหลุด | เคยคุยแล้วหายไป > 7 วัน |
 | เสี่ยงหลุด | ไม่มีข้อความ 3-7 วัน (เตือนก่อนหลุด!) |
 
-### 10. 📋 งานติดตาม + ⚡ Quick Reply + 💰 AI Cost + 👔 ทีมงาน + 👁️ Vision AI + 🔗 ERP
+### 10. งานติดตาม + Quick Reply + AI Cost + ทีมงาน + Vision AI + ERP
 
 ดูรายละเอียดทุกฟีเจอร์ได้ที่ [คู่มือ](docs/INSTALL.md)
 
@@ -305,27 +369,25 @@
 
 | หน้า | สำหรับ | หน้าที่ |
 |------|--------|---------|
-| 🗨️ **แชท** | พนักงาน | เปิด 4 จอพร้อมกัน LINE/FB/IG + สติกเกอร์ + 💡AI แนะนำ + 🧠Memory |
-| 💬 **Inbox** | พนักงาน | แชทจอเดียว + ข้อมูลลูกค้าด้านขวา |
-| 📊 **Dashboard** | เจ้าของ | ภาพรวมทุกแชท + filter platform |
-| 👥 **CRM** | เจ้าของ/พนักงาน | ลูกค้า + pipeline + มอบหมาย staff + filter "ลูกค้าของฉัน" |
-| 📜 **สนทนารวม** ⭐ | เจ้าของ/พนักงาน | ดูสนทนาทุก platform ของลูกค้า 1 คน ในจอเดียว |
-| 🔀 **รวมลูกค้า** | Admin | หาลูกค้าซ้ำข้าม platform + รวมเอง (Manual) |
-| 📈 **KPI** | เจ้าของ | พนักงาน + ปิดการขาย + รายได้ |
-| 🦐 **น้องกุ้ง** | เจ้าของ | AI Advice 5 บทบาท |
-| 📚 **Knowledge Base** | เจ้าของ | ฐานความรู้ — เพิ่ม/แก้/ลบ/เปิด-ปิด |
-| 🤖 **ตั้งค่า Bot** ⭐ | Admin | แก้ชื่อ/prompt/mode/keywords แต่ละห้อง |
-| 💰 **AI Cost** | เจ้าของ | ค่าใช้จ่าย AI แบบละเอียด |
-| 📋 **งานติดตาม** | พนักงาน | task + priority + deadline |
-| ⚡ **Templates** | พนักงาน | ข้อความสำเร็จรูป |
-| 🔗 **เชื่อมต่อ** | Admin | LINE/FB/IG/Telegram สถานะ |
-| ⚙️ **ตั้งค่า** | Admin | MongoDB, AI keys |
-| 👔 **ทีมงาน** | Admin | เชิญคน + กำหนด role |
-| 📖 **คู่มือ** | ทุกคน | step-by-step |
-| 🔐 **Login** | ทุกคน | Google OAuth |
-| 🚀 **Onboarding** | ครั้งแรก | Setup wizard |
-
-> ⭐ = ฟีเจอร์ใหม่
+| **แชท** | พนักงาน | เปิด 4 จอพร้อมกัน LINE/FB/IG + สติกเกอร์ + AI แนะนำ + Memory |
+| **Inbox** | พนักงาน | แชทจอเดียว + ข้อมูลลูกค้าด้านขวา |
+| **Dashboard** | เจ้าของ | ภาพรวมทุกแชท + filter platform |
+| **CRM** | เจ้าของ/พนักงาน | ลูกค้า + pipeline + มอบหมาย staff + filter "ลูกค้าของฉัน" |
+| **สนทนารวม** | เจ้าของ/พนักงาน | ดูสนทนาทุก platform ของลูกค้า 1 คน ในจอเดียว |
+| **รวมลูกค้า** | Admin | หาลูกค้าซ้ำข้าม platform + รวมเอง (Manual) |
+| **KPI** | เจ้าของ | พนักงาน + ปิดการขาย + รายได้ |
+| **น้องกุ้ง** | เจ้าของ | AI Advice 5 บทบาท |
+| **Knowledge Base** | เจ้าของ | ฐานความรู้ — เพิ่ม/แก้/ลบ/เปิด-ปิด |
+| **ตั้งค่า Bot** | Admin | แก้ชื่อ/prompt/mode/keywords แต่ละห้อง |
+| **AI Cost** | เจ้าของ | ค่าใช้จ่าย AI แบบละเอียด |
+| **งานติดตาม** | พนักงาน | task + priority + deadline |
+| **Templates** | พนักงาน | ข้อความสำเร็จรูป |
+| **เชื่อมต่อ** | Admin | LINE/FB/IG/Telegram สถานะ |
+| **ตั้งค่า** | Admin | MongoDB, AI keys |
+| **ทีมงาน** | Admin | เชิญคน + กำหนด role |
+| **คู่มือ** | ทุกคน | step-by-step |
+| **Login** | ทุกคน | Google OAuth |
+| **Onboarding** | ครั้งแรก | Setup wizard |
 
 ---
 
@@ -350,8 +412,8 @@
 
 ```
 08:00  ลูกค้า A ทักมา LINE: "รุ่นไหนดี ใช้บ้าน 3 คน"
-       → AI ไฮไลท์: "🟡 เริ่มสนใจ" + ดึง KB: "รุ่น A เหมาะบ้าน 2-5 คน"
-       → กด 💡 AI แนะนำ: "รุ่น A เหมาะเลยค่ะ กรอง 4 ขั้นตอน ราคา 12,900"
+       → AI ไฮไลท์: "เริ่มสนใจ" + ดึง KB: "รุ่น A เหมาะบ้าน 2-5 คน"
+       → กด AI แนะนำ: "รุ่น A เหมาะเลยค่ะ กรอง 4 ขั้นตอน ราคา 12,900"
        → พนักงานกด "ใช้เลย" → ส่ง (Reply API ฟรี!)
 
 08:15  ลูกค้า B ทักมา Facebook พร้อมกัน
@@ -418,8 +480,8 @@
 | **"ข้อมูลลูกค้าปลอดภัยไหม?"** | ข้อมูลเก็บใน MongoDB Atlas ของคุณเอง ไม่ผ่านเซิร์ฟเวอร์คนอื่น Login ด้วย Google OAuth มี RBAC (admin/responder/viewer) |
 | **"ต้องมี dev ไหม?"** | ติดตั้งครั้งแรกต้องมีคนช่วย setup (Docker + env vars) หลังจากนั้นใช้งานผ่านเว็บได้เลย ไม่ต้องเขียน code |
 | **"AI ตอบผิดล่ะ?"** | AI ตอบจาก Knowledge Base ที่คุณใส่เอง ถ้าข้อมูลถูก AI ตอบถูก + มี "🤖 ตอบอัตโนมัติ" ชัดเจน + ถ้าไม่แน่ใจ AI จะบอก "รอทีมงานตอบนะคะ" |
-| **"รองรับลูกค้ากี่คน?"** | ไม่จำกัด ขึ้นอยู่กับ MongoDB plan (ฟรี 512MB ≈ ข้อความ 500,000+) |
-| **"LINE Push ข้อความเสียเงินไหม?"** | ระบบใช้ Reply API ก่อน (ฟรี!) ถ้าเกิน 25 วินาทีจึง fallback เป็น Push ทุกข้อความบอกว่า "ฟรี" หรือ "push" |
+| **"รองรับลูกค้ากี่คน?"** | ไม่จำกัด ขึ้นอยู่กับ MongoDB plan (ฟรี 512MB = ข้อความ 500,000+) |
+| **"LINE Push เสียเงินไหม?"** | ระบบใช้ Reply API ก่อน (ฟรี!) ถ้าเกิน 25 วินาทีจึง fallback เป็น Push ทุกข้อความบอกว่า "ฟรี" หรือ "push" |
 | **"ถ้าเลิกใช้ล่ะ?"** | ข้อมูลอยู่ใน MongoDB ของคุณ export ได้เลย ไม่โดน lock-in |
 | **"Scale ได้ไหม?"** | Docker-based ย้ายไป VPS ใหญ่ขึ้นได้ หรือเพิ่ม MongoDB plan สำหรับธุรกิจที่โตขึ้น |
 
@@ -481,12 +543,19 @@ Qdrant Cloud (Knowledge Base vector search)
 ### Quick Start
 
 ```bash
+# 1. Clone
 git clone https://github.com/smlsoft/openclawminicrm.git
 cd openclawminicrm
+
+# 2. Setup environment
 cp .env.example .env
 # แก้ไขค่าใน .env (MongoDB URI, AI keys, LINE/FB tokens)
+
+# 3. Run with Docker
 docker compose up -d --build
-# เข้า: http://localhost:3002/dashboard
+
+# 4. Open browser
+# http://localhost:3002/dashboard
 ```
 
 ### Env Variables
@@ -494,22 +563,27 @@ docker compose up -d --build
 ```env
 # Database
 MONGODB_URI=mongodb+srv://...
-# AI
+
+# AI Providers (ฟรีทั้งหมด)
 OPENROUTER_API_KEY=...
 GROQ_API_KEY=...
 SAMBANOVA_API_KEY=...
 GOOGLE_API_KEY=...         # Gemini (embedding + vision)
-# LINE
+
+# LINE Messaging API
 LINE_CHANNEL_ACCESS_TOKEN=...
 LINE_CHANNEL_SECRET=...
+
 # Meta (Facebook + Instagram)
 FB_PAGE_ACCESS_TOKEN=...
 FB_APP_SECRET=...
 FB_VERIFY_TOKEN=...
+
 # Knowledge Base (Qdrant)
 QDRANT_URL=https://xxx.cloud.qdrant.io:6333
 QDRANT_API_KEY=...
-# Auth
+
+# Auth (Google OAuth)
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 NEXTAUTH_SECRET=...
@@ -530,25 +604,51 @@ NEXTAUTH_SECRET=...
 | `/api/advisor/sources-changed` | GET | sourceId ที่มีข้อความใหม่ |
 | `/api/advisor/source-detail/:id` | GET | ข้อความ + analytics + skills |
 | `/api/advisor/advice` | POST | บันทึกคำแนะนำ |
+| `/api/advisor/cost` | POST | บันทึกค่าใช้จ่าย AI |
+| `/api/costs` | GET | สรุปค่าใช้จ่าย AI (dashboard) |
 
 ### MongoDB Collections
 
 | Collection | หน้าที่ |
 |-----------|--------|
-| messages | ข้อความทั้งหมด (text/image/sticker/video/audio/location/file) + embedding |
-| customers | ข้อมูลลูกค้า + platformIds + pipeline + deal |
-| knowledge_base | ฐานความรู้ร้าน (metadata) |
-| ai_memory | Memory ลูกค้า/กลุ่ม (compact summary) |
-| ai_skill_lessons | บทเรียน AI (สำเร็จ/ล้มเหลว → กฎ) |
-| user_skills | AI analysis per user (sentiment, tags) |
-| chat_analytics | Sentiment + Purchase Intent per source |
-| ai_advice | คำแนะนำจาก OpenClaw (5 บทบาท) |
-| ai_costs | ค่าใช้จ่าย AI ทุก call |
-| tasks | งานติดตาม |
-| reply_templates | ข้อความสำเร็จรูป |
-| users / teams / team_members | Multi-tenant |
-| alerts | แจ้งเตือน (ตอบช้า, sentiment red) |
-| groups_meta | metadata ห้องแชท |
+| `messages` | ข้อความทั้งหมด (text/image/sticker/video/audio/location/file) + embedding |
+| `customers` | ข้อมูลลูกค้า + platformIds + pipeline + deal |
+| `knowledge_base` | ฐานความรู้ร้าน (metadata) |
+| `ai_memory` | Memory ลูกค้า/กลุ่ม (compact summary) |
+| `ai_skill_lessons` | บทเรียน AI (สำเร็จ/ล้มเหลว → กฎ) |
+| `user_skills` | AI analysis per user (sentiment, tags) |
+| `chat_analytics` | Sentiment + Purchase Intent per source |
+| `ai_advice` | คำแนะนำจาก OpenClaw (5 บทบาท) |
+| `ai_costs` | ค่าใช้จ่าย AI ทุก call |
+| `tasks` | งานติดตาม |
+| `reply_templates` | ข้อความสำเร็จรูป |
+| `users` / `teams` / `team_members` | Multi-tenant |
+| `alerts` | แจ้งเตือน (ตอบช้า, sentiment red) |
+| `groups_meta` | metadata ห้องแชท |
+| `platform_tokens` | LINE/FB/IG access tokens per team |
+| `audit_logs` | Audit trail (PDPA compliance) |
+
+### Project Structure
+
+```
+openclawminicrm/
+├── nginx/                  # Reverse proxy + SSL config
+├── openclaw/               # AI Advisor (แกนหลัก)
+│   ├── cron/               # Scheduled jobs (5 บทบาท)
+│   └── ...
+├── proxy/                  # Agent — webhook + AI + RAG + MCP
+│   ├── routes/             # API routes
+│   ├── services/           # AI, LINE, Meta, Knowledge Base
+│   └── ...
+├── smltrackdashboard/      # Dashboard — Next.js 16
+│   ├── app/                # App Router pages
+│   ├── components/         # React components
+│   └── ...
+├── docs/                   # Documentation
+├── docker-compose.yml      # Dev compose
+├── docker-compose.prod.yml # Production compose
+└── .env.example            # Environment template
+```
 
 ---
 
@@ -565,11 +665,39 @@ NEXTAUTH_SECRET=...
 
 ---
 
-## ติดต่อ
+## Contributing
 
-- Web: [crm.satistang.com](https://crm.satistang.com)
-- GitHub: [github.com/smlsoft/openclawminicrm](https://github.com/smlsoft/openclawminicrm)
+ยินดีรับ Pull Request! โปรดอ่านแนวทาง:
+
+1. Fork repo
+2. สร้าง branch: `git checkout -b feature/my-feature`
+3. Commit: `git commit -m "feat: add my feature"`
+4. Push: `git push origin feature/my-feature`
+5. เปิด Pull Request
+
+**Commit Convention:** `feat:` / `fix:` / `docs:` / `refactor:` / `chore:`
 
 ---
 
-**OpenClaw Mini CRM 🦐 — ฟรี ไม่จำกัด ข้อมูลเป็นของคุณ AI ทำงานแทนคุณ 24/7**
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## ติดต่อ
+
+- **Web:** [crm.satistang.com](https://crm.satistang.com)
+- **GitHub:** [github.com/smlsoft/openclawminicrm](https://github.com/smlsoft/openclawminicrm)
+
+---
+
+<div align="center">
+
+**OpenClaw Mini CRM 🦐**
+
+ฟรี 100% · ไม่จำกัด · ข้อมูลเป็นของคุณ · AI ทำงานแทนคุณ 24/7
+
+Made with ❤️ for Thai SMEs
+
+</div>
