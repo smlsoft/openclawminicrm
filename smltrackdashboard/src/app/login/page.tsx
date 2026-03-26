@@ -24,9 +24,9 @@ export default function LoginPage() {
   const handleDemoLogin = async () => {
     setDemoLoading(true);
     // ใช้ credentials provider สำหรับ demo
-    await signIn("credentials", {
-      email: "demo@smlsoft.com",
+    await signIn("google", {
       callbackUrl: "/dashboard",
+      login_hint: "smldemocrm@gmail.com",
     });
   };
 

@@ -80,9 +80,11 @@ export default function Home() {
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [showAlerts, setShowAlerts] = useState(true);
 
-  // Redirect ถ้ายังไม่ setup
+  // Redirect ถ้ายังไม่ login หรือยังไม่ setup
   useEffect(() => {
-    if (authStatus === "authenticated" && (session?.user as any)?.setupComplete === false) {
+    if (authStatus === "unauthenticated") {
+      router.replace("/dashboard/login");
+    } else if (authStatus === "authenticated" && (session?.user as any)?.setupComplete === false) {
       router.replace("/dashboard/onboarding");
     }
   }, [authStatus, session, router]);
