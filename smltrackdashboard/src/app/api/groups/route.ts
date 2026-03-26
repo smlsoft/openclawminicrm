@@ -49,12 +49,13 @@ export async function GET(request: NextRequest) {
         { $match: { sourceId: { $in: sourceIds } } },
         { $group: { _id: "$sourceId", count: { $sum: 1 } } },
       ]).toArray(),
-      // ดึงแค่ข้อความล่าสุด 1 ข้อความต่อ sourceId (เร็วมาก)
+      // ดึง 5 ข้อความล่าสุดต่อ sourceId (พอสำหรับ iPhone preview)
       db.collection("messages").aggregate([
         { $match: { sourceId: { $in: sourceIds } } },
         { $sort: { createdAt: -1 } },
-        { $group: { _id: "$sourceId", lastMsg: { $first: "$$ROOT" } } },
-        { $project: { "lastMsg.embedding": 0, "lastMsg.imageUrl": 0 } },
+        { $project: { embedding: 0 } },
+        { $group: { _id: "$sourceId", messages: { $push: "$$ROOT" } } },
+        { $project: { messages: { $slice: ["$messages", 5] } } },
       ]).toArray(),
     ]);
 
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     const metaMap = new Map(allMeta.map((m) => [m.sourceId, m]));
     const analyticsMap = new Map(allAnalytics.map((a) => [a.sourceId, a]));
     const logMap = new Map(allLogCounts.map((l) => [l._id, l.count]));
-    const lastMsgMap = new Map(lastMessages.map((m) => [m._id, m.lastMsg]));
+    const msgMap = new Map(lastMessages.map((m) => [m._id, m.messages || []]));
 
     // 4. Assemble results (no DB calls in loop)
     const groups = sourceAgg.map((src) => {
@@ -70,7 +71,8 @@ export async function GET(request: NextRequest) {
       const meta = metaMap.get(sourceId);
       const analytics = analyticsMap.get(sourceId);
       const logCount = logMap.get(sourceId) || 0;
-      const lastMsg = lastMsgMap.get(sourceId);
+      const messages = msgMap.get(sourceId) || [];
+      const lastMsg = messages[0];
 
       return {
         id: sourceId,
@@ -86,6 +88,11 @@ export async function GET(request: NextRequest) {
         overallSentiment: analytics?.overallSentiment || analytics?.sentiment || null,
         purchaseIntent: analytics?.purchaseIntent || null,
         analysisLogsCount: logCount,
+        messages: messages.reverse().map((m: any) => ({
+          ...m,
+          _id: m._id.toString(),
+          hasImage: m.messageType === "image",
+        })),
       };
     });
 
