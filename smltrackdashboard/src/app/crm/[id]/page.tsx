@@ -447,12 +447,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
               </div>
             )}
-            <div className="mt-3">
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <Link href={`/customer/${id}`}
+                className="text-xs px-3 py-1.5 rounded-lg bg-indigo-900/30 text-indigo-400 border border-indigo-700/30 hover:bg-indigo-800/40 transition">
+                📜 ดูสนทนาทั้งหมด
+              </Link>
               <button onClick={() => setShowMergeModal(true)}
                 className="text-xs px-3 py-1.5 rounded-lg bg-amber-900/30 text-amber-400 border border-amber-700/30 hover:bg-amber-800/40 transition">
                 🔀 รวมลูกค้า (Merge)
               </button>
-              <p className="text-[10px] theme-text-muted mt-1">รวมลูกค้าจากช่องทางอื่นที่เป็นคนเดียวกัน</p>
+              <p className="text-[10px] theme-text-muted mt-1 w-full">รวมลูกค้าจากช่องทางอื่นที่เป็นคนเดียวกัน</p>
             </div>
           </div>
 
