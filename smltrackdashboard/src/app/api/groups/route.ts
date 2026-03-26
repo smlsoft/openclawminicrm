@@ -11,16 +11,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
     const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
 
-    // 1. ดึง groups จาก groups_meta (ใช้ index, ไม่ต้อง aggregate messages)
-    const allMeta = await db.collection("groups_meta")
-      .find()
-      .sort({ lastMessageAt: -1, _id: -1 })
-      .skip(page * limit)
-      .limit(limit)
-      .toArray();
+    // 1. ดึง sourceIds จาก messages (groups_meta อาจว่าง)
+    const allSourceIds = await db.collection("messages").distinct("sourceId");
+    const totalCount = allSourceIds.filter(Boolean).length;
+    const sourceIds = allSourceIds.filter(Boolean).slice(page * limit, (page + 1) * limit);
 
-    const totalCount = await db.collection("groups_meta").countDocuments();
-    const sourceIds = allMeta.map((m) => m.sourceId).filter(Boolean);
+    // ดึง groups_meta สำหรับ sourceIds ที่ paginate แล้ว
+    const allMeta = sourceIds.length > 0
+      ? await db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray()
+      : [];
 
     if (sourceIds.length === 0) {
       return NextResponse.json({ groups: [], pagination: { total: 0, limit, page, pages: 0, hasMore: false } });
