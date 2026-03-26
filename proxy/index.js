@@ -232,6 +232,45 @@ async function getDB() {
 // === Collection เดียว: messages (แยกด้วย sourceId field) ===
 const MESSAGES_COLL = "messages";
 
+// === [Audit] Audit Log — บันทึกทุก action ของ staff ===
+const AUDIT_LOG_COLL = "audit_logs";
+
+async function auditLog(action, details = {}) {
+  const db = await getDB();
+  if (!db) return;
+  try {
+    await db.collection(AUDIT_LOG_COLL).insertOne({
+      action,
+      ...details,
+      createdAt: new Date(),
+    });
+  } catch {}
+}
+
+// === [Privacy] PDPA Notice — แจ้งลูกค้าครั้งแรก ===
+const PRIVACY_TEXT = `🔒 แจ้งเตือน: ระบบนี้ใช้ AI ในการวิเคราะห์และตอบกลับข้อความ ข้อมูลของคุณจะถูกเก็บรักษาตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล (PDPA)\n\nพิมพ์ "หยุด" เพื่อหยุดรับข้อความอัตโนมัติ\nพิมพ์ "ลบข้อมูล" เพื่อขอลบข้อมูลของคุณ`;
+const privacyNoticeSent = new Set(); // in-memory cache เพื่อไม่ต้อง query DB ทุกข้อความ
+
+async function sendPrivacyNoticeIfNeeded(sourceId, platform, sendFn) {
+  if (privacyNoticeSent.has(sourceId)) return;
+  const database = await getDB();
+  if (!database) return;
+  const consent = await database.collection("privacy_consent").findOne({ sourceId }).catch(() => null);
+  if (consent) {
+    privacyNoticeSent.add(sourceId);
+    return;
+  }
+  await sendFn().catch(() => {});
+  await database.collection("privacy_consent").insertOne({
+    sourceId,
+    platform,
+    noticeSentAt: new Date(),
+    optedOut: false,
+  }).catch(() => {});
+  privacyNoticeSent.add(sourceId);
+  console.log(`[Privacy] ส่งแจ้งเตือน PDPA → ${platform}:${sourceId.substring(0, 12)}`);
+}
+
 // === AI Cost Tracking ===
 // ราคาโดยประมาณต่อ 1M tokens (USD)
 const AI_PRICING = {
@@ -593,7 +632,14 @@ async function ensureIndexes() {
     await database.collection("ai_costs").createIndex({ createdAt: -1 });
     await database.collection("ai_costs").createIndex({ feature: 1, createdAt: -1 });
 
-    console.log("[Index] ✅ All indexes ready (messages, customers, groups, KB, memory, skills, tasks, templates, analytics)");
+    // ── [Audit] Audit Logs ──
+    await database.collection(AUDIT_LOG_COLL).createIndex({ createdAt: -1 });
+    await database.collection(AUDIT_LOG_COLL).createIndex({ action: 1, createdAt: -1 });
+
+    // ── [Privacy] Privacy Consent ──
+    await database.collection("privacy_consent").createIndex({ sourceId: 1 }, { unique: true });
+
+    console.log("[Index] ✅ All indexes ready (messages, customers, groups, KB, memory, skills, tasks, templates, analytics, audit, privacy)");
   } catch (e) {
     if (!e.message?.includes("already exists")) {
       console.error("[Index] Error:", e.message);
@@ -2108,6 +2154,12 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
         }, platform)
 
         console.log(`[Meta/${platform}] ${userName}@${sourceId.substring(0, 12)}: ${msgText.substring(0, 60)}`)
+
+        // === [Privacy] แจ้ง PDPA ข้อความแรก (Meta) ===
+        sendPrivacyNoticeIfNeeded(sourceId, platform, () =>
+          sendMetaMessage(senderId, PRIVACY_TEXT)
+        ).catch(() => {})
+
         analyzeChat(sourceId, userName, msgText, senderId, { type: "user" }).catch((e) => console.error("[Meta/Skill] Catch:", e.message))
         learnFromMessage(sourceId, userName, msgText, "text", "user").catch(() => {})
 
@@ -2282,6 +2334,14 @@ app.post("/webhook", express.raw({ type: "*/*" }), async (req, res) => {
     // === เก็บข้อความ + น้องกุ้งตอบแทน (ถ้าเปิด) ===
     try {
       await processEvent(event);
+
+      // === [Privacy] แจ้ง PDPA ข้อความแรก (เฉพาะ 1-on-1) ===
+      if (source.type === "user") {
+        sendPrivacyNoticeIfNeeded(sourceId, "line", () =>
+          sendLinePush(sourceId, [{ type: "text", text: PRIVACY_TEXT }])
+        ).catch(() => {});
+      }
+
       const userName = await getUserName(source).catch(() => "User");
       const messageText = msg.text || `[${msg.type}]`;
       const lineUserId = source.userId || null;
@@ -3262,6 +3322,7 @@ app.post("/api/inbox/send", sendLimiter, express.json(), async (req, res) => {
       platform
     );
 
+    auditLog("send_message", { sourceId, platform, staffName: senderName, messageType }).catch(() => {});
     console.log(`[Inbox] ✅ ส่ง${method === "reply" ? "(ฟรี)" : "(push)"} → ${platform}:${sourceId.substring(0, 8)} โดย ${senderName}`);
     res.json({ ok: true, method });
   } catch (e) {
@@ -3284,6 +3345,7 @@ app.post("/api/inbox/upload", uploadLimiter, upload.single("image"), (req, res) 
   // สร้าง public URL (ผ่าน nginx/proxy)
   const baseUrl = process.env.BASE_URL || `https://crm.satistang.com`;
   const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+  auditLog("upload_image", { filename: req.file.filename }).catch(() => {});
   res.json({ ok: true, imageUrl, filename: req.file.filename });
 });
 
@@ -3294,6 +3356,8 @@ app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "7d" }));
 app.post("/api/inbox/suggest", aiLimiter, express.json(), async (req, res) => {
   const { sourceId } = req.body;
   if (!sourceId) return res.status(400).json({ error: "sourceId required" });
+
+  auditLog("view_suggest", { sourceId }).catch(() => {});
 
   try {
     const db = await getDB();
@@ -3594,6 +3658,7 @@ app.post("/api/km", express.json({ limit: "5mb" }), async (req, res) => {
       console.error("[KB] Qdrant upsert error:", e.message)
     );
 
+    auditLog("create_kb", { title }).catch(() => {});
     console.log(`[KB] + เพิ่ม: ${title}`);
     res.json({ ok: true, id: result.insertedId });
   } catch (e) {
@@ -3624,6 +3689,7 @@ app.patch("/api/km/:id", express.json(), async (req, res) => {
       }
     }
 
+    auditLog("update_kb", { id: req.params.id, active }).catch(() => {});
     console.log(`[KB] ✏️ อัพเดท: ${req.params.id} ${active !== undefined ? (active ? "→ เปิด" : "→ ปิด") : ""}`);
     res.json({ ok: true });
   } catch (e) {
@@ -3638,6 +3704,7 @@ app.delete("/api/km/:id", express.json(), async (req, res) => {
     const db = await getDB();
     await db.collection(KB_COLL).deleteOne({ _id: new ObjectId(req.params.id) });
     deleteKBFromQdrant(req.params.id).catch(() => {});
+    auditLog("delete_kb", { id: req.params.id }).catch(() => {});
     console.log(`[KB] 🗑️ ลบ: ${req.params.id}`);
     res.json({ ok: true });
   } catch (e) {
@@ -4143,6 +4210,7 @@ app.post("/api/customers/merge/consolidate", express.json(), async (req, res) =>
     const { primaryRooms, secondaryRooms } = req.body;
     if (!primaryRooms?.length) return res.status(400).json({ error: "primaryRooms required" });
     console.log(`[Merge] consolidate: primary=${primaryRooms.length} rooms, secondary=${(secondaryRooms || []).length} rooms`);
+    auditLog("merge_customer", { primaryRooms, secondaryRooms }).catch(() => {});
     await Promise.all([
       consolidateMemoryAfterMerge(primaryRooms, secondaryRooms || []),
       consolidateAnalyticsAfterMerge(primaryRooms, secondaryRooms || []),
@@ -4152,6 +4220,22 @@ app.post("/api/customers/merge/consolidate", express.json(), async (req, res) =>
   } catch (err) {
     console.error("[Merge] consolidate error:", err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// === [Audit] GET /api/audit-logs — ดู audit logs ===
+app.get("/api/audit-logs", async (req, res) => {
+  try {
+    const db = await getDB();
+    const limit = parseInt(req.query.limit || "100");
+    const logs = await db.collection(AUDIT_LOG_COLL)
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray();
+    res.json(logs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
