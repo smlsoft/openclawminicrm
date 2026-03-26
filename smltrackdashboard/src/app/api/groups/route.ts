@@ -7,81 +7,67 @@ export async function GET(request: NextRequest) {
   const t0 = Date.now();
   try {
     const db = await getDB();
-    const tDb = Date.now();
 
     const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
     const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
 
-    // 1. ดึง sourceIds + lastActivity + count ด้วย aggregation เดียว (แทน N+1)
-    const sourceAgg = await db
-      .collection("messages")
-      .aggregate([
-        {
-          $group: {
-            _id: "$sourceId",
-            messageCount: { $sum: 1 },
-            lastActivity: { $max: "$createdAt" },
-          },
-        },
-        { $sort: { lastActivity: -1 } },
-        { $skip: page * limit },
-        { $limit: limit },
-      ])
+    // 1. ดึง groups จาก groups_meta (ใช้ index, ไม่ต้อง aggregate messages)
+    const allMeta = await db.collection("groups_meta")
+      .find()
+      .sort({ lastMessageAt: -1, _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
       .toArray();
 
-    const total = await db.collection("messages").aggregate([
-      { $group: { _id: "$sourceId" } },
-      { $count: "total" },
-    ]).toArray();
-    const totalCount = total[0]?.total || 0;
+    const totalCount = await db.collection("groups_meta").countDocuments();
+    const sourceIds = allMeta.map((m) => m.sourceId).filter(Boolean);
 
-    const sourceIds = sourceAgg.map((s) => s._id).filter(Boolean);
     if (sourceIds.length === 0) {
       return NextResponse.json({ groups: [], pagination: { total: 0, limit, page, pages: 0, hasMore: false } });
     }
 
-    // 2. Batch queries — ดึงทุกอย่างใน $in เดียว (ไม่มี N+1)
-    // Dashboard ไม่ต้องการ full messages — แค่ lastMessage ก็พอ
-    const [allMeta, allAnalytics, allLogCounts, lastMessages] = await Promise.all([
-      db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray(),
+    // 2. Batch fetch analytics + logs (simple $in queries — fast)
+    const [allAnalytics, allLogCounts] = await Promise.all([
       db.collection("chat_analytics").find({ sourceId: { $in: sourceIds } }).toArray(),
       db.collection("analysis_logs").aggregate([
         { $match: { sourceId: { $in: sourceIds } } },
         { $group: { _id: "$sourceId", count: { $sum: 1 } } },
       ]).toArray(),
-      // ดึง 5 ข้อความล่าสุดต่อ sourceId (พอสำหรับ iPhone preview)
-      db.collection("messages").aggregate([
-        { $match: { sourceId: { $in: sourceIds } } },
-        { $sort: { createdAt: -1 } },
-        { $project: { embedding: 0 } },
-        { $group: { _id: "$sourceId", messages: { $push: "$$ROOT" } } },
-        { $project: { messages: { $slice: ["$messages", 5] } } },
-      ]).toArray(),
     ]);
 
-    // 3. Build lookup maps
-    const metaMap = new Map(allMeta.map((m) => [m.sourceId, m]));
+    // 3. ดึง messages แบบ parallel find ต่อ sourceId (ใช้ index sourceId+createdAt)
+    const msgResults = await Promise.all(
+      sourceIds.map((sid) =>
+        db.collection("messages")
+          .find({ sourceId: sid }, { projection: { embedding: 0 } })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray()
+      )
+    );
+
+    // 4. Build lookup maps
     const analyticsMap = new Map(allAnalytics.map((a) => [a.sourceId, a]));
     const logMap = new Map(allLogCounts.map((l) => [l._id, l.count]));
-    const msgMap = new Map(lastMessages.map((m) => [m._id, m.messages || []]));
+    const msgMap = new Map(sourceIds.map((sid, i) => [sid, msgResults[i]]));
 
-    // 4. Assemble results (no DB calls in loop)
-    const groups = sourceAgg.map((src) => {
-      const sourceId = src._id;
-      const meta = metaMap.get(sourceId);
+    // 5. Assemble
+    const groups = allMeta.map((meta) => {
+      const sourceId = meta.sourceId;
       const analytics = analyticsMap.get(sourceId);
       const logCount = logMap.get(sourceId) || 0;
       const messages = msgMap.get(sourceId) || [];
       const lastMsg = messages[0];
+      const count = meta.messageCount || messages.length;
 
       return {
         id: sourceId,
-        name: meta?.groupName || sourceId,
-        sourceType: meta?.sourceType || "unknown",
-        platform: meta?.platform || "line",
-        messageCount: src.messageCount,
+        name: meta.groupName || sourceId,
+        sourceType: meta.sourceType || "unknown",
+        platform: meta.platform || "line",
+        messageCount: count,
         lastMessage: lastMsg?.content?.substring(0, 50) || "",
-        lastActivity: src.lastActivity || null,
+        lastActivity: lastMsg?.createdAt || meta.lastMessageAt || null,
         sentiment: analytics?.overallSentiment || analytics?.sentiment || null,
         customerSentiment: analytics?.customerSentiment || null,
         staffSentiment: analytics?.staffSentiment || null,
@@ -97,7 +83,7 @@ export async function GET(request: NextRequest) {
     });
 
     const tEnd = Date.now();
-    console.log(`[/api/groups] page=${page} limit=${limit} groups=${groups.length} total=${totalCount} db=${tDb - t0}ms query=${tEnd - tDb}ms total=${tEnd - t0}ms`);
+    console.log(`[/api/groups] page=${page} limit=${limit} groups=${groups.length} total=${totalCount} time=${tEnd - t0}ms`);
 
     return NextResponse.json({
       groups,
@@ -110,6 +96,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err: any) {
+    console.error("[/api/groups] error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
