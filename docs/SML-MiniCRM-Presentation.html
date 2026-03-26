@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Mini CRM - AI Chat Intelligence สำหรับ SMEs ไทย</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    background: #0a0e2a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 40px 50px;
+    background: linear-gradient(160deg, #0a0e2a 0%, #1a1f3a 50%, #0f1330 100%);
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Decorative elements */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .page::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Page footer */
+  .page-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(99,102,241,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-warm {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .accent-indigo { color: #818cf8; }
+  .accent-cyan { color: #22d3ee; }
+  .accent-green { color: #34d399; }
+  .accent-amber { color: #fbbf24; }
+  .accent-rose { color: #fb7185; }
+
+  /* Cover page */
+  .cover {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .cover .logo {
+    font-size: 72px;
+    margin-bottom: 8px;
+  }
+
+  .cover h1 {
+    font-size: 42px;
+    margin-bottom: 8px;
+  }
+
+  .cover .tagline {
+    font-size: 22px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+
+  .cover .sub-tagline {
+    font-size: 17px;
+    color: #64748b;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+
+  .cover .value-props {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .cover .value-prop {
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-size: 15px;
+    color: #c7d2fe;
+  }
+
+  .cover .bottom-bar {
+    margin-top: 48px;
+    padding: 16px 32px;
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 16px;
+    font-size: 16px;
+    color: #67e8f9;
+    letter-spacing: 0.5px;
+  }
+
+  /* Section header styling */
+  .section-num {
+    display: inline-block;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-right: 12px;
+    vertical-align: middle;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(99,102,241,0.2);
+  }
+
+  .section-header h2 {
+    margin-bottom: 0;
+  }
+
+  /* Cards */
+  .card {
+    background: rgba(30,35,60,0.7);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .card-grid .card {
+    margin-bottom: 0;
+  }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .card h3 {
+    margin-bottom: 6px;
+  }
+
+  .card p, .card li {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card ul li {
+    padding: 3px 0;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #6366f1;
+  }
+
+  /* Problem items */
+  .problem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .problem-item .icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  .problem-item .text h3 {
+    color: #fca5a5;
+    font-size: 17px;
+    margin-bottom: 2px;
+  }
+
+  .problem-item .text p {
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  /* Solution flow */
+  .flow-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .flow-step {
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 14px;
+    min-width: 100px;
+  }
+
+  .flow-step .emoji {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .flow-arrow {
+    font-size: 20px;
+    color: #6366f1;
+  }
+
+  .highlight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .highlight-card {
+    background: rgba(30,35,60,0.8);
+    border-radius: 14px;
+    padding: 18px 20px;
+    border-left: 4px solid;
+    text-align: left;
+  }
+
+  .highlight-card.indigo { border-color: #6366f1; }
+  .highlight-card.cyan { border-color: #06b6d4; }
+  .highlight-card.green { border-color: #10b981; }
+  .highlight-card.amber { border-color: #f59e0b; }
+
+  .highlight-card h3 {
+    font-size: 16px;
+  }
+
+  .highlight-card p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  /* Feature lists */
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(99,102,241,0.08);
+  }
+
+  .feature-item:last-child {
+    border-bottom: none;
+  }
+
+  .feature-item .fi-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .feature-item h3 {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  .feature-item p {
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  /* Platform colors */
+  .platform-line { color: #06d6a0; }
+  .platform-fb { color: #4895ef; }
+  .platform-ig { color: #c77dff; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 12px 0;
+  }
+
+  th {
+    background: rgba(99,102,241,0.15);
+    color: #c7d2fe;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  th:first-child {
+    border-radius: 8px 0 0 0;
+  }
+
+  th:last-child {
+    border-radius: 0 8px 0 0;
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(99,102,241,0.08);
+    color: #cbd5e1;
+  }
+
+  tr:nth-child(even) td {
+    background: rgba(30,35,60,0.4);
+  }
+
+  tr:hover td {
+    background: rgba(99,102,241,0.06);
+  }
+
+  .check { color: #34d399; font-weight: bold; }
+  .cross { color: #f87171; }
+  .free-tag {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Steps */
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+    background: rgba(30,35,60,0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(99,102,241,0.1);
+  }
+
+  .step-num {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .step-text h3 {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  .step-text p {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  /* Use case cards */
+  .usecase {
+    background: rgba(30,35,60,0.7);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+  }
+
+  .usecase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .usecase-header .emoji {
+    font-size: 32px;
+  }
+
+  .usecase-header h3 {
+    font-size: 17px;
+    color: #e2e8f0;
+    margin-bottom: 0;
+  }
+
+  .usecase-flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  .usecase-flow span {
+    background: rgba(99,102,241,0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .usecase-flow .arrow {
+    color: #6366f1;
+    background: none;
+    padding: 0;
+  }
+
+  /* Price comparison */
+  .price-highlight {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.1));
+    border: 2px solid rgba(16,185,129,0.3);
+    border-radius: 16px;
+    margin: 16px 0;
+  }
+
+  .price-highlight .price {
+    font-size: 56px;
+    font-weight: 800;
+    color: #34d399;
+  }
+
+  .price-highlight .price-label {
+    font-size: 20px;
+    color: #94a3b8;
+  }
+
+  /* Ending page */
+  .ending {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ending .cta {
+    margin-top: 32px;
+    padding: 18px 48px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border-radius: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    display: inline-block;
+  }
+
+  .ending .contact-info {
+    margin-top: 28px;
+    color: #94a3b8;
+    font-size: 16px;
+  }
+
+  .ending .contact-info a {
+    color: #818cf8;
+    text-decoration: none;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-green {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,0.3);
+  }
+
+  .badge-indigo {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,0.3);
+  }
+
+  .badge-amber {
+    background: rgba(245,158,11,0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+
+  .badge-rose {
+    background: rgba(244,63,94,0.15);
+    color: #fb7185;
+    border: 1px solid rgba(244,63,94,0.3);
+  }
+
+  /* Small text in table */
+  .small-table {
+    font-size: 12px;
+  }
+
+  .small-table th {
+    font-size: 11px;
+    padding: 7px 10px;
+  }
+
+  .small-table td {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* PDPA shield */
+  .shield-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .shield-item {
+    background: rgba(30,35,60,0.7);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .shield-item .icon {
+    font-size: 30px;
+    margin-bottom: 6px;
+  }
+
+  .shield-item h3 {
+    font-size: 14px;
+    color: #34d399;
+    margin-bottom: 4px;
+  }
+
+  .shield-item p {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  /* KPI cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .kpi-card {
+    background: rgba(30,35,60,0.7);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .kpi-card .icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .kpi-card h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .kpi-card p {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  /* Subtle divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+    margin: 16px 0;
+  }
+
+  @media print {
+    body {
+      background: #0a0e2a;
+    }
+    .page {
+      margin: 0;
+      box-shadow: none;
+      page-break-inside: avoid;
+    }
+  }
+
+  @media screen {
+    .page {
+      margin: 20px auto;
+      box-shadow: 0 0 60px rgba(99,102,241,0.1);
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== หน้า 1: ปก ===== -->
+<div class="page cover">
+  <div class="logo">&#x1F990;</div>
+  <h1><span class="gradient-text">OpenClaw Mini CRM</span></h1>
+  <div class="tagline">AI Chat Intelligence สำหรับ SMEs ไทย</div>
+  <div class="sub-tagline">LINE &middot; Facebook &middot; Instagram &mdash; รวมจอเดียว</div>
+
+  <div class="value-props">
+    <div class="value-prop">&#x1F4B0; ฟรี 100%</div>
+    <div class="value-prop">&#x1F512; ข้อมูลเป็นของคุณ</div>
+    <div class="value-prop">&#x1F916; AI ทำงานแทนคุณ 24/7</div>
+  </div>
+
+  <div class="bottom-bar">
+    SML Mini CRM &mdash; ระบบ CRM อัจฉริยะสำหรับธุรกิจ SME ไทย
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>crm.satistang.com</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 2: ปัญหาที่ SME เจอ ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2><span class="gradient-text-warm">ปัญหาที่ SME เจอทุกวัน</span></h2>
+  </div>
+
+  <div class="problem-item">
+    <div class="icon">&#x1F4F1;</div>
+    <div class="text">
+      <h3>ลูกค้าทักมาหลายช่องทาง สลับแอปไม่ทัน</h3>
+      <p>LINE, Facebook, Instagram ทักพร้อมกัน &mdash; เปิดมือถือ 3 แอป สลับจนมึน ตอบพลาด ตอบซ้ำ ลืมตอบ</p>
+    </div>
+  </div>
+
+  <div class="problem-item">
+    <div class="icon">&#x23F3;</div>
+    <div class="text">
+      <h3>พนักงานตอบช้า ลูกค้าหนีไปร้านอื่น</h3>
+      <p>ลูกค้ารอ 10 นาที = โอกาสขายหาย &mdash; ธุรกิจที่ตอบเร็วกว่าได้ลูกค้าไป</p>
+    </div>
+  </div>
+
+  <div class="problem-item">
+    <div class="icon">&#x1F4CA;</div>
+    <div class="text">
+      <h3>ข้อมูลกระจาย ไม่รู้ว่าใครสนใจซื้อ</h3>
+      <p>แชทอยู่ในมือถือพนักงานแต่ละคน ไม่มีข้อมูลรวมศูนย์ ไม่รู้ว่าลูกค้าคนไหนพร้อมซื้อ</p>
+    </div>
+  </div>
+
+  <div class="problem-item">
+    <div class="icon">&#x1F441;</div>
+    <div class="text">
+      <h3>เจ้าของไม่เห็นภาพรวม ลูกค้าหายไม่รู้ตัว</h3>
+      <p>ไม่มี dashboard ไม่มีรายงาน ลูกค้าเก่าหายไป 2 สัปดาห์กว่าจะรู้ &mdash; สายเกินไปแล้ว</p>
+    </div>
+  </div>
+
+  <div class="problem-item">
+    <div class="icon">&#x1F4B8;</div>
+    <div class="text">
+      <h3>CRM แพง จ่ายเดือนละพัน ใช้ไม่คุ้ม</h3>
+      <p>ระบบ CRM ในตลาดเริ่มต้น 500-1,590 บาท/เดือน &mdash; SME เพิ่งเริ่มต้น จ่ายไม่ไหว</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>01 &mdash; ปัญหาที่ SME เจอทุกวัน</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 3: OpenClaw แก้ปัญหาอย่างไร ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2><span class="gradient-text">OpenClaw แก้ปัญหาอย่างไร</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px; text-align:center;">ระบบ AI อัจฉริยะที่ทำงานให้คุณอัตโนมัติ ตั้งแต่รับแชทจนถึงปิดการขาย</p>
+
+  <div class="flow-container">
+    <div class="flow-step">
+      <span class="emoji">&#x1F4AC;</span>
+      ลูกค้าทักมา
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step">
+      <span class="emoji">&#x1F916;</span>
+      AI วิเคราะห์
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step">
+      <span class="emoji">&#x1F4A1;</span>
+      แนะนำคำตอบ
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step">
+      <span class="emoji">&#x2705;</span>
+      ตอบแทนอัตโนมัติ
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step">
+      <span class="emoji">&#x1F9E0;</span>
+      เรียนรู้ &amp; จำ
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="text-align:center; color:#818cf8; margin-bottom:16px;">4 จุดเด่นที่ทำให้ SME เลือก OpenClaw</h3>
+
+  <div class="highlight-grid">
+    <div class="highlight-card indigo">
+      <h3>&#x1F4F1; รวมแชท 3 ช่องทาง</h3>
+      <p>LINE, Facebook, Instagram &mdash; แชทลูกค้าทุกช่องทางมาอยู่ในหน้าจอเดียว ไม่ต้องสลับแอป</p>
+    </div>
+    <div class="highlight-card cyan">
+      <h3>&#x1F916; AI ตอบแทนอัตโนมัติ</h3>
+      <p>ลูกค้าทักนอกเวลา? AI ตอบทันทีจาก Knowledge Base &mdash; ไม่พลาดโอกาสขาย</p>
+    </div>
+    <div class="highlight-card green">
+      <h3>&#x1F9E0; จำลูกค้า ยิ่งใช้ยิ่งเก่ง</h3>
+      <p>AI เรียนรู้ว่าใครชอบอะไร ซื้อบ่อยแค่ไหน สนใจสินค้าตัวไหน &mdash; แนะนำได้ตรงใจ</p>
+    </div>
+    <div class="highlight-card amber">
+      <h3>&#x1F512; ปกป้องข้อมูล PDPA</h3>
+      <p>ข้อมูลเก็บใน MongoDB ของคุณเอง &mdash; mask ข้อมูลส่วนตัว ตรงตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>02 &mdash; ภาพรวมการแก้ปัญหา</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 4: แชท Multi-Panel ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2><span class="gradient-text">แชท Multi-Panel</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">เปิดแชทหลายจอพร้อมกัน ดูลูกค้าทุกช่องทางในที่เดียว</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">&#x1F5A5;</div>
+      <h3>เปิด 4 จอพร้อมกัน</h3>
+      <p>ดูแชท LINE, Facebook, Instagram พร้อมกันได้ถึง 4 Panel &mdash; ไม่ต้องสลับหน้าจอ</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F3A8;</div>
+      <h3>แยกสีตาม Platform</h3>
+      <ul>
+        <li><span class="platform-line">&#x25CF; LINE &mdash; สีเขียว</span></li>
+        <li><span class="platform-fb">&#x25CF; Facebook &mdash; สีน้ำเงิน</span></li>
+        <li><span class="platform-ig">&#x25CF; Instagram &mdash; สีม่วง</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F4B0;</div>
+      <h3>Reply-first ประหยัดค่า LINE</h3>
+      <p>ตอบกลับภายใน 7 วัน ไม่เสียค่า Push Message &mdash; ประหยัดค่าใช้จ่ายให้ธุรกิจ</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F4E8;</div>
+      <h3>ส่งได้ทุกรูปแบบ</h3>
+      <ul>
+        <li>ข้อความ + Emoji</li>
+        <li>สติกเกอร์ LINE</li>
+        <li>รูปภาพ + ไฟล์</li>
+        <li>ตำแหน่ง (Location)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(6,182,212,0.3);">
+    <h3 style="color:#22d3ee;">&#x1F50D; ค้นหาลูกค้าข้ามทุก Platform</h3>
+    <p style="font-size:15px; color:#94a3b8;">พิมพ์ชื่อลูกค้า &mdash; ค้นเจอทันทีไม่ว่าจะทักมาจาก LINE, Facebook หรือ Instagram</p>
+  </div>
+
+  <div class="card" style="border-color: rgba(245,158,11,0.3);">
+    <h3 style="color:#fbbf24;">&#x1F4CB; Quick Reply &mdash; ตอบเร็วขึ้น 10 เท่า</h3>
+    <p style="font-size:15px; color:#94a3b8;">สร้างข้อความสำเร็จรูป (ทักทาย, ราคา, ติดตาม, ปิดการขาย) &mdash; กดเลือก คัดลอก วาง จบ!</p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>03 &mdash; แชท Multi-Panel</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 5: AI อัจฉริยะ ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2><span class="gradient-text">AI อัจฉริยะ</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">ระบบ AI ที่ทำงานแทนคุณ &mdash; แนะนำ ตอบแทน จำลูกค้า วิเคราะห์ ทุกอย่างอัตโนมัติ</p>
+
+  <div class="feature-item">
+    <div class="fi-icon">&#x1F4A1;</div>
+    <div>
+      <h3 class="accent-amber">AI แนะนำคำตอบ + เหตุผล</h3>
+      <p>ลูกค้าทักมา &rarr; AI อ่านบริบท &rarr; เสนอคำตอบ + อธิบายว่าทำไมควรตอบแบบนี้ &mdash; พนักงานใหม่ก็ตอบเก่งได้ทันที</p>
+    </div>
+  </div>
+
+  <div class="feature-item">
+    <div class="fi-icon">&#x1F916;</div>
+    <div>
+      <h3 class="accent-cyan">AI ตอบแทนอัตโนมัติ (5 นาที)</h3>
+      <p>ลูกค้าทักแล้วไม่มีคนตอบภายใน 5 นาที? AI จะตอบแทนจาก Knowledge Base &mdash; ไม่พลาดลูกค้าแม้แต่คนเดียว</p>
+    </div>
+  </div>
+
+  <div class="feature-item">
+    <div class="fi-icon">&#x1F9E0;</div>
+    <div>
+      <h3 class="accent-green">จำลูกค้า &mdash; ยิ่งใช้ยิ่งเก่ง</h3>
+      <p>AI จำได้ว่าลูกค้าเคยซื้ออะไร สนใจอะไร ชมหรือร้องเรียนเรื่องอะไร &mdash; แนะนำสินค้าได้ตรงใจ ทุกครั้งที่ทักกลับมา</p>
+    </div>
+  </div>
+
+  <div class="feature-item">
+    <div class="fi-icon">&#x1F990;</div>
+    <div>
+      <h3 class="accent-indigo">น้องกุ้ง &mdash; AI Advisor 5 บทบาท 24/7</h3>
+      <p>น้องกุ้ง วิเคราะห์ข้อมูลทุก 1 ชั่วโมง แล้วแจ้งเตือนเจ้าของ:</p>
+    </div>
+  </div>
+
+  <div class="card-grid" style="margin-left: 40px;">
+    <div class="card" style="padding:12px 16px;">
+      <p><span class="badge badge-rose">ด่วน!</span> ลูกค้าไม่พอใจ ควรโทรทันที</p>
+    </div>
+    <div class="card" style="padding:12px 16px;">
+      <p><span class="badge badge-amber">ระวัง</span> ลูกค้าเริ่มมีปัญหา ควรเข้าไปดูแล</p>
+    </div>
+    <div class="card" style="padding:12px 16px;">
+      <p><span class="badge badge-green">โอกาส!</span> ลูกค้าอยากซื้อ ควรเสนอราคา</p>
+    </div>
+    <div class="card" style="padding:12px 16px;">
+      <p><span class="badge badge-indigo">ข้อมูล</span> สรุปสถิติ + ภาพรวมวันนี้</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>04 &mdash; AI อัจฉริยะ</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 6: Knowledge Base + AI Learning ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2><span class="gradient-text">Knowledge Base + AI Learning</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">ใส่ข้อมูลร้านให้ AI &mdash; ยิ่งใส่มาก ยิ่งตอบเก่ง ยิ่งเรียนรู้ ยิ่งฉลาด</p>
+
+  <div class="card" style="border-color: rgba(99,102,241,0.3);">
+    <h3 style="color:#818cf8;">&#x1F4DA; Knowledge Base &mdash; สอน AI ให้รู้จักธุรกิจคุณ</h3>
+    <p>ใส่ข้อมูลร้าน &rarr; AI นำไปตอบลูกค้าถูกต้อง ตรงประเด็น ทันที</p>
+    <div class="divider"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+      <div>
+        <p style="font-size:13px; color:#818cf8; font-weight:600; margin-bottom:4px;">ตัวอย่างข้อมูลที่ใส่ได้:</p>
+        <ul style="list-style:none; padding:0;">
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; รายการสินค้า + ราคา</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; โปรโมชั่นประจำเดือน</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; เวลาเปิด/ปิดร้าน</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; วิธีสั่งซื้อ / จัดส่ง</li>
+        </ul>
+      </div>
+      <div>
+        <p style="font-size:13px; color:#818cf8; font-weight:600; margin-bottom:4px;">&nbsp;</p>
+        <ul style="list-style:none; padding:0;">
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; คำถามที่ถามบ่อย (FAQ)</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; นโยบายร้าน</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; ข้อมูลบริการหลังการขาย</li>
+          <li style="font-size:13px; color:#94a3b8; padding:2px 0;">&#x2022; ที่อยู่ + แผนที่ร้าน</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" style="border-color: rgba(16,185,129,0.3);">
+      <div class="card-icon">&#x1F9E0;</div>
+      <h3 style="color:#34d399;">AI เรียนรู้จากทุกการสนทนา</h3>
+      <ul>
+        <li>จำว่าลูกค้าเคยซื้ออะไร</li>
+        <li>จำว่าลูกค้าชมหรือร้องเรียนอะไร</li>
+        <li>จำ pattern การถาม-ตอบ</li>
+        <li>ปรับสไตล์ให้เข้ากับลูกค้า</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color: rgba(6,182,212,0.3);">
+      <div class="card-icon">&#x1F52C;</div>
+      <h3 style="color:#22d3ee;">A/B Testing อัตโนมัติ</h3>
+      <ul>
+        <li>ทดสอบสไตล์ AI หลายแบบ</li>
+        <li>วัดผลว่าแบบไหนปิดการขายได้ดี</li>
+        <li>ระบบเลือกสไตล์ที่ดีที่สุดเอง</li>
+        <li>ยิ่งใช้นาน AI ยิ่งเก่ง</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(245,158,11,0.3);">
+    <h3 style="color:#fbbf24;">&#x1F441; Vision AI &mdash; อ่านรูปเป็นข้อความ</h3>
+    <p>ลูกค้าส่งรูปสินค้า, สลิปโอนเงิน, ใบเสนอราคา &rarr; AI บรรยายเป็นภาษาไทยอัตโนมัติ &rarr; ค้นหาได้ + นำไปวิเคราะห์ต่อ</p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>05 &mdash; Knowledge Base + AI Learning</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 7: CRM + Pipeline ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2><span class="gradient-text">CRM + Sales Pipeline</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">ลูกค้าถูกสร้างอัตโนมัติ ติดตามสถานะจนปิดการขาย &mdash; ไม่ต้องกรอกข้อมูลเอง</p>
+
+  <div class="flow-container" style="margin-bottom:20px;">
+    <div class="flow-step" style="border-color: rgba(148,163,184,0.3);">
+      <span class="emoji">&#x1F195;</span>
+      ลูกค้าใหม่
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step" style="border-color: rgba(6,182,212,0.3);">
+      <span class="emoji">&#x1F440;</span>
+      สนใจ
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step" style="border-color: rgba(245,158,11,0.3);">
+      <span class="emoji">&#x1F4B5;</span>
+      เสนอราคา
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step" style="border-color: rgba(99,102,241,0.3);">
+      <span class="emoji">&#x1F91D;</span>
+      ต่อรอง
+    </div>
+    <span class="flow-arrow">&#x27A1;</span>
+    <div class="flow-step" style="border-color: rgba(16,185,129,0.3);">
+      <span class="emoji">&#x1F3C6;</span>
+      ปิดการขาย
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">&#x1F464;</div>
+      <h3>สร้างลูกค้าอัตโนมัติ</h3>
+      <ul>
+        <li>ลูกค้าทักมา = สร้างข้อมูลทันที</li>
+        <li>ดึงรูป + ชื่อจาก LINE/FB/IG</li>
+        <li>AI ให้คะแนน sentiment อัตโนมัติ</li>
+        <li>ติดแท็กอัตโนมัติ (สนใจ, ร้องเรียน...)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F517;</div>
+      <h3>รวมลูกค้าข้าม Platform</h3>
+      <ul>
+        <li>ลูกค้าทัก LINE + FB + IG = คนเดียว</li>
+        <li>ระบบรวมข้อมูลอัตโนมัติ</li>
+        <li>หรือ Manual Merge เองก็ได้</li>
+        <li>เห็นประวัติทุกช่องทางในที่เดียว</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x1F465;</div>
+      <h3>มอบหมายลูกค้าให้ Staff</h3>
+      <ul>
+        <li>กำหนดเจ้าของลูกค้าแต่ละราย</li>
+        <li>ดูเฉพาะ "ลูกค้าของฉัน" ได้</li>
+        <li>ไม่ซ้ำซ้อน ไม่ตกหล่น</li>
+        <li>วัด KPI รายบุคคลได้</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#x26A0;</div>
+      <h3>Churn Prediction</h3>
+      <ul>
+        <li>ทำนายลูกค้าเสี่ยงหาย</li>
+        <li>ไม่มีข้อความ 3-7 วัน = เตือน</li>
+        <li>ไม่มีข้อความ 7+ วัน = ลูกค้าหลุด</li>
+        <li>แจ้งเตือนให้ติดตามก่อนสาย</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(99,102,241,0.3);">
+    <h3 style="color:#818cf8;">&#x1F4B0; บันทึกมูลค่า Deal</h3>
+    <p>ใส่มูลค่า Deal + วันที่คาดว่าจะปิด + เหตุผล (ปิดได้/ไม่ได้) &mdash; รู้ยอดขายคาดการณ์ทันที</p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>06 &mdash; CRM + Sales Pipeline</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 8: PDPA ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2><span class="gradient-text">ปกป้องข้อมูล PDPA</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:24px;">ระบบปกป้องข้อมูลลูกค้าตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล &mdash; ครบทุกด้าน ไม่ต้องกังวล</p>
+
+  <div class="shield-grid">
+    <div class="shield-item">
+      <div class="icon">&#x1F3AD;</div>
+      <h3>PII Masking</h3>
+      <p>ซ่อนเบอร์โทร เลขบัตรประชาชน เลขบัญชี อัตโนมัติ &mdash; ปลอดภัย</p>
+    </div>
+    <div class="shield-item">
+      <div class="icon">&#x1F6E1;</div>
+      <h3>Prompt Injection Protection</h3>
+      <p>ป้องกันการโจมตี AI ด้วยข้อความอันตราย &mdash; ปิดช่องโหว่</p>
+    </div>
+    <div class="shield-item">
+      <div class="icon">&#x1F4DC;</div>
+      <h3>Privacy Notice อัตโนมัติ</h3>
+      <p>แจ้งลูกค้าเรื่องการเก็บข้อมูลอัตโนมัติ &mdash; ตามกฎหมาย</p>
+    </div>
+    <div class="shield-item">
+      <div class="icon">&#x1F6AA;</div>
+      <h3>Opt-out + Right to Delete</h3>
+      <p>ลูกค้าขอลบข้อมูลเมื่อไหร่ก็ได้ &mdash; ตาม PDPA</p>
+    </div>
+    <div class="shield-item">
+      <div class="icon">&#x1F4DD;</div>
+      <h3>Audit Log</h3>
+      <p>บันทึกทุกการเข้าถึงข้อมูล &mdash; ตรวจสอบย้อนหลังได้</p>
+    </div>
+    <div class="shield-item">
+      <div class="icon">&#x1F6A6;</div>
+      <h3>Rate Limit + File Validation</h3>
+      <p>ป้องกัน spam + ตรวจสอบไฟล์ก่อนรับ &mdash; ปลอดภัยทุกด้าน</p>
+    </div>
+  </div>
+
+  <div class="divider" style="margin:24px 0;"></div>
+
+  <div class="card" style="border-color: rgba(16,185,129,0.3); text-align:center;">
+    <h3 style="color:#34d399; font-size:20px;">&#x1F512; ข้อมูลเก็บใน MongoDB Atlas ของคุณเอง</h3>
+    <p style="font-size:16px; color:#94a3b8; margin-top:8px;">ไม่มีใครเข้าถึงข้อมูลของคุณได้ &mdash; คุณเป็นเจ้าของ 100%</p>
+    <p style="font-size:16px; color:#94a3b8; margin-top:4px;">ไม่ต้องกลัว Lock-in &mdash; ย้ายข้อมูลออกได้ทุกเมื่อ</p>
+  </div>
+
+  <div class="card" style="border-color: rgba(99,102,241,0.3);">
+    <h3 style="color:#818cf8;">&#x1F310; ERP Integration ผ่าน MCP</h3>
+    <p>เชื่อมต่อระบบ ERP ได้ 61 คำสั่ง: เช็คสต็อก, ยอดขาย, KPI, ลูกหนี้/เจ้าหนี้, สินค้าขายดี &mdash; AI เรียกใช้อัตโนมัติเมื่อลูกค้าถามข้อมูลธุรกิจ</p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>07 &mdash; ปกป้องข้อมูล PDPA</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 9: ตัวอย่างการใช้งานจริง ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2><span class="gradient-text">ตัวอย่างการใช้งานจริง</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">ธุรกิจ SME ไทยใช้ OpenClaw Mini CRM ได้ทุกประเภท</p>
+
+  <div class="usecase">
+    <div class="usecase-header">
+      <div class="emoji">&#x1F4A7;</div>
+      <div>
+        <h3>ร้านกรองน้ำ</h3>
+        <p style="font-size:14px; color:#94a3b8;">ลูกค้าถามราคาเครื่องกรองน้ำผ่าน LINE, Facebook พร้อมกัน</p>
+      </div>
+    </div>
+    <div class="usecase-flow">
+      <span>ลูกค้าถามราคา</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>AI ดึงราคาจาก KB</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>แนะนำรุ่นที่เหมาะ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>ส่งใบเสนอราคา</span>
+      <span class="arrow">&#x27A1;</span>
+      <span style="background:rgba(16,185,129,0.2); color:#34d399;">&#x2705; ปิดการขาย</span>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="usecase-header">
+      <div class="emoji">&#x1F35C;</div>
+      <div>
+        <h3>ร้านอาหาร</h3>
+        <p style="font-size:14px; color:#94a3b8;">ลูกค้าถามเวลาเปิด/ปิด, เมนูแนะนำ, จองโต๊ะ ตลอดทั้งวัน</p>
+      </div>
+    </div>
+    <div class="usecase-flow">
+      <span>ลูกค้าถามเมนู</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>AI ตอบทันที 24/7</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>จำลูกค้าประจำ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>แนะนำเมนูที่ชอบ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span style="background:rgba(16,185,129,0.2); color:#34d399;">&#x2705; ลูกค้ากลับมาซื้อซ้ำ</span>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="usecase-header">
+      <div class="emoji">&#x1F455;</div>
+      <div>
+        <h3>ร้านเสื้อผ้า</h3>
+        <p style="font-size:14px; color:#94a3b8;">โปรโมชั่นลดราคา 10 คนทักพร้อมกัน พนักงานตอบไม่ทัน</p>
+      </div>
+    </div>
+    <div class="usecase-flow">
+      <span>10 คนทักพร้อมกัน</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>AI ตอบแทนทันที</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>ส่งรูป+ราคา</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>พนักงานรับช่วงต่อ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span style="background:rgba(16,185,129,0.2); color:#34d399;">&#x2705; ไม่เสียลูกค้า</span>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="usecase-header">
+      <div class="emoji">&#x1F3E0;</div>
+      <div>
+        <h3>อสังหาริมทรัพย์ / รับสร้างบ้าน</h3>
+        <p style="font-size:14px; color:#94a3b8;">ลูกค้าถามราคาบ้าน, ขอนัดดูสถานที่, ขอแบบบ้าน</p>
+      </div>
+    </div>
+    <div class="usecase-flow">
+      <span>ลูกค้าสนใจโครงการ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>Pipeline: สนใจ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>นัดดูสถานที่</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>ส่งใบเสนอราคา</span>
+      <span class="arrow">&#x27A1;</span>
+      <span style="background:rgba(16,185,129,0.2); color:#34d399;">&#x2705; ปิดดีล</span>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="usecase-header">
+      <div class="emoji">&#x1F489;</div>
+      <div>
+        <h3>คลินิกความงาม / สุขภาพ</h3>
+        <p style="font-size:14px; color:#94a3b8;">ลูกค้านัดคิวผ่าน LINE, ถามโปรผ่าน IG, รีวิวผ่าน FB</p>
+      </div>
+    </div>
+    <div class="usecase-flow">
+      <span>ลูกค้าถามโปร</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>AI ส่งรายละเอียด</span>
+      <span class="arrow">&#x27A1;</span>
+      <span>จองคิวอัตโนมัติ</span>
+      <span class="arrow">&#x27A1;</span>
+      <span style="background:rgba(16,185,129,0.2); color:#34d399;">&#x2705; ลูกค้ามาตามนัด</span>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>08 &mdash; ตัวอย่างการใช้งานจริง</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 10: KPI + รายงาน ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2><span class="gradient-text">KPI + รายงานอัจฉริยะ</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:20px;">เจ้าของเห็นภาพรวมธุรกิจทั้งหมดในหน้าเดียว &mdash; ตัดสินใจได้ทันที</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="icon">&#x23F1;</div>
+      <h3 class="accent-cyan">เวลาตอบเฉลี่ย</h3>
+      <p>วัดว่าพนักงานตอบลูกค้าเร็วแค่ไหน &mdash; เร็ว / กลาง / ช้า</p>
+    </div>
+    <div class="kpi-card">
+      <div class="icon">&#x1F3AF;</div>
+      <h3 class="accent-green">อัตราปิดการขาย</h3>
+      <p>ปิดได้กี่ % จากลูกค้าทั้งหมด &mdash; วัดผลพนักงานแต่ละคน</p>
+    </div>
+    <div class="kpi-card">
+      <div class="icon">&#x26A0;</div>
+      <h3 class="accent-amber">ลูกค้าเสี่ยงหลุด</h3>
+      <p>ไม่มีข้อความ 3-7 วัน &mdash; เตือนก่อนที่จะสายเกินไป</p>
+    </div>
+    <div class="kpi-card">
+      <div class="icon">&#x1F4B0;</div>
+      <h3 class="accent-indigo">AI Cost Tracker</h3>
+      <p>ค่าใช้จ่าย AI ทุกบาท &mdash; แยก provider, model, feature</p>
+    </div>
+    <div class="kpi-card">
+      <div class="icon">&#x1F4CA;</div>
+      <h3 class="accent-rose">Health Score</h3>
+      <p>คะแนนสุขภาพลูกค้า &mdash; รู้ว่าใครต้องดูแลเป็นพิเศษ</p>
+    </div>
+    <div class="kpi-card">
+      <div class="icon">&#x1F500;</div>
+      <h3 style="color:#c084fc;">Smart Routing</h3>
+      <p>แยก topic อัตโนมัติ &mdash; ส่งเรื่องให้คนที่เชี่ยวชาญ</p>
+    </div>
+  </div>
+
+  <div class="divider" style="margin:20px 0;"></div>
+
+  <h3 style="color:#818cf8; margin-bottom:14px;">&#x1F4CB; KPI พนักงาน &mdash; รู้ว่าใครทำงาน ใครไม่ทำ</h3>
+
+  <table>
+    <tr>
+      <th>KPI</th>
+      <th>วัดอะไร</th>
+      <th>ระดับ</th>
+    </tr>
+    <tr>
+      <td>&#x23F1; เวลาตอบเฉลี่ย</td>
+      <td>พนักงานตอบลูกค้าเร็วแค่ไหน</td>
+      <td><span class="badge badge-green">เร็ว</span> <span class="badge badge-amber">กลาง</span> <span class="badge badge-rose">ช้า</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F465; จำนวนลูกค้า</td>
+      <td>แต่ละคนดูแลลูกค้ากี่ราย</td>
+      <td>แยกตามช่องทาง</td>
+    </tr>
+    <tr>
+      <td>&#x1F3AF; อัตราปิดการขาย</td>
+      <td>ปิดได้กี่ % จากทั้งหมด</td>
+      <td>รายบุคคล / ทีม</td>
+    </tr>
+    <tr>
+      <td>&#x26A0; ลูกค้าหลุด</td>
+      <td>เคยคุยแล้วหายไป > 7 วัน</td>
+      <td><span class="badge badge-rose">ต้องติดตาม</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F4B0; รายได้ Pipeline</td>
+      <td>ยอดรวม / ปิดได้ / ปิดไม่ได้</td>
+      <td>เป็นบาท</td>
+    </tr>
+  </table>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>09 &mdash; KPI + รายงาน</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 11: ราคา ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2><span class="gradient-text">ราคา &mdash; ฟรี 100%</span></h2>
+  </div>
+
+  <div class="price-highlight">
+    <div class="price">&#x0E3F;0</div>
+    <div class="price-label">ต่อเดือน &mdash; ฟรีตลอดชีพ ไม่มีค่าใช้จ่ายแอบแฝง</div>
+  </div>
+
+  <table>
+    <tr>
+      <th>รายการ</th>
+      <th>ราคา</th>
+    </tr>
+    <tr>
+      <td>&#x1F990; OpenClaw Mini CRM (ระบบทั้งหมด)</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F4BE; MongoDB Atlas (ฐานข้อมูล 512MB)</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F916; AI (OpenRouter free models)</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F4F2; LINE OA (200 msg/เดือน)</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F4D8; Facebook Messenger</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+    <tr>
+      <td>&#x1F4F7; Instagram DM</td>
+      <td><span class="free-tag">ฟรี</span></td>
+    </tr>
+  </table>
+
+  <div class="divider" style="margin:20px 0;"></div>
+
+  <h3 style="color:#818cf8; margin-bottom:14px;">&#x1F4CA; เปรียบเทียบกับ CRM อื่นในไทย</h3>
+
+  <table class="small-table">
+    <tr>
+      <th></th>
+      <th style="color:#34d399;">OpenClaw Mini CRM</th>
+      <th>R-CRM</th>
+      <th>Oho Chat</th>
+      <th>Zoho CRM</th>
+    </tr>
+    <tr>
+      <td><strong>ราคา/เดือน</strong></td>
+      <td style="color:#34d399; font-weight:700;">ฟรี</td>
+      <td>&#x0E3F;1,590</td>
+      <td>&#x0E3F;990</td>
+      <td>&#x0E3F;500</td>
+    </tr>
+    <tr>
+      <td>LINE</td>
+      <td class="check">&#x2714;</td>
+      <td class="check">&#x2714;</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">&#x2718;</td>
+    </tr>
+    <tr>
+      <td>Facebook</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="check">&#x2714;</td>
+      <td class="check">&#x2714;</td>
+    </tr>
+    <tr>
+      <td>Instagram</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">&#x2718;</td>
+    </tr>
+    <tr>
+      <td>AI วิเคราะห์แชท</td>
+      <td class="check">&#x2714; อัตโนมัติ</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+    </tr>
+    <tr>
+      <td>AI Advisor 24/7</td>
+      <td class="check">&#x2714; น้องกุ้ง</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+    </tr>
+    <tr>
+      <td>AI ตอบแทนอัตโนมัติ</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+      <td class="cross">&#x2718;</td>
+    </tr>
+    <tr>
+      <td>ข้อมูลเป็นของคุณ</td>
+      <td class="check">&#x2714; MongoDB ของคุณ</td>
+      <td class="cross">เก็บในระบบเขา</td>
+      <td class="cross">เก็บในระบบเขา</td>
+      <td class="cross">เก็บในระบบเขา</td>
+    </tr>
+    <tr>
+      <td>ภาษาไทย 100%</td>
+      <td class="check">&#x2714;</td>
+      <td class="check">&#x2714;</td>
+      <td class="check">&#x2714;</td>
+      <td class="cross">ไม่ครบ</td>
+    </tr>
+  </table>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>10 &mdash; ราคา</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 12: เริ่มต้นใช้งาน ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2><span class="gradient-text">เริ่มต้นใช้งาน &mdash; 5 ขั้นตอน</span></h2>
+  </div>
+
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:24px;">เปิดใช้งานได้ภายใน 5 นาที &mdash; ไม่ต้องติดตั้ง ไม่ต้องมีความรู้ด้าน IT</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text">
+      <h3>เปิดเว็บ crm.satistang.com</h3>
+      <p>เปิดบราวเซอร์ &rarr; ไม่ต้องดาวน์โหลดอะไรเลย</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text">
+      <h3>Login ด้วย Google Account</h3>
+      <p>ใช้ Gmail ที่มีอยู่ &rarr; ไม่ต้องสมัครใหม่ ไม่ต้องจำรหัสผ่าน</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text">
+      <h3>Setup ระบบ (Wizard)</h3>
+      <p>ทำตาม Setup Wizard &rarr; ใส่ MongoDB URI + AI Key (มีคำแนะนำทุกขั้นตอน)</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-text">
+      <h3>เชื่อม LINE OA / Facebook Page / Instagram</h3>
+      <p>ใส่ Token จาก LINE, Facebook &rarr; ระบบเริ่มรับแชทจากลูกค้าทันที</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-text">
+      <h3>เพิ่ม Knowledge Base + เริ่มใช้งาน!</h3>
+      <p>ใส่ข้อมูลร้าน &rarr; AI เริ่มตอบลูกค้าอัตโนมัติ + วิเคราะห์ข้อมูลทุก 1 ชั่วโมง</p>
+    </div>
+  </div>
+
+  <div class="divider" style="margin:28px 0;"></div>
+
+  <div style="text-align:center; margin:16px 0;">
+    <div style="display:inline-block; background:rgba(99,102,241,0.1); border:2px solid rgba(99,102,241,0.3); border-radius:16px; padding:24px 40px;">
+      <p style="font-size:14px; color:#94a3b8; margin-bottom:8px;">เปิดเว็บเพื่อเริ่มใช้งาน</p>
+      <p style="font-size:24px; color:#818cf8; font-weight:700;">crm.satistang.com</p>
+      <p style="font-size:13px; color:#64748b; margin-top:8px;">รองรับทุกอุปกรณ์ &mdash; คอมพิวเตอร์ แท็บเล็ต มือถือ</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-color: rgba(245,158,11,0.3); margin-top:20px;">
+    <h3 style="color:#fbbf24;">&#x1F4E2; ต้องการความช่วยเหลือ?</h3>
+    <p>ทีมงานพร้อมช่วยตั้งค่า &mdash; ติดต่อผ่านเว็บ crm.satistang.com หรือ GitHub: github.com/smlsoft/smltrack</p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>11 &mdash; เริ่มต้นใช้งาน</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 13: หน้าจอทั้งหมด ===== -->
+<div class="page">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2><span class="gradient-text">หน้าจอทั้งหมด (19 หน้า)</span></h2>
+  </div>
+
+  <p style="font-size:15px; color:#94a3b8; margin-bottom:16px;">ระบบครบทุกฟังก์ชันที่ธุรกิจ SME ต้องการ</p>
+
+  <table class="small-table">
+    <tr>
+      <th>#</th>
+      <th>หน้าจอ</th>
+      <th>สำหรับ</th>
+      <th>หน้าที่</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Login</td>
+      <td>ทุกคน</td>
+      <td>เข้าสู่ระบบด้วย Google Account</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Dashboard</td>
+      <td>Admin</td>
+      <td>ภาพรวมธุรกิจ + สถิติ + KPI</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>แชท (All)</td>
+      <td>ทุกคน</td>
+      <td>ดูแชทลูกค้าทุกช่องทาง รวม</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>แชท LINE</td>
+      <td>ทุกคน</td>
+      <td>แชท LINE แยก tab</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>แชท Facebook</td>
+      <td>ทุกคน</td>
+      <td>แชท Facebook Messenger แยก tab</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>แชท Instagram</td>
+      <td>ทุกคน</td>
+      <td>แชท Instagram DM แยก tab</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Multi-Panel</td>
+      <td>Responder</td>
+      <td>เปิดแชทหลายจอพร้อมกัน</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>CRM &mdash; ลูกค้า</td>
+      <td>Admin</td>
+      <td>รายชื่อลูกค้า + Pipeline + สถานะ</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>CRM &mdash; Pipeline</td>
+      <td>Admin</td>
+      <td>Sales Pipeline (Kanban Board)</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>CRM &mdash; รวมลูกค้า</td>
+      <td>Admin</td>
+      <td>รวมลูกค้าข้าม Platform</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>Knowledge Base</td>
+      <td>Admin</td>
+      <td>ใส่ข้อมูลร้านให้ AI เรียนรู้</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Quick Reply</td>
+      <td>ทุกคน</td>
+      <td>ข้อความสำเร็จรูป</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>งานและติดตาม</td>
+      <td>ทุกคน</td>
+      <td>สร้างงานติดตามลูกค้า + Deadline</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>น้องกุ้ง Advice</td>
+      <td>Admin</td>
+      <td>คำแนะนำจาก AI Advisor</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>KPI พนักงาน</td>
+      <td>Admin</td>
+      <td>วัดผลการทำงานรายบุคคล</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>AI Cost Tracker</td>
+      <td>Admin</td>
+      <td>ค่าใช้จ่าย AI ทุกรายการ</td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td>ทีมงาน</td>
+      <td>Admin</td>
+      <td>จัดการสมาชิก + เชิญ + กำหนดสิทธิ์</td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td>ตั้งค่า Platform</td>
+      <td>Admin</td>
+      <td>เชื่อม LINE / Facebook / Instagram</td>
+    </tr>
+    <tr>
+      <td>19</td>
+      <td>ตั้งค่า PDPA</td>
+      <td>Admin</td>
+      <td>Privacy Notice + PII Masking + Audit</td>
+    </tr>
+  </table>
+
+  <div class="card" style="border-color: rgba(99,102,241,0.3); margin-top:12px;">
+    <p style="text-align:center; font-size:15px; color:#94a3b8;">
+      <span class="accent-indigo" style="font-weight:600;">4 ระดับสิทธิ์:</span>
+      &nbsp;&nbsp;<span class="badge badge-rose">Admin</span>
+      &nbsp;&nbsp;<span class="badge badge-amber">Responder</span>
+      &nbsp;&nbsp;<span class="badge badge-indigo">Reviewer</span>
+      &nbsp;&nbsp;<span class="badge badge-green">Viewer</span>
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>12 &mdash; หน้าจอทั้งหมด</span>
+  </div>
+</div>
+
+<!-- ===== หน้า 14: ท้ายเอกสาร ===== -->
+<div class="page ending">
+  <div class="logo" style="font-size:80px;">&#x1F990;</div>
+  <h1 style="font-size:38px;"><span class="gradient-text">OpenClaw Mini CRM</span></h1>
+  <p style="font-size:22px; color:#94a3b8; margin-bottom:8px;">AI Chat Intelligence สำหรับ SMEs ไทย</p>
+
+  <div class="divider" style="margin:24px 80px;"></div>
+
+  <p style="font-size:20px; color:#e2e8f0; margin-bottom:8px;">
+    &#x1F4B0; ฟรี 100% &nbsp;&middot;&nbsp; &#x267E; ไม่จำกัดการใช้งาน &nbsp;&middot;&nbsp; &#x1F916; AI ทำงานแทนคุณ 24/7
+  </p>
+  <p style="font-size:17px; color:#94a3b8; margin-bottom:8px;">
+    LINE &middot; Facebook &middot; Instagram &mdash; รวมจอเดียว
+  </p>
+  <p style="font-size:16px; color:#64748b;">
+    ข้อมูลเป็นของคุณ 100% &mdash; เก็บใน MongoDB Atlas ของคุณเอง
+  </p>
+
+  <div class="cta">&#x1F680; ลองใช้ฟรีวันนี้</div>
+
+  <div class="contact-info">
+    <p style="margin-bottom:8px;">
+      &#x1F310; <a href="https://crm.satistang.com" target="_blank">crm.satistang.com</a>
+    </p>
+    <p style="margin-bottom:8px;">
+      &#x1F4BB; <a href="https://github.com/smlsoft/smltrack" target="_blank">github.com/smlsoft/smltrack</a>
+    </p>
+    <p style="font-size:14px; color:#475569; margin-top:24px;">
+      SML Mini CRM &copy; 2024-2026 &mdash; Made with &#x2764; for Thai SMEs
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>OpenClaw Mini CRM</span>
+    <span>ขอบคุณที่สนใจ</span>
+  </div>
+</div>
+
+</body>
+</html>

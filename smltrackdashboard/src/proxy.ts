@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Next.js 16: proxy.ts แทน middleware.ts — รัน Node.js runtime เสมอ
 // Dev mode: ไม่มี GOOGLE_CLIENT_ID → ข้าม auth ทั้งหมด
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   // Dev mode — ผ่านได้เลย (check at runtime, not build time)
   if (!process.env.GOOGLE_CLIENT_ID) return NextResponse.next();
 
