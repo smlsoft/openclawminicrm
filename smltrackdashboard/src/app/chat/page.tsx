@@ -356,7 +356,7 @@ function ChatPanel({
   const cfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.line;
 
   return (
-    <div className={`flex flex-col h-full border-r theme-border last:border-r-0 min-w-0 border-t-2 ${cfg.borderColor}`}>
+    <div className={`flex flex-col h-full min-w-0 border-t-3 theme-bg ${cfg.borderColor}`}>
       {/* ── Header — สีตาม platform ── */}
       <div className={`flex items-center gap-2 px-3 py-2 border-b theme-border shrink-0 ${cfg.headerBg}`}>
         <div className={`w-8 h-8 rounded-full ${avatarBg(platform)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
@@ -1082,7 +1082,7 @@ export default function ChatPage() {
       </aside>
 
       {/* ═══ RIGHT — Chat Panels (side by side) ═══ */}
-      <div className="flex-1 flex min-w-0">
+      <div className="flex-1 flex min-w-0 gap-[2px] bg-black/40">
         {openPanels.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
             <div className="w-16 h-16 theme-bg-card rounded-2xl flex items-center justify-center text-3xl">💬</div>
