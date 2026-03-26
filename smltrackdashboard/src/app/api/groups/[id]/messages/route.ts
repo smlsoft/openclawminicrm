@@ -21,7 +21,7 @@ export async function GET(
 
     const messages = await db
       .collection("messages")
-      .find(query, { projection: { embedding: 0 } })
+      .find(query, { projection: { embedding: 0, "analysis": 0, "aiResponse": 0 } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray();

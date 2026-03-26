@@ -174,7 +174,7 @@ function ChatPanel({
   const fetchMessages = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await fetch(`/dashboard/api/groups/${encodeURIComponent(conv.id)}/messages?limit=100`);
+      const res = await fetch(`/dashboard/api/groups/${encodeURIComponent(conv.id)}/messages?limit=30`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setMessages(data);
