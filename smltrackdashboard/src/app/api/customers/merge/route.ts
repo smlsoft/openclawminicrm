@@ -76,6 +76,19 @@ export async function POST(request: NextRequest) {
     // ลบ secondary customer
     await db.collection("customers").deleteOne({ _id: new ObjectId(secondaryId) });
 
+    // หลัง merge → รวม AI data (memory + analytics + skills)
+    const agentUrl = process.env.AGENT_URL || "http://localhost:3000";
+    await fetch(`${agentUrl}/api/customers/merge/consolidate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        primaryRooms: mergedRooms,
+        secondaryRooms: secondary.rooms || [],
+      }),
+    }).catch(() => {
+      console.log("[Merge] consolidate call failed — agent อาจไม่ online");
+    });
+
     return NextResponse.json({
       status: "ok",
       merged: {

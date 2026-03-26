@@ -85,8 +85,12 @@ async function doAutoReply(sourceId, userName, customerMessage) {
 
   console.log(`[Auto-Reply] 5 นาทีไม่มีคนตอบ → AI ตอบแทน ${sourceId.substring(0, 8)}`);
 
+  // ดึง rooms ทั้งหมดของลูกค้า (merged customer)
+  const customer = await db.collection("customers").findOne({ rooms: sourceId }).catch(() => null);
+  const allSourceIds = customer?.rooms || [sourceId];
+
   // ดึง memory + KB + skill lessons
-  const aiContext = await buildAIContext(sourceId, customerMessage);
+  const aiContext = await buildAIContext(sourceId, customerMessage, allSourceIds);
 
   // เรียก AI
   const messages = [
@@ -3318,7 +3322,8 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
         content: await (async () => {
           // ดึง memory + KB + skill lessons
           const lastCustomerMsg = recentMsgs.filter(m => m.role === "user").pop();
-          const aiContext = await buildAIContext(sourceId, lastCustomerMsg?.content || chatHistory.substring(0, 200));
+          const allSourceIds = customer?.rooms || [sourceId];
+          const aiContext = await buildAIContext(sourceId, lastCustomerMsg?.content || chatHistory.substring(0, 200), allSourceIds);
           return `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}${aiContext}\n\nแนะนำคำตอบให้พนักงาน:`;
         })()
       }
@@ -3946,9 +3951,11 @@ async function getSkillLessons(limit = 5) {
 
 // ── Build AI Context (memory + skills + KB) ────────────────────────────────
 
-async function buildAIContext(sourceId, customerMessage) {
+async function buildAIContext(sourceId, customerMessage, allSourceIds = null) {
+  // ถ้ามี allSourceIds (merged customer) → ใช้ room แรกเป็น memory หลัก
+  const memorySourceId = allSourceIds?.[0] || sourceId;
   const [memory, kbResults, lessons] = await Promise.all([
-    getMemory(sourceId).catch(() => null),
+    getMemory(memorySourceId).catch(() => null),
     searchKB(customerMessage, 3).catch(() => []),
     getSkillLessons(5).catch(() => []),
   ]);
@@ -3977,6 +3984,131 @@ async function buildAIContext(sourceId, customerMessage) {
 
   return context;
 }
+
+// === Merge Consolidation — รวม AI data หลัง merge ลูกค้า ===
+
+async function consolidateMemoryAfterMerge(primaryRooms, secondaryRooms) {
+  const db = await getDB();
+  if (!db) return;
+  const allRooms = [...primaryRooms, ...secondaryRooms];
+  const memDocs = await db.collection(MEMORY_COLL).find({ sourceId: { $in: allRooms } }).toArray();
+  if (memDocs.length <= 1) return;
+
+  const merged = {
+    messageCount: 0, purchaseCount: 0, positiveCount: 0, negativeCount: 0,
+    compactSummary: "", interests: [], personality: "", bestApproach: "", purchaseHistory: "",
+  };
+  for (const m of memDocs) {
+    merged.messageCount += m.messageCount || 0;
+    merged.purchaseCount += m.purchaseCount || 0;
+    merged.positiveCount += m.positiveCount || 0;
+    merged.negativeCount += m.negativeCount || 0;
+    if (m.compactSummary) merged.compactSummary += (merged.compactSummary ? " | " : "") + m.compactSummary;
+    if (m.interests) merged.interests.push(...m.interests);
+    if (m.personality && !merged.personality) merged.personality = m.personality;
+    if (m.bestApproach && !merged.bestApproach) merged.bestApproach = m.bestApproach;
+    if (m.purchaseHistory) merged.purchaseHistory += (merged.purchaseHistory ? ", " : "") + m.purchaseHistory;
+  }
+  merged.interests = [...new Set(merged.interests)];
+
+  const primarySourceId = primaryRooms[0];
+  await db.collection(MEMORY_COLL).updateOne(
+    { sourceId: primarySourceId },
+    { $set: { ...merged, updatedAt: new Date() }, $setOnInsert: { sourceId: primarySourceId, createdAt: new Date() } },
+    { upsert: true }
+  );
+  await db.collection(MEMORY_COLL).deleteMany({ sourceId: { $in: secondaryRooms } });
+  console.log(`[Merge] รวม ai_memory ${memDocs.length} docs → ${primarySourceId.substring(0, 8)}`);
+}
+
+async function consolidateAnalyticsAfterMerge(primaryRooms, secondaryRooms) {
+  const db = await getDB();
+  if (!db) return;
+  const allRooms = [...primaryRooms, ...secondaryRooms];
+  const docs = await db.collection("chat_analytics").find({ sourceId: { $in: allRooms } }).toArray();
+  if (docs.length <= 1) return;
+
+  // ใช้ analytics จาก room ที่อัพเดทล่าสุดเป็นหลัก
+  docs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const best = docs[0];
+  const primarySourceId = primaryRooms[0];
+
+  const totalUsers = docs.reduce((sum, d) => sum + (d.userCount || 0), 0);
+  const totalCustomers = docs.reduce((sum, d) => sum + (d.customerCount || 0), 0);
+  const totalStaff = docs.reduce((sum, d) => sum + (d.staffCount || 0), 0);
+
+  await db.collection("chat_analytics").updateOne(
+    { sourceId: primarySourceId },
+    {
+      $set: {
+        sourceId: primarySourceId,
+        sentiment: best.sentiment,
+        customerSentiment: best.customerSentiment,
+        staffSentiment: best.staffSentiment,
+        overallSentiment: best.overallSentiment,
+        purchaseIntent: best.purchaseIntent,
+        userCount: totalUsers,
+        customerCount: totalCustomers,
+        staffCount: totalStaff,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: { createdAt: new Date() },
+    },
+    { upsert: true }
+  );
+  await db.collection("chat_analytics").deleteMany({ sourceId: { $in: secondaryRooms } });
+  console.log(`[Merge] รวม chat_analytics ${docs.length} docs → ${primarySourceId.substring(0, 8)}`);
+}
+
+async function consolidateSkillsAfterMerge(primaryRooms, secondaryRooms) {
+  const db = await getDB();
+  if (!db) return;
+  const allRooms = [...primaryRooms, ...secondaryRooms];
+  const docs = await db.collection("user_skills").find({ sourceId: { $in: allRooms } }).toArray();
+  if (docs.length === 0) return;
+
+  const primarySourceId = primaryRooms[0];
+
+  // ย้าย user_skills จาก secondary rooms → primary room
+  // group by userId เก็บตัวล่าสุด
+  const byUser = new Map();
+  for (const d of docs) {
+    const existing = byUser.get(d.userId);
+    if (!existing || (d.updatedAt || 0) > (existing.updatedAt || 0)) {
+      byUser.set(d.userId, d);
+    }
+  }
+
+  // ลบ skills เก่าทั้งหมดแล้ว insert ใหม่ด้วย primarySourceId
+  await db.collection("user_skills").deleteMany({ sourceId: { $in: allRooms } });
+  const newDocs = [...byUser.values()].map(({ _id, ...rest }) => ({
+    ...rest,
+    sourceId: primarySourceId,
+    updatedAt: new Date(),
+  }));
+  if (newDocs.length > 0) {
+    await db.collection("user_skills").insertMany(newDocs);
+  }
+  console.log(`[Merge] รวม user_skills ${docs.length} → ${newDocs.length} docs (${primarySourceId.substring(0, 8)})`);
+}
+
+// POST /api/customers/merge/consolidate — dashboard เรียกหลัง merge
+app.post("/api/customers/merge/consolidate", express.json(), async (req, res) => {
+  try {
+    const { primaryRooms, secondaryRooms } = req.body;
+    if (!primaryRooms?.length) return res.status(400).json({ error: "primaryRooms required" });
+    console.log(`[Merge] consolidate: primary=${primaryRooms.length} rooms, secondary=${(secondaryRooms || []).length} rooms`);
+    await Promise.all([
+      consolidateMemoryAfterMerge(primaryRooms, secondaryRooms || []),
+      consolidateAnalyticsAfterMerge(primaryRooms, secondaryRooms || []),
+      consolidateSkillsAfterMerge(primaryRooms, secondaryRooms || []),
+    ]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[Merge] consolidate error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // === Telegram Bot (น้องกุ้ง) ===
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
