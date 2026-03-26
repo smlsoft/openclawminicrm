@@ -476,7 +476,7 @@
 
 | ข้อกังวล | คำตอบ |
 |----------|-------|
-| **"ฟรีจริงหรือเปล่า?"** | ฟรีจริง — ใช้ AI provider ฟรี (OpenRouter, Groq) + MongoDB ฟรี (512MB) + Qdrant ฟรี (1GB) เพียงพอสำหรับ SME ทั่วไป |
+| **"ฟรีจริงหรือเปล่า?"** | ซอฟต์แวร์ฟรี — ใช้ AI provider ฟรี (OpenRouter, Groq) + MongoDB local (ไม่จำกัด) + Qdrant ฟรี (1GB) ค่าใช้จ่ายมีแค่ VPS ~$24/เดือน |
 | **"ข้อมูลลูกค้าปลอดภัยไหม?"** | ข้อมูลเก็บใน MongoDB Atlas ของคุณเอง ไม่ผ่านเซิร์ฟเวอร์คนอื่น Login ด้วย Google OAuth มี RBAC (admin/responder/viewer) |
 | **"ต้องมี dev ไหม?"** | ติดตั้งครั้งแรกต้องมีคนช่วย setup (Docker + env vars) หลังจากนั้นใช้งานผ่านเว็บได้เลย ไม่ต้องเขียน code |
 | **"AI ตอบผิดล่ะ?"** | AI ตอบจาก Knowledge Base ที่คุณใส่เอง ถ้าข้อมูลถูก AI ตอบถูก + มี "🤖 ตอบอัตโนมัติ" ชัดเจน + ถ้าไม่แน่ใจ AI จะบอก "รอทีมงานตอบนะคะ" |
@@ -494,11 +494,11 @@
 ```
 LINE / Facebook / Instagram
   ↓ webhook
-Nginx (SSL + rate limit)
+Caddy (Auto HTTPS + reverse proxy)
   ↓
 Agent (Docker) → AI + RAG + MCP → reply
   ↓
-MongoDB Atlas (messages + users + teams)
+MongoDB (Docker, local) ← images → Cloudflare R2 CDN
   ↓
 OpenClaw (cron ทุก 1 ชม.) → วิเคราะห์ → เก็บ advice
   ↓
@@ -513,7 +513,7 @@ Qdrant Cloud (Knowledge Base vector search)
 |------|-----------|
 | Agent | Node.js + Express + Multer |
 | Dashboard | Next.js 16 + Tailwind CSS |
-| Database | MongoDB Atlas (messages, customers, teams, tasks, ...) |
+| Database | MongoDB 7 (Docker, local — ไม่ใช่ Atlas) |
 | Vector Search | Qdrant Cloud + Gemini Embedding (768 dims) |
 | AI Advisor | OpenClaw + OpenRouter (Qwen3-235B) |
 | AI Bot | น้องกุ้ง 🦐 (5 บทบาท + Deep Loop Analysis) |
@@ -525,8 +525,9 @@ Qdrant Cloud (Knowledge Base vector search)
 | Smart Routing | แยก topic อัตโนมัติ (sales/shipping/support/returns) |
 | Security | Rate Limit + File Validation + Webhook Signature |
 | Auth | Google OAuth (NextAuth) |
-| Deploy | Docker Compose + Hetzner VPS |
-| Reverse Proxy | Nginx + Let's Encrypt SSL |
+| Deploy | Docker Compose + DigitalOcean VPS (Singapore) |
+| Reverse Proxy | Caddy (Auto HTTPS) |
+| Image Storage | Cloudflare R2 CDN |
 | AI Providers | OpenRouter / SambaNova / Groq / Cerebras / Gemini (ฟรี) |
 | Channels | LINE Messaging API / Meta Graph API / Telegram Bot API |
 | ERP | MCP Protocol (61 commands) |
@@ -535,10 +536,12 @@ Qdrant Cloud (Knowledge Base vector search)
 
 | Service | Role | Port | Folder |
 |---------|------|------|--------|
-| Nginx | Reverse proxy + SSL | 80/443 | `nginx/` |
+| Caddy | Auto HTTPS + reverse proxy | 80/443 | `Caddyfile` |
+| MongoDB | Database (local Docker) | 27017 | `/opt/mongodb-data` |
 | OpenClaw | AI Advisor (แกนหลัก) | 18789 | `openclaw/` |
 | Agent | LINE/FB/IG + RAG + MCP | 3000 | `proxy/` |
 | Dashboard | Web UI + Auth | 3001 | `smltrackdashboard/` |
+| Watchtower | Auto-update OpenClaw image | — | — |
 
 ### Quick Start
 
