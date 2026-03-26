@@ -4,10 +4,12 @@ import { getDB } from "@/lib/mongodb";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const t0 = Date.now();
   try {
     const db = await getDB();
+    const tDb = Date.now();
 
-    const limit = parseInt(request.nextUrl.searchParams.get("limit") || "50");
+    const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
     const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
 
     // 1. ดึง sourceIds + lastActivity + count ด้วย aggregation เดียว (แทน N+1)
@@ -101,6 +103,9 @@ export async function GET(request: NextRequest) {
         })),
       };
     });
+
+    const tEnd = Date.now();
+    console.log(`[/api/groups] page=${page} limit=${limit} groups=${groups.length} total=${totalCount} db=${tDb - t0}ms query=${tEnd - tDb}ms total=${tEnd - t0}ms`);
 
     return NextResponse.json({
       groups,

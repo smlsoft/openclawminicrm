@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -79,6 +79,10 @@ export default function Home() {
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [showAlerts, setShowAlerts] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Redirect ถ้ายังไม่ login หรือยังไม่ setup
   useEffect(() => {
@@ -93,33 +97,51 @@ export default function Home() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const fetchAll = useCallback(async () => {
+  const fetchGroups = useCallback(async (pageNum: number, append = false) => {
     try {
-      const res = await fetch("/dashboard/api/groups");
+      if (append) setLoadingMore(true);
+      const res = await fetch(`/dashboard/api/groups?page=${pageNum}&limit=20`);
       const raw = await res.json();
       const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
 
-      // Server ส่ง messages มาพร้อมแล้ว ไม่ต้อง fetch แยก
       const withMessages = data;
 
-      if (autoSort) {
-        withMessages.sort((a, b) => {
-          const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
-          const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
-          return tb - ta;
+      if (append) {
+        // เลื่อนดูเพิ่ม — ต่อท้าย
+        setGroups((prev) => {
+          const existingIds = new Set(prev.map((g) => g.id));
+          const newGroups = withMessages.filter((g: Group) => !existingIds.has(g.id));
+          return [...prev, ...newGroups];
         });
-        setOrder(withMessages.map((g) => g.id));
-      } else if (order.length === 0) {
-        setOrder(withMessages.map((g) => g.id));
+        setOrder((prev) => {
+          const newIds = withMessages.map((g: Group) => g.id).filter((id: string) => !prev.includes(id));
+          return [...prev, ...newIds];
+        });
       } else {
-        const newIds = withMessages.map((g) => g.id).filter((id) => !order.includes(id));
-        if (newIds.length > 0) setOrder((prev) => [...prev, ...newIds]);
+        // โหลดครั้งแรก / refresh
+        if (autoSort) {
+          withMessages.sort((a: Group, b: Group) => {
+            const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+            const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+            return tb - ta;
+          });
+          setOrder(withMessages.map((g: Group) => g.id));
+        } else if (order.length === 0) {
+          setOrder(withMessages.map((g: Group) => g.id));
+        }
+        setGroups(withMessages);
       }
 
-      setGroups(withMessages);
-    } catch {}
+      setHasMore(raw.pagination?.hasMore ?? false);
+    } catch {} finally {
+      setLoadingMore(false);
+    }
   }, [autoSort, order.length]);
+
+  const fetchAll = useCallback(async () => {
+    await fetchGroups(0, false);
+  }, [fetchGroups]);
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -131,9 +153,17 @@ export default function Home() {
 
   useEffect(() => { fetchAll(); fetchAlerts(); }, []);
   useEffect(() => {
-    const interval = setInterval(() => { fetchAll(); fetchAlerts(); }, 5000);
+    const interval = setInterval(() => { fetchGroups(0, false); fetchAlerts(); }, 10000);
     return () => clearInterval(interval);
-  }, [fetchAll, fetchAlerts]);
+  }, [fetchGroups, fetchAlerts]);
+
+  // Infinite scroll — เลื่อนถึงล่างสุดแล้วดึงเพิ่ม
+  const loadMore = useCallback(() => {
+    if (!hasMore || loadingMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchGroups(nextPage, true);
+  }, [hasMore, loadingMore, page, fetchGroups]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -331,6 +361,26 @@ export default function Home() {
             </div>
           </SortableContext>
         </DndContext>
+
+        {/* Load More */}
+        {hasMore && (
+          <div className="flex justify-center py-6">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="px-6 py-2.5 theme-bg-card border theme-border rounded-xl text-sm theme-text-secondary hover:theme-bg-hover transition disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  กำลังโหลด...
+                </span>
+              ) : (
+                "โหลดเพิ่ม"
+              )}
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
