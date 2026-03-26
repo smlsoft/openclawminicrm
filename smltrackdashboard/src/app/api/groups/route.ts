@@ -7,80 +7,109 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDB();
 
-    // Pagination params (backward compatible — default limit=50, page=0)
     const limit = parseInt(request.nextUrl.searchParams.get("limit") || "50");
     const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
 
-    const [allMeta, allAnalytics, allLogCounts] = await Promise.all([
-      db.collection("groups_meta").find().toArray(),
-      db.collection("chat_analytics").find().toArray(),
+    // 1. ดึง sourceIds + lastActivity + count ด้วย aggregation เดียว (แทน N+1)
+    const sourceAgg = await db
+      .collection("messages")
+      .aggregate([
+        {
+          $group: {
+            _id: "$sourceId",
+            messageCount: { $sum: 1 },
+            lastActivity: { $max: "$createdAt" },
+          },
+        },
+        { $sort: { lastActivity: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+      ])
+      .toArray();
+
+    const total = await db.collection("messages").aggregate([
+      { $group: { _id: "$sourceId" } },
+      { $count: "total" },
+    ]).toArray();
+    const totalCount = total[0]?.total || 0;
+
+    const sourceIds = sourceAgg.map((s) => s._id).filter(Boolean);
+    if (sourceIds.length === 0) {
+      return NextResponse.json({ groups: [], pagination: { total: 0, limit, page, pages: 0, hasMore: false } });
+    }
+
+    // 2. Batch queries — ดึงทุกอย่างใน $in เดียว (ไม่มี N+1)
+    const [allMeta, allAnalytics, allLogCounts, allMessages] = await Promise.all([
+      db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray(),
+      db.collection("chat_analytics").find({ sourceId: { $in: sourceIds } }).toArray(),
       db.collection("analysis_logs").aggregate([
+        { $match: { sourceId: { $in: sourceIds } } },
         { $group: { _id: "$sourceId", count: { $sum: 1 } } },
+      ]).toArray(),
+      // ดึง 50 messages ล่าสุดต่อ sourceId ด้วย aggregation
+      db.collection("messages").aggregate([
+        { $match: { sourceId: { $in: sourceIds } } },
+        { $sort: { createdAt: -1 } },
+        { $project: { embedding: 0, imageUrl: 0 } },
+        {
+          $group: {
+            _id: "$sourceId",
+            messages: { $push: "$$ROOT" },
+          },
+        },
+        {
+          $project: {
+            messages: { $slice: ["$messages", 50] },
+          },
+        },
       ]).toArray(),
     ]);
 
-    // ดึง sourceIds ทั้งหมดจาก messages collection
-    const sourceIds = await db
-      .collection("messages")
-      .distinct("sourceId");
+    // 3. Build lookup maps
+    const metaMap = new Map(allMeta.map((m) => [m.sourceId, m]));
+    const analyticsMap = new Map(allAnalytics.map((a) => [a.sourceId, a]));
+    const logMap = new Map(allLogCounts.map((l) => [l._id, l.count]));
+    const msgMap = new Map(allMessages.map((m) => [m._id, m.messages || []]));
 
-    const total = sourceIds.length;
-    const paginatedIds = sourceIds.slice(page * limit, (page + 1) * limit);
+    // 4. Assemble results (no DB calls in loop)
+    const groups = sourceAgg.map((src) => {
+      const sourceId = src._id;
+      const meta = metaMap.get(sourceId);
+      const analytics = analyticsMap.get(sourceId);
+      const logCount = logMap.get(sourceId) || 0;
+      const messages = msgMap.get(sourceId) || [];
+      const lastMsg = messages[0];
 
-    const groups = await Promise.all(
-      paginatedIds.map(async (sourceId: string) => {
-        if (!sourceId) return null;
-        const meta = allMeta.find(
-          (m) => m.sourceId === sourceId || m.sourceId?.startsWith(sourceId?.substring(0, 20))
-        );
-        const analytics = allAnalytics.find(
-          (a) => a.sourceId === sourceId || a.sourceId?.startsWith(sourceId?.substring(0, 20))
-        );
-        const logCount = allLogCounts.find((l) => l._id === sourceId)?.count || 0;
-
-        const [count, messages] = await Promise.all([
-          db.collection("messages").countDocuments({ sourceId }),
-          db
-            .collection("messages")
-            .find({ sourceId }, { projection: { embedding: 0, imageUrl: 0 } })
-            .sort({ createdAt: -1 })
-            .limit(50)
-            .toArray(),
-        ]);
-
-        const lastMsg = messages[0];
-
-        return {
-          id: sourceId,
-          name: meta?.groupName || sourceId,
-          sourceType: meta?.sourceType || "unknown",
-          platform: meta?.platform || "line",
-          messageCount: count,
-          lastMessage: lastMsg?.content?.substring(0, 50) || "",
-          lastActivity: lastMsg?.createdAt || null,
-          sentiment: analytics?.overallSentiment || analytics?.sentiment || null,
-          customerSentiment: analytics?.customerSentiment || null,
-          staffSentiment: analytics?.staffSentiment || null,
-          overallSentiment: analytics?.overallSentiment || analytics?.sentiment || null,
-          purchaseIntent: analytics?.purchaseIntent || null,
-          analysisLogsCount: logCount,
-          messages: messages.reverse().map((m) => ({
-            ...m,
-            _id: m._id.toString(),
-            hasImage: m.messageType === "image",
-          })),
-        };
-      })
-    );
+      return {
+        id: sourceId,
+        name: meta?.groupName || sourceId,
+        sourceType: meta?.sourceType || "unknown",
+        platform: meta?.platform || "line",
+        messageCount: src.messageCount,
+        lastMessage: lastMsg?.content?.substring(0, 50) || "",
+        lastActivity: src.lastActivity || null,
+        sentiment: analytics?.overallSentiment || analytics?.sentiment || null,
+        customerSentiment: analytics?.customerSentiment || null,
+        staffSentiment: analytics?.staffSentiment || null,
+        overallSentiment: analytics?.overallSentiment || analytics?.sentiment || null,
+        purchaseIntent: analytics?.purchaseIntent || null,
+        analysisLogsCount: logCount,
+        messages: messages.reverse().map((m: any) => ({
+          ...m,
+          _id: m._id.toString(),
+          hasImage: m.messageType === "image",
+        })),
+      };
+    });
 
     return NextResponse.json({
-      groups: groups.filter(Boolean),
+      groups,
       pagination: {
-        total,
+        total: totalCount,
         limit,
         page,
-        pages: Math.ceil(total / limit),
-        hasMore: (page + 1) * limit < total,
+        pages: Math.ceil(totalCount / limit),
+        hasMore: (page + 1) * limit < totalCount,
       },
     });
   } catch (err: any) {
