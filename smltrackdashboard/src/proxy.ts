@@ -27,6 +27,18 @@ export async function proxy(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET || "dev-secret-change-me-in-production",
   });
 
+  // Demo guard — block mutations สำหรับ demo user
+  if (token?.email === "demo@smlsoft.com" && req.method !== "GET") {
+    const readOnlyPaths = ["/api/settings", "/api/config", "/api/team", "/api/km", "/api/onboarding", "/api/account"];
+    const isBlocked = readOnlyPaths.some((p) => pathname.startsWith(p));
+    if (isBlocked) {
+      return NextResponse.json(
+        { error: "Demo mode — ดูได้อย่างเดียว ไม่สามารถแก้ไขได้" },
+        { status: 403 }
+      );
+    }
+  }
+
   if (!token) {
     // redirect ไป login page (ใช้ NEXTAUTH_URL เพื่อหลีกเลี่ยง internal hostname)
     const origin = process.env.NEXTAUTH_URL || req.nextUrl.origin;
