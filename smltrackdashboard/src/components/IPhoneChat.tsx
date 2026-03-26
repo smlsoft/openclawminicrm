@@ -9,7 +9,17 @@ interface Message {
   content: string;
   messageType: string;
   imageUrl?: string | null;
+  videoUrl?: string | null;
+  audioUrl?: string | null;
+  location?: { title?: string; address?: string; latitude: number; longitude: number } | null;
+  sticker?: { packageId?: string; stickerId?: string; stickerUrl?: string } | null;
   hasImage?: boolean;
+  hasVideo?: boolean;
+  hasAudio?: boolean;
+  hasSticker?: boolean;
+  hasLocation?: boolean;
+  sendMethod?: string;
+  isAutoReply?: boolean;
   createdAt?: string;
 }
 
@@ -289,7 +299,18 @@ export default function IPhoneChat({
                         <p className={`text-[11px] font-medium mb-0.5 ${msg.role === "assistant" ? "text-sky-400" : "text-emerald-400"}`}>{msg.userName}</p>
                       )}
 
-                      {(msg.hasImage || msg.imageUrl) && (
+                      {/* Sticker */}
+                      {(msg.hasSticker || msg.sticker) && msg.sticker && (
+                        <img
+                          src={msg.sticker.stickerUrl || `https://stickershop.line-scdn.net/stickershop/v1/sticker/${msg.sticker.stickerId}/iPhone/sticker@2x.png`}
+                          alt="sticker"
+                          className="w-24 h-24 object-contain my-1"
+                          loading="lazy"
+                        />
+                      )}
+
+                      {/* Image */}
+                      {(msg.hasImage || msg.imageUrl) && !msg.sticker && (
                         <img
                           src={msg.imageUrl || `/api/image/${group.id}/${msg._id}`}
                           alt=""
@@ -299,8 +320,42 @@ export default function IPhoneChat({
                         />
                       )}
 
+                      {/* Video */}
+                      {(msg.hasVideo || msg.videoUrl) && msg.videoUrl && !msg.videoUrl.startsWith("line-content") && (
+                        <video src={msg.videoUrl} controls className="rounded-md max-w-full max-h-48 my-1" />
+                      )}
+                      {msg.videoUrl?.startsWith("line-content") && (
+                        <div className="flex items-center gap-1.5 my-1 text-xs text-sky-400">🎥 วิดีโอ (ดูใน LINE)</div>
+                      )}
+
+                      {/* Audio */}
+                      {(msg.hasAudio || msg.audioUrl) && msg.audioUrl && !msg.audioUrl.startsWith("line-content") && (
+                        <audio src={msg.audioUrl} controls className="max-w-full my-1 h-8" />
+                      )}
+                      {msg.audioUrl?.startsWith("line-content") && (
+                        <div className="flex items-center gap-1.5 my-1 text-xs text-sky-400">🎵 เสียง (ดูใน LINE)</div>
+                      )}
+
+                      {/* Location */}
+                      {(msg.hasLocation || msg.location) && msg.location && (
+                        <a
+                          href={`https://www.google.com/maps?q=${msg.location.latitude},${msg.location.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 my-1 text-xs text-sky-300 hover:text-sky-200 underline"
+                        >
+                          📍 {msg.location.title || "ดูแผนที่"}
+                        </a>
+                      )}
+
                       <div className="flex items-end gap-2">
-                        <p className="whitespace-pre-wrap break-words flex-1 leading-[18px]">{msg.content}</p>
+                        {/* ซ่อน content ถ้าเป็น sticker */}
+                        {msg.content && msg.messageType !== "sticker" && !msg.hasSticker && (
+                          <p className="whitespace-pre-wrap break-words flex-1 leading-[18px]">{msg.content}</p>
+                        )}
+                        {(msg.messageType === "sticker" || msg.hasSticker) && (
+                          <p className="flex-1" />
+                        )}
                         {msg.createdAt && (
                           <span className="iphone-time text-[10px] shrink-0 translate-y-0.5">
                             {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}

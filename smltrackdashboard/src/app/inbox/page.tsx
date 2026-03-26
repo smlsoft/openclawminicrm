@@ -13,7 +13,17 @@ interface Message {
   content: string;
   messageType: string;
   imageUrl?: string | null;
+  videoUrl?: string | null;
+  audioUrl?: string | null;
+  location?: { title?: string; address?: string; latitude: number; longitude: number } | null;
+  sticker?: { packageId?: string; stickerId?: string; stickerUrl?: string } | null;
   hasImage?: boolean;
+  hasVideo?: boolean;
+  hasAudio?: boolean;
+  hasSticker?: boolean;
+  hasLocation?: boolean;
+  sendMethod?: string;
+  isAutoReply?: boolean;
   createdAt?: string;
   platform?: string;
 }
@@ -171,22 +181,33 @@ function ChatBubble({
   onZoom: (url: string) => void;
 }) {
   const isStaff = msg.role === "assistant";
-  const showImage = msg.hasImage || !!msg.imageUrl;
+  const showImage = (msg.hasImage || !!msg.imageUrl) && !msg.sticker;
+  const isAutoReply = msg.isAutoReply;
 
   return (
     <div className={`flex ${isStaff ? "justify-end" : "justify-start"} mb-1`}>
       <div
         className={`relative max-w-[70%] px-3 py-2 text-sm rounded-2xl ${
           isStaff
-            ? "bg-indigo-600 text-white rounded-br-sm"
+            ? isAutoReply ? "bg-amber-700/60 text-white rounded-br-sm" : "bg-indigo-600 text-white rounded-br-sm"
             : "theme-bg-card theme-text rounded-bl-sm"
         }`}
       >
         {msg.userName && (
-          <p className={`text-[11px] font-semibold mb-1 ${isStaff ? "text-indigo-200" : "text-sky-400"}`}>
+          <p className={`text-[11px] font-semibold mb-1 ${isStaff ? (isAutoReply ? "text-amber-200" : "text-indigo-200") : "text-sky-400"}`}>
             {msg.userName}
           </p>
         )}
+        {/* Sticker */}
+        {(msg.hasSticker || msg.sticker) && msg.sticker && (
+          <img
+            src={msg.sticker.stickerUrl || `https://stickershop.line-scdn.net/stickershop/v1/sticker/${msg.sticker.stickerId}/iPhone/sticker@2x.png`}
+            alt="sticker"
+            className="w-28 h-28 object-contain my-1"
+            loading="lazy"
+          />
+        )}
+        {/* Image */}
         {showImage && (msg.imageUrl || msg.hasImage) && (
           <img
             src={msg.imageUrl || ""}
@@ -196,14 +217,48 @@ function ChatBubble({
             onClick={() => msg.imageUrl && onZoom(msg.imageUrl)}
           />
         )}
-        {msg.content && (
+        {/* Video */}
+        {(msg.hasVideo || msg.videoUrl) && msg.videoUrl && !msg.videoUrl.startsWith("line-content") && (
+          <video src={msg.videoUrl} controls className="rounded-lg max-w-full max-h-56 mb-1" />
+        )}
+        {msg.videoUrl?.startsWith("line-content") && (
+          <p className="text-xs text-sky-300 my-1">🎥 วิดีโอ (ดูใน LINE)</p>
+        )}
+        {/* Audio */}
+        {(msg.hasAudio || msg.audioUrl) && msg.audioUrl && !msg.audioUrl.startsWith("line-content") && (
+          <audio src={msg.audioUrl} controls className="max-w-full my-1" />
+        )}
+        {msg.audioUrl?.startsWith("line-content") && (
+          <p className="text-xs text-sky-300 my-1">🎵 เสียง (ดูใน LINE)</p>
+        )}
+        {/* Location */}
+        {(msg.hasLocation || msg.location) && msg.location && (
+          <a
+            href={`https://www.google.com/maps?q=${msg.location.latitude},${msg.location.longitude}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 my-1 text-xs text-sky-300 hover:text-sky-200 underline"
+          >
+            📍 {msg.location.title || "ดูแผนที่"}
+          </a>
+        )}
+        {/* Text (ซ่อนถ้าเป็น sticker) */}
+        {msg.content && msg.messageType !== "sticker" && !msg.hasSticker && (
           <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
         )}
-        {msg.createdAt && (
-          <span className={`text-[10px] mt-1 block ${isStaff ? "text-indigo-300" : "theme-text-muted"} text-right`}>
-            {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
+        {/* Time + send method */}
+        <div className={`flex items-center justify-end gap-1 mt-1 ${isStaff ? "text-indigo-300" : "theme-text-muted"}`}>
+          {msg.sendMethod && isStaff && (
+            <span className={`text-[9px] ${msg.sendMethod === "reply" ? "text-green-300" : "text-amber-300"}`}>
+              {msg.sendMethod === "reply" ? "✓ฟรี" : "push"}
+            </span>
+          )}
+          {msg.createdAt && (
+            <span className="text-[10px] text-right">
+              {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
