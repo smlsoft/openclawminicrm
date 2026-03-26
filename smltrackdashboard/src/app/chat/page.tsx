@@ -74,10 +74,29 @@ const LINE_STICKER_PACKAGES = [
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const PLATFORM_CONFIG: Record<string, { label: string; color: string; badgeBg: string; dot: string }> = {
-  line:      { label: "LINE",      color: "text-green-400",  badgeBg: "bg-green-600",  dot: "bg-green-400" },
-  facebook:  { label: "Facebook",  color: "text-blue-400",   badgeBg: "bg-blue-600",   dot: "bg-blue-400" },
-  instagram: { label: "Instagram", color: "text-pink-400",   badgeBg: "bg-gradient-to-r from-purple-600 to-pink-600", dot: "bg-pink-400" },
+const PLATFORM_CONFIG: Record<string, {
+  label: string; icon: string; color: string; badgeBg: string; dot: string;
+  borderColor: string; headerBg: string; sendBg: string; sendHover: string;
+  placeholder: string; capabilities: string;
+}> = {
+  line: {
+    label: "LINE", icon: "💚", color: "text-green-400", badgeBg: "bg-green-600", dot: "bg-green-400",
+    borderColor: "border-green-500", headerBg: "bg-green-950/60", sendBg: "bg-green-600", sendHover: "hover:bg-green-500",
+    placeholder: "พิมพ์ข้อความ LINE…",
+    capabilities: "ข้อความ · รูป · สติกเกอร์ · วิดีโอ · เสียง · ตำแหน่ง · Flex",
+  },
+  facebook: {
+    label: "Facebook", icon: "💙", color: "text-blue-400", badgeBg: "bg-blue-600", dot: "bg-blue-400",
+    borderColor: "border-blue-500", headerBg: "bg-blue-950/60", sendBg: "bg-blue-600", sendHover: "hover:bg-blue-500",
+    placeholder: "พิมพ์ข้อความ Messenger…",
+    capabilities: "ข้อความ · รูป (เร็วๆ นี้)",
+  },
+  instagram: {
+    label: "Instagram", icon: "💜", color: "text-pink-400", badgeBg: "bg-gradient-to-r from-purple-600 to-pink-600", dot: "bg-pink-400",
+    borderColor: "border-pink-500", headerBg: "bg-pink-950/40", sendBg: "bg-gradient-to-r from-purple-600 to-pink-600", sendHover: "hover:brightness-110",
+    placeholder: "พิมพ์ข้อความ Instagram DM…",
+    capabilities: "ข้อความ · รูป (เร็วๆ นี้)",
+  },
 };
 
 const MAX_PANELS = 4;
@@ -321,9 +340,9 @@ function ChatPanel({
   const cfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.line;
 
   return (
-    <div className="flex flex-col h-full border-r theme-border last:border-r-0 min-w-0">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b theme-border theme-bg-secondary shrink-0">
+    <div className={`flex flex-col h-full border-r theme-border last:border-r-0 min-w-0 border-t-2 ${cfg.borderColor}`}>
+      {/* ── Header — สีตาม platform ── */}
+      <div className={`flex items-center gap-2 px-3 py-2 border-b theme-border shrink-0 ${cfg.headerBg}`}>
         <div className={`w-8 h-8 rounded-full ${avatarBg(platform)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
           {getInitials(conv.name)}
         </div>
@@ -332,8 +351,8 @@ function ChatPanel({
             <span className="text-sm font-semibold theme-text truncate">
               {conv.name !== conv.id ? conv.name : conv.id.substring(0, 12) + "…"}
             </span>
-            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${cfg.badgeBg} text-white leading-none`}>
-              {cfg.label}
+            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${cfg.badgeBg} text-white leading-none`}>
+              {cfg.icon} {cfg.label}
             </span>
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -346,6 +365,8 @@ function ChatPanel({
               </span>
             )}
           </div>
+          {/* Platform capabilities */}
+          <p className={`text-[9px] mt-0.5 ${cfg.color} opacity-60`}>{cfg.capabilities}</p>
         </div>
         <button
           onClick={onClose}
@@ -607,18 +628,18 @@ function ChatPanel({
                 e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
               }}
               onKeyDown={handleKeyDown}
-              placeholder="พิมพ์ข้อความ…"
+              placeholder={cfg.placeholder}
               disabled={sending}
-              className="w-full theme-input border rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-indigo-500 resize-none transition disabled:opacity-50"
+              className={`w-full theme-input border rounded-lg px-2.5 py-1.5 text-sm focus:outline-none resize-none transition disabled:opacity-50 focus:${cfg.borderColor}`}
               style={{ minHeight: "36px", maxHeight: "80px" }}
             />
           </div>
-          {/* Send */}
+          {/* Send — สีตาม platform */}
           <button
             onClick={handleSendText}
             disabled={sending || !inputText.trim()}
-            className="p-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-600 text-white rounded-lg transition shrink-0"
-            title="ส่ง"
+            className={`p-2 ${cfg.sendBg} ${cfg.sendHover} disabled:bg-gray-700 disabled:text-gray-600 text-white rounded-lg transition shrink-0`}
+            title={`ส่งผ่าน ${cfg.label}`}
           >
             {sending ? (
               <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
@@ -849,7 +870,7 @@ export default function ChatPage() {
           })}
         </div>
 
-        {/* Conversation list */}
+        {/* Conversation list — แยกสีตาม platform */}
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 gap-1">
@@ -859,16 +880,25 @@ export default function ChatPage() {
           ) : filtered.map(conv => {
             const isOpen = openPanels.includes(conv.id);
             const platform = conv.platform || "line";
-            const cfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.line;
+            const pcfg = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.line;
             const sentimentLevel = conv.customerSentiment?.level || conv.sentiment?.level;
+
+            // แถบสีซ้ายตาม platform
+            const leftBorderColor = platform === "line" ? "border-l-green-500"
+              : platform === "facebook" ? "border-l-blue-500"
+              : "border-l-pink-500";
+
+            // ไฮไลท์ถ้าเพิ่งมีข้อความ (<2 นาที)
+            const isRecent = conv.lastActivity && (Date.now() - new Date(conv.lastActivity).getTime()) < 120000;
 
             return (
               <button
                 key={conv.id}
                 onClick={() => openChat(conv.id)}
-                className={`w-full text-left px-2.5 py-2 flex items-start gap-2 transition border-b theme-border hover:theme-bg-hover ${
-                  isOpen ? "bg-indigo-950/50 border-l-2 border-l-indigo-500" : ""
-                }`}
+                className={`w-full text-left px-2.5 py-2 flex items-start gap-2 transition border-b theme-border border-l-2 hover:theme-bg-hover ${
+                  isOpen ? `${leftBorderColor} bg-opacity-20 ${platform === "line" ? "bg-green-950/40" : platform === "facebook" ? "bg-blue-950/40" : "bg-pink-950/40"}`
+                    : `${leftBorderColor} border-l-opacity-30`
+                } ${isRecent && !isOpen ? "animate-pulse-subtle" : ""}`}
               >
                 <div className="relative shrink-0">
                   <div className={`w-8 h-8 rounded-full ${avatarBg(platform)} flex items-center justify-center text-[10px] font-bold text-white`}>
@@ -879,18 +909,29 @@ export default function ChatPage() {
                       sentimentLevel === "red" ? "bg-red-500" : sentimentLevel === "yellow" ? "bg-amber-400" : "bg-emerald-500"
                     }`} style={{ borderColor: 'var(--bg-secondary)' }} />
                   )}
+                  {/* ข้อความใหม่ indicator */}
+                  {isRecent && !isOpen && (
+                    <span className="absolute -top-0.5 -left-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
-                    <span className={`text-xs font-semibold truncate flex-1 ${isOpen ? "text-indigo-300" : "theme-text"}`}>
+                    <span className={`text-xs font-semibold truncate flex-1 ${isOpen ? pcfg.color : isRecent ? "theme-text font-bold" : "theme-text"}`}>
                       {conv.name !== conv.id ? conv.name : conv.id.substring(0, 12) + "…"}
                     </span>
-                    <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${cfg.badgeBg} text-white leading-none`}>
-                      {cfg.label}
+                    <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${pcfg.badgeBg} text-white leading-none`}>
+                      {pcfg.icon} {pcfg.label}
                     </span>
                   </div>
-                  <p className="text-[10px] theme-text-muted truncate mt-0.5">{conv.lastMessage || "—"}</p>
-                  <span className="text-[9px] theme-text-muted">{timeAgo(conv.lastActivity)}</span>
+                  <p className={`text-[10px] truncate mt-0.5 ${isRecent ? "theme-text-secondary font-medium" : "theme-text-muted"}`}>
+                    {conv.lastMessage || "—"}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[9px] theme-text-muted">{timeAgo(conv.lastActivity)}</span>
+                    {conv.purchaseIntent?.level === "red" && (
+                      <span className="text-[8px] bg-red-900/50 text-red-400 px-1 rounded">สนใจซื้อ!</span>
+                    )}
+                  </div>
                 </div>
               </button>
             );
@@ -901,20 +942,47 @@ export default function ChatPage() {
       {/* ═══ RIGHT — Chat Panels (side by side) ═══ */}
       <div className="flex-1 flex min-w-0">
         {openPanels.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
             <div className="w-16 h-16 theme-bg-card rounded-2xl flex items-center justify-center text-3xl">💬</div>
             <div>
               <h2 className="text-base font-bold theme-text mb-1">เลือกบทสนทนา</h2>
-              <p className="text-xs theme-text-muted">คลิกชื่อลูกค้าทางซ้ายเพื่อเปิดแชท</p>
-              <p className="text-xs theme-text-muted mt-1">เปิดได้สูงสุด {MAX_PANELS} จอพร้อมกัน</p>
+              <p className="text-xs theme-text-muted">คลิกชื่อลูกค้าทางซ้ายเพื่อเปิดแชท — สูงสุด {MAX_PANELS} จอพร้อมกัน</p>
             </div>
-            <div className="mt-4 space-y-1 text-[11px] theme-text-muted text-left">
-              <p>📱 <strong className="theme-text">Reply API</strong> — ตอบภายใน 25 วิ ฟรี!</p>
-              <p>📤 <strong className="theme-text">Push API</strong> — fallback อัตโนมัติ</p>
-              <p>🤖 <strong className="theme-text">AI อัตโนมัติ</strong> — 5 นาทีไม่ตอบ AI ช่วย (1-on-1)</p>
-              <p>😀 <strong className="theme-text">Sticker</strong> — ส่ง LINE sticker ฟรี</p>
+
+            {/* Platform Summary */}
+            <div className="flex gap-3 mt-2">
+              <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-green-950/30 border border-green-800/30">
+                <span className="text-2xl">💚</span>
+                <span className="text-lg font-bold text-green-400">{platformCounts.line}</span>
+                <span className="text-[10px] text-green-400/70">LINE</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-blue-950/30 border border-blue-800/30">
+                <span className="text-2xl">💙</span>
+                <span className="text-lg font-bold text-blue-400">{platformCounts.facebook}</span>
+                <span className="text-[10px] text-blue-400/70">Facebook</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl bg-pink-950/30 border border-pink-800/30">
+                <span className="text-2xl">💜</span>
+                <span className="text-lg font-bold text-pink-400">{platformCounts.instagram}</span>
+                <span className="text-[10px] text-pink-400/70">Instagram</span>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] theme-text-muted text-left">
+              <p>📱 <strong className="text-green-400">Reply API</strong> — ตอบ LINE ฟรี!</p>
+              <p>🤖 <strong className="text-amber-400">AI อัตโนมัติ</strong> — 5 นาที ไม่ตอบ</p>
+              <p>💡 <strong className="text-indigo-400">AI แนะนำ</strong> — คำตอบ + เหตุผล</p>
+              <p>😀 <strong className="text-green-400">Sticker</strong> — LINE สติกเกอร์ฟรี</p>
               <p>🖼️ <strong className="theme-text">รูปภาพ</strong> — อัพโหลดและส่ง</p>
-              <p>📍 <strong className="theme-text">ตำแหน่ง</strong> — แชร์ location</p>
+              <p>📍 <strong className="theme-text">ตำแหน่ง</strong> — แชร์ GPS</p>
+            </div>
+
+            {/* Platform capabilities */}
+            <div className="mt-3 text-[10px] theme-text-muted space-y-1">
+              <p><span className="text-green-400">LINE:</span> ข้อความ · รูป · สติกเกอร์ · วิดีโอ · เสียง · ตำแหน่ง · Flex</p>
+              <p><span className="text-blue-400">Facebook:</span> ข้อความ · รูป (เร็วๆ นี้)</p>
+              <p><span className="text-pink-400">Instagram:</span> ข้อความ · รูป (เร็วๆ นี้)</p>
             </div>
           </div>
         ) : (
