@@ -9,7 +9,33 @@ const { MongoClient } = require("mongodb");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const rateLimit = require("express-rate-limit");
 const app = express();
+
+// === Rate Limiters (Security) ===
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: "คำขอมากเกินไป กรุณารอสักครู่" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const sendLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { error: "ส่งข้อความเร็วเกินไป กรุณารอสักครู่" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { error: "อัพโหลดมากเกินไป กรุณารอสักครู่" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // === Reply Token Cache (LINE Reply API ฟรี → ใช้ก่อน Push) ===
 // replyToken มีอายุ ~30 วินาที เก็บไว้ใช้ตอน admin ตอบ
@@ -146,6 +172,19 @@ const upload = multer({
     cb(null, allowed.test(file.mimetype));
   },
 });
+
+// === [Security] Image Signature Validation ===
+function validateImageSignature(filePath) {
+  const buffer = Buffer.alloc(12);
+  const fd = fs.openSync(filePath, "r");
+  try { fs.readSync(fd, buffer, 0, 12, 0); } finally { fs.closeSync(fd); }
+  const hex = buffer.toString("hex");
+  if (hex.startsWith("ffd8ff")) return true;       // JPEG
+  if (hex.startsWith("89504e47")) return true;      // PNG
+  if (hex.startsWith("474946")) return true;         // GIF
+  if (hex.startsWith("52494646") && hex.includes("57454250")) return true; // WebP
+  return false;
+}
 
 // === Reverse Proxy: /dashboard* → dashboard container ===
 const DASHBOARD_HOST = process.env.DASHBOARD_HOST || "dashboard";
@@ -3153,7 +3192,7 @@ async function sendLineMessage(sourceId, payload) {
 
 // POST /api/inbox/send — ส่งข้อความจาก Dashboard ไปหาลูกค้า
 // รองรับ: text, imageUrl, sticker { packageId, stickerId }
-app.post("/api/inbox/send", express.json(), async (req, res) => {
+app.post("/api/inbox/send", sendLimiter, express.json(), async (req, res) => {
   const {
     sourceId, platform, text, imageUrl, videoUrl, audioUrl, audioDuration,
     location, sticker, template, flex, quickReply, staffName
@@ -3232,9 +3271,15 @@ app.post("/api/inbox/send", express.json(), async (req, res) => {
 });
 
 // POST /api/inbox/upload — อัพโหลดรูปภาพสำหรับส่ง
-app.post("/api/inbox/upload", upload.single("image"), (req, res) => {
+app.post("/api/inbox/upload", uploadLimiter, upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "ไม่มีไฟล์รูปภาพ" });
+  }
+  // [Security] Validate file signature (magic bytes)
+  if (!validateImageSignature(req.file.path)) {
+    fs.unlinkSync(req.file.path);
+    console.warn("[Security] Rejected upload — invalid image signature:", req.file.originalname);
+    return res.status(400).json({ error: "ไฟล์ไม่ใช่รูปภาพที่รองรับ (JPEG/PNG/GIF/WebP)" });
   }
   // สร้าง public URL (ผ่าน nginx/proxy)
   const baseUrl = process.env.BASE_URL || `https://crm.satistang.com`;
@@ -3246,7 +3291,7 @@ app.post("/api/inbox/upload", upload.single("image"), (req, res) => {
 app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "7d" }));
 
 // === AI Suggest Reply — แนะนำคำตอบ + เหตุผลให้ Admin ===
-app.post("/api/inbox/suggest", express.json(), async (req, res) => {
+app.post("/api/inbox/suggest", aiLimiter, express.json(), async (req, res) => {
   const { sourceId } = req.body;
   if (!sourceId) return res.status(400).json({ error: "sourceId required" });
 
@@ -3633,7 +3678,7 @@ app.get("/api/skills/lessons", async (req, res) => {
 });
 
 // POST /api/km/search — ค้นหา KB (สำหรับ debug/test)
-app.post("/api/km/search", express.json(), async (req, res) => {
+app.post("/api/km/search", aiLimiter, express.json(), async (req, res) => {
   const { query } = req.body;
   if (!query) return res.status(400).json({ error: "query required" });
   try {
