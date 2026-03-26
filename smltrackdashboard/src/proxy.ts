@@ -28,9 +28,10 @@ export async function proxy(req: NextRequest) {
   });
 
   if (!token) {
-    // redirect ไป login page
-    const loginUrl = new URL("/dashboard/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.url);
+    // redirect ไป login page (ใช้ NEXTAUTH_URL เพื่อหลีกเลี่ยง internal hostname)
+    const origin = process.env.NEXTAUTH_URL || req.nextUrl.origin;
+    const loginUrl = new URL("/dashboard/login", origin);
+    loginUrl.searchParams.set("callbackUrl", `${origin}${req.nextUrl.pathname}`);
     return NextResponse.redirect(loginUrl);
   }
 
