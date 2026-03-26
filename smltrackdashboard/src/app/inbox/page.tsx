@@ -324,7 +324,8 @@ export default function InboxPage() {
   const fetchConversations = useCallback(async () => {
     try {
       const res = await fetch("/dashboard/api/groups");
-      const data = await res.json();
+      const raw = await res.json();
+      const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
       const sorted = [...data].sort((a, b) => {
         const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
@@ -337,7 +338,7 @@ export default function InboxPage() {
 
   useEffect(() => {
     fetchConversations();
-    const iv = setInterval(fetchConversations, 5000);
+    const iv = setInterval(fetchConversations, 15000);
     return () => clearInterval(iv);
   }, [fetchConversations]);
 

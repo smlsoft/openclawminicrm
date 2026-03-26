@@ -94,7 +94,8 @@ export default function Home() {
   const fetchAll = useCallback(async () => {
     try {
       const res = await fetch("/dashboard/api/groups");
-      const data = await res.json();
+      const raw = await res.json();
+      const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
 
       // Server ส่ง messages มาพร้อมแล้ว ไม่ต้อง fetch แยก

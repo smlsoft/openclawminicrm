@@ -1,11 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDB } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const db = await getDB();
+
+    // Pagination params (backward compatible — default limit=50, page=0)
+    const limit = parseInt(request.nextUrl.searchParams.get("limit") || "50");
+    const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
 
     const [allMeta, allAnalytics, allLogCounts] = await Promise.all([
       db.collection("groups_meta").find().toArray(),
@@ -20,8 +24,11 @@ export async function GET() {
       .collection("messages")
       .distinct("sourceId");
 
+    const total = sourceIds.length;
+    const paginatedIds = sourceIds.slice(page * limit, (page + 1) * limit);
+
     const groups = await Promise.all(
-      sourceIds.map(async (sourceId: string) => {
+      paginatedIds.map(async (sourceId: string) => {
         if (!sourceId) return null;
         const meta = allMeta.find(
           (m) => m.sourceId === sourceId || m.sourceId?.startsWith(sourceId?.substring(0, 20))
@@ -66,7 +73,16 @@ export async function GET() {
       })
     );
 
-    return NextResponse.json(groups.filter(Boolean));
+    return NextResponse.json({
+      groups: groups.filter(Boolean),
+      pagination: {
+        total,
+        limit,
+        page,
+        pages: Math.ceil(total / limit),
+        hasMore: (page + 1) * limit < total,
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
