@@ -160,6 +160,11 @@ function ChatPanel({
   const [suggestAnalysis, setSuggestAnalysis] = useState("");
   const [suggestLoading, setSuggestLoading] = useState(false);
 
+  // Memory / Skills
+  const [showMemory, setShowMemory] = useState(false);
+  const [memoryData, setMemoryData] = useState<any>(null);
+  const [memoryLoading, setMemoryLoading] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -205,6 +210,17 @@ function ChatPanel({
       if (Array.isArray(data)) setTemplates(data);
     } catch {}
   }, [templates.length]);
+
+  // ── Memory / Skills ──
+  const fetchMemory = useCallback(async () => {
+    setMemoryLoading(true);
+    try {
+      const res = await fetch(`/dashboard/api/memory/${encodeURIComponent(conv.id)}`);
+      const data = await res.json();
+      setMemoryData(data);
+    } catch {}
+    setMemoryLoading(false);
+  }, [conv.id]);
 
   // ── AI Suggest ──
   const fetchSuggestions = useCallback(async () => {
@@ -487,6 +503,107 @@ function ChatPanel({
         </div>
       )}
 
+      {/* ── Memory & Skills Panel ── */}
+      {showMemory && (
+        <div className="border-t theme-border theme-bg-secondary max-h-56 overflow-y-auto">
+          <div className="flex items-center justify-between px-3 py-1.5 border-b theme-border">
+            <span className="text-[11px] font-bold text-purple-400">🧠 Memory + Skills</span>
+            <div className="flex items-center gap-2">
+              <button onClick={fetchMemory} disabled={memoryLoading} className="text-[10px] text-purple-400 hover:text-purple-300 disabled:opacity-50">
+                {memoryLoading ? "โหลด..." : "🔄 รีเฟรช"}
+              </button>
+              <button onClick={() => setShowMemory(false)} className="theme-text-muted hover:theme-text text-sm">✕</button>
+            </div>
+          </div>
+
+          {memoryLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <span className="text-[11px] theme-text-muted">กำลังโหลด Memory...</span>
+            </div>
+          ) : !memoryData ? (
+            <p className="text-[11px] text-center py-4 theme-text-muted">ไม่มีข้อมูล</p>
+          ) : (
+            <div className="p-2 space-y-2">
+              {/* Customer Memory */}
+              {memoryData.memory?.compactSummary && (
+                <div className="theme-bg-card rounded-lg px-3 py-2 border theme-border">
+                  <p className="text-[10px] font-bold text-purple-400 mb-1">👤 จำลูกค้า</p>
+                  <p className="text-[11px] theme-text leading-relaxed">{memoryData.memory.compactSummary}</p>
+                  {memoryData.memory.personality && (
+                    <p className="text-[10px] theme-text-muted mt-1">สไตล์: <span className="text-purple-300">{memoryData.memory.personality}</span></p>
+                  )}
+                  {memoryData.memory.bestApproach && (
+                    <p className="text-[10px] theme-text-muted">วิธีตอบ: <span className="text-cyan-300">{memoryData.memory.bestApproach}</span></p>
+                  )}
+                  {memoryData.memory.interests?.length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {memoryData.memory.interests.map((i: string, idx: number) => (
+                        <span key={idx} className="text-[9px] bg-purple-900/40 text-purple-300 px-1.5 py-0.5 rounded">
+                          {i}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-3 mt-1.5 text-[9px] theme-text-muted">
+                    <span>💬 {memoryData.memory.messageCount || 0} ข้อความ</span>
+                    {memoryData.memory.purchaseCount > 0 && <span className="text-green-400">🛒 ซื้อ {memoryData.memory.purchaseCount} ครั้ง</span>}
+                    {memoryData.memory.positiveCount > 0 && <span className="text-emerald-400">👍 ชม {memoryData.memory.positiveCount}</span>}
+                    {memoryData.memory.negativeCount > 0 && <span className="text-red-400">👎 ร้องเรียน {memoryData.memory.negativeCount}</span>}
+                  </div>
+                </div>
+              )}
+
+              {!memoryData.memory?.compactSummary && (
+                <div className="theme-bg-card rounded-lg px-3 py-2 border theme-border">
+                  <p className="text-[10px] theme-text-muted text-center">
+                    ยังไม่มี Memory — AI จะสร้างอัตโนมัติหลังคุยครบ 10 ข้อความ
+                  </p>
+                  {memoryData.memory?.messageCount > 0 && (
+                    <p className="text-[9px] theme-text-muted text-center mt-1">
+                      ตอนนี้ {memoryData.memory.messageCount}/10 ข้อความ
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Skill Lessons สำหรับลูกค้าคนนี้ */}
+              {memoryData.lessons?.length > 0 && (
+                <div className="theme-bg-card rounded-lg px-3 py-2 border theme-border">
+                  <p className="text-[10px] font-bold text-amber-400 mb-1">📝 บทเรียน AI เฉพาะลูกค้าคนนี้</p>
+                  {memoryData.lessons.slice(0, 5).map((l: any, i: number) => (
+                    <div key={i} className="flex items-start gap-1.5 mb-1">
+                      <span className="text-[9px] shrink-0">
+                        {l.outcomeType === "purchase" ? "🛒" : l.outcomeType === "positive" ? "👍" : l.outcomeType === "negative" ? "👎" : "📝"}
+                      </span>
+                      <div>
+                        {l.rule && <p className="text-[10px] theme-text">{l.rule}</p>}
+                        {l.whatWorked && <p className="text-[9px] text-green-400">✓ {l.whatWorked}</p>}
+                        {l.whatFailed && <p className="text-[9px] text-red-400">✗ {l.whatFailed}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Global Skills */}
+              {memoryData.globalLessons?.length > 0 && (
+                <div className="theme-bg-card rounded-lg px-3 py-2 border theme-border">
+                  <p className="text-[10px] font-bold text-cyan-400 mb-1">🌐 บทเรียน AI ภาพรวม (จากลูกค้าทุกคน)</p>
+                  {memoryData.globalLessons.slice(0, 5).map((l: any, i: number) => (
+                    <div key={i} className="flex items-start gap-1.5 mb-1">
+                      <span className="text-[9px] shrink-0">
+                        {l.outcomeType === "purchase" ? "🛒" : l.outcomeType === "positive" ? "👍" : l.outcomeType === "negative" ? "👎" : "📝"}
+                      </span>
+                      <p className="text-[10px] theme-text-secondary">{l.rule}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── AI Suggestion Panel ── */}
       {showSuggest && (
         <div className="border-t theme-border theme-bg-secondary max-h-52 overflow-y-auto">
@@ -634,6 +751,12 @@ function ChatPanel({
             className={`p-1 rounded transition text-sm ${showSuggest ? "bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30" : "theme-text-secondary hover:theme-text"}`}
             title="AI แนะนำคำตอบ"
           >💡</button>
+          {/* Memory toggle */}
+          <button
+            onClick={() => { setShowMemory(v => !v); setShowStickers(false); setShowTemplates(false); setShowAttach(false); setShowSuggest(false); if (!showMemory) fetchMemory(); }}
+            className={`p-1 rounded transition text-sm ${showMemory ? "bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/30" : "theme-text-secondary hover:theme-text"}`}
+            title="🧠 Memory + Skills ของลูกค้า"
+          >🧠</button>
           <span className={`ml-auto text-[9px] ${cfg.color} opacity-50`}>{cfg.label}</span>
         </div>
         {/* แถว 2: Input เต็มความกว้าง + ปุ่มส่ง */}

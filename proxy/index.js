@@ -85,11 +85,8 @@ async function doAutoReply(sourceId, userName, customerMessage) {
 
   console.log(`[Auto-Reply] 5 นาทีไม่มีคนตอบ → AI ตอบแทน ${sourceId.substring(0, 8)}`);
 
-  // ดึง Knowledge Base ที่เกี่ยวข้อง
-  const kbResults = await searchKB(customerMessage, 3).catch(() => []);
-  const kbContext = kbResults.length > 0
-    ? `\n\nข้อมูลจากฐานความรู้ที่เกี่ยวข้อง:\n${kbResults.map(k => `- ${k.title}: ${k.content.substring(0, 200)}`).join("\n")}`
-    : "";
+  // ดึง memory + KB + skill lessons
+  const aiContext = await buildAIContext(sourceId, customerMessage);
 
   // เรียก AI
   const messages = [
@@ -97,10 +94,11 @@ async function doAutoReply(sourceId, userName, customerMessage) {
       role: "system",
       content: `คุณเป็นผู้ช่วยอัตโนมัติของร้าน ตอบสั้นๆ สุภาพ เป็นภาษาไทย
 ตอนนี้ทีมงานไม่ว่างชั่วคราว คุณช่วยตอบไปก่อน
-ใช้ข้อมูลจากฐานความรู้ในการตอบถ้ามี
+ใช้ข้อมูลจากฐานความรู้และ memory ในการตอบ
+ปรับวิธีตอบตามสไตล์ลูกค้า (ถ้ารู้)
 ห้ามสัญญาเรื่องราคา/โปรโมชั่นที่ไม่ได้อยู่ในฐานความรู้
 ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
-ตอบไม่เกิน 2 ประโยค${kbContext}`
+ตอบไม่เกิน 2 ประโยค${aiContext}`
     },
     { role: "user", content: customerMessage },
   ];
@@ -2014,6 +2012,7 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
 
         console.log(`[Meta/${platform}] ${userName}@${sourceId.substring(0, 12)}: ${msgText.substring(0, 60)}`)
         analyzeChat(sourceId, userName, msgText, senderId, { type: "user" }).catch((e) => console.error("[Meta/Skill] Catch:", e.message))
+        learnFromMessage(sourceId, userName, msgText, "text", "user").catch(() => {})
 
         // น้องกุ้งตอบแทนใน Facebook/Instagram (Send API — ฟรี!)
         const metaConfig = await getBotConfig(sourceId)
@@ -2196,6 +2195,9 @@ app.post("/webhook", express.raw({ type: "*/*" }), async (req, res) => {
 
       // Skill-Based Analytics
       analyzeChat(sourceId, userName, messageText, lineUserId, source).catch((e) => console.error("[Skill] Catch:", e.message));
+
+      // AI Learning: อัพเดท memory + ตรวจจับ signals
+      learnFromMessage(sourceId, userName, messageText, msg.type, source.type).catch(() => {});
 
       // === น้องกุ้งตอบแทน (LINE Reply API — ฟรี!) ===
       if (msg.text && event.replyToken) {
@@ -3260,13 +3262,10 @@ app.post("/api/inbox/suggest", express.json(), async (req, res) => {
       {
         role: "user",
         content: await (async () => {
-          // ดึง Knowledge Base ที่เกี่ยวข้อง
+          // ดึง memory + KB + skill lessons
           const lastCustomerMsg = recentMsgs.filter(m => m.role === "user").pop();
-          const kbResults = await searchKB(lastCustomerMsg?.content || chatHistory.substring(0, 200), 3).catch(() => []);
-          const kbContext = kbResults.length > 0
-            ? `\n\nข้อมูลจากฐานความรู้:\n${kbResults.map(k => `[${k.category || "KM"}] ${k.title}: ${k.content.substring(0, 300)}`).join("\n")}`
-            : "";
-          return `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}${kbContext}\n\nแนะนำคำตอบให้พนักงาน:`;
+          const aiContext = await buildAIContext(sourceId, lastCustomerMsg?.content || chatHistory.substring(0, 200));
+          return `บทสนทนา:\n${chatHistory}${customerInfo}${sentimentInfo}${aiContext}\n\nแนะนำคำตอบให้พนักงาน:`;
         })()
       }
     ];
@@ -3542,6 +3541,38 @@ app.delete("/api/km/:id", express.json(), async (req, res) => {
   }
 });
 
+// GET /api/memory/:sourceId — ดู memory + skill lessons ของลูกค้า/กลุ่ม
+app.get("/api/memory/:sourceId", async (req, res) => {
+  try {
+    const db = await getDB();
+    const memory = await getMemory(req.params.sourceId);
+    const lessons = await db.collection(SKILL_LESSONS_COLL)
+      .find({ sourceId: req.params.sourceId })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .toArray();
+    const globalLessons = await getSkillLessons(10);
+    res.json({ memory: memory || {}, lessons, globalLessons });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/skills/lessons — ดู global skill lessons ทั้งหมด
+app.get("/api/skills/lessons", async (req, res) => {
+  try {
+    const db = await getDB();
+    const lessons = await db.collection(SKILL_LESSONS_COLL)
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+    res.json(lessons);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/km/search — ค้นหา KB (สำหรับ debug/test)
 app.post("/api/km/search", express.json(), async (req, res) => {
   const { query } = req.body;
@@ -3553,6 +3584,272 @@ app.post("/api/km/search", express.json(), async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// === AI Learning System — Memory + Skill Refinement ===
+const MEMORY_COLL = "ai_memory";        // จำลูกค้า + กลุ่ม
+const SKILL_LESSONS_COLL = "ai_skill_lessons"; // เรียนรู้จากความสำเร็จ/ล้มเหลว
+
+// ── Customer/Group Memory ──────────────────────────────────────────────────
+
+// ดึง memory ของ sourceId (compact แล้ว ประหยัด token)
+async function getMemory(sourceId) {
+  const db = await getDB();
+  if (!db) return null;
+  return db.collection(MEMORY_COLL).findOne({ sourceId });
+}
+
+// บันทึก/อัพเดท memory
+async function upsertMemory(sourceId, updates) {
+  const db = await getDB();
+  if (!db) return;
+  await db.collection(MEMORY_COLL).updateOne(
+    { sourceId },
+    { $set: { ...updates, updatedAt: new Date() }, $setOnInsert: { sourceId, createdAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+// วิเคราะห์ข้อความ → อัพเดท memory อัตโนมัติ (เรียกหลัง processEvent)
+async function learnFromMessage(sourceId, userName, content, messageType, sourceType) {
+  if (!content || content.startsWith("[") || messageType !== "text") return;
+  if (content.length < 5) return; // ข้อความสั้นเกินไม่มีอะไรเรียนรู้
+
+  const db = await getDB();
+  if (!db) return;
+
+  const mem = await getMemory(sourceId) || {};
+  const msgCount = (mem.messageCount || 0) + 1;
+
+  // ทุกข้อความ: อัพเดท stats
+  const quickUpdate = {
+    messageCount: msgCount,
+    lastMessageAt: new Date(),
+    lastUserName: userName,
+    sourceType: sourceType || mem.sourceType,
+  };
+
+  // ทุก 10 ข้อความ: AI สรุป + เรียนรู้ (ประหยัด token)
+  if (msgCount % 10 === 0) {
+    compactMemory(sourceId, mem).catch(() => {});
+  }
+
+  // ตรวจจับ signals พิเศษ (ไม่ใช้ AI ประหยัด token)
+  const lower = content.toLowerCase();
+
+  // 🛒 ซื้อสินค้า → เรียนรู้ทำไมถึงสำเร็จ
+  if (/สั่ง|ซื้อ|จ่าย|โอน|ชำระ|order|สลิป/.test(lower)) {
+    quickUpdate.lastPurchaseSignal = new Date();
+    quickUpdate.purchaseCount = (mem.purchaseCount || 0) + 1;
+    learnSkillFromOutcome(sourceId, "purchase").catch(() => {});
+  }
+  // 👍 ชม / พอใจ → เรียนรู้อะไรได้ผล
+  if (/ขอบคุณ|ดีมาก|สุดยอด|ประทับใจ|แนะนำ|ชอบ|เยี่ยม|thank|great|good/.test(lower)) {
+    quickUpdate.lastPositiveFeedback = new Date();
+    quickUpdate.positiveCount = (mem.positiveCount || 0) + 1;
+    learnSkillFromOutcome(sourceId, "positive").catch(() => {});
+  }
+  // 😤 ร้องเรียน → เรียนรู้อะไรไม่ได้ผล
+  if (/ผิดหวัง|แย่|ช้า|เสีย|ไม่ดี|คืนเงิน|ยกเลิก|ร้องเรียน/.test(lower)) {
+    quickUpdate.lastNegativeFeedback = new Date();
+    quickUpdate.negativeCount = (mem.negativeCount || 0) + 1;
+    learnSkillFromOutcome(sourceId, "negative").catch(() => {});
+  }
+  // 📦 ถามสินค้า (detect product interest)
+  if (/ราคา|รุ่น|สี|ขนาด|spec|รายละเอียด|มีอะไร|แบบไหน/.test(lower)) {
+    quickUpdate.lastProductInquiry = new Date();
+  }
+
+  await upsertMemory(sourceId, quickUpdate);
+}
+
+// ── Auto Compact Memory (ทุก 10 ข้อความ) ───────────────────────────────────
+
+async function compactMemory(sourceId, existingMem) {
+  const db = await getDB();
+  if (!db) return;
+
+  // ดึง 20 ข้อความล่าสุด
+  const recentMsgs = await db.collection("messages")
+    .find({ sourceId, role: "user" })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .project({ content: 1, userName: 1, createdAt: 1 })
+    .toArray();
+
+  if (recentMsgs.length < 5) return;
+
+  const chatSample = recentMsgs.reverse()
+    .map(m => `${m.userName}: ${m.content}`)
+    .join("\n");
+
+  const prevSummary = existingMem.compactSummary || "";
+
+  const aiMessages = [
+    {
+      role: "system",
+      content: `คุณเป็นระบบสรุป Memory ของลูกค้า/กลุ่ม สรุปให้สั้นที่สุด (ไม่เกิน 150 คำ) เป็นภาษาไทย
+
+ตอบเป็น JSON:
+{
+  "compactSummary": "สรุปรวม: ลูกค้าเป็นใคร ชอบอะไร ซื้ออะไร สไตล์พูดแบบไหน",
+  "interests": ["สินค้าที่สนใจ"],
+  "personality": "สไตล์ลูกค้า (สั้นๆ เช่น ใจร้อน, ชอบต่อราคา, ถามละเอียด)",
+  "bestApproach": "วิธีตอบที่เหมาะกับลูกค้าคนนี้ (1 ประโยค)",
+  "purchaseHistory": "สิ่งที่เคยซื้อ/สนใจ (ถ้ามี)",
+  "skillLesson": "บทเรียนจากการสนทนานี้ — อะไรได้ผล/ไม่ได้ผล (1 ประโยค)"
+}`
+    },
+    {
+      role: "user",
+      content: `Memory เดิม: ${prevSummary || "ยังไม่มี"}\n\nบทสนทนาล่าสุด:\n${chatSample}\n\nสรุป Memory ใหม่:`
+    },
+  ];
+
+  const reply = await callLightAI(aiMessages, { maxTokens: 300, timeout: 20000 }).catch(() => null);
+  if (!reply) return;
+
+  // Parse JSON
+  let parsed = null;
+  try { parsed = JSON.parse(reply.trim()); } catch {}
+  if (!parsed) {
+    try {
+      const m = reply.match(/\{[\s\S]*\}/);
+      if (m) parsed = JSON.parse(m[0]);
+    } catch {}
+  }
+
+  if (parsed) {
+    await upsertMemory(sourceId, {
+      compactSummary: parsed.compactSummary || prevSummary,
+      interests: parsed.interests || existingMem.interests || [],
+      personality: parsed.personality || existingMem.personality || "",
+      bestApproach: parsed.bestApproach || existingMem.bestApproach || "",
+      purchaseHistory: parsed.purchaseHistory || existingMem.purchaseHistory || "",
+      lastCompactAt: new Date(),
+    });
+
+    // บันทึก skill lesson (ถ้ามี)
+    if (parsed.skillLesson) {
+      await db.collection(SKILL_LESSONS_COLL).insertOne({
+        sourceId,
+        lesson: parsed.skillLesson,
+        context: "auto-compact",
+        createdAt: new Date(),
+      });
+    }
+
+    console.log(`[Memory] 🧠 Compact: ${sourceId.substring(0, 8)} — ${(parsed.compactSummary || "").substring(0, 50)}`);
+  }
+}
+
+// ── Skill Lessons — เรียนรู้จาก success/failure ────────────────────────────
+
+// เรียกตอนลูกค้าชม/ซื้อ/ร้องเรียน → สรุปบทเรียน
+async function learnSkillFromOutcome(sourceId, outcomeType) {
+  const db = await getDB();
+  if (!db) return;
+
+  // ดึง 10 ข้อความล่าสุด (ก่อน outcome)
+  const recentMsgs = await db.collection("messages")
+    .find({ sourceId })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .project({ role: 1, userName: 1, content: 1 })
+    .toArray();
+
+  if (recentMsgs.length < 3) return;
+
+  const chatSample = recentMsgs.reverse()
+    .map(m => `[${m.role === "assistant" ? "staff" : m.userName}]: ${m.content}`)
+    .join("\n");
+
+  const outcomeLabels = {
+    purchase: "ลูกค้าซื้อสินค้า (สำเร็จ!)",
+    positive: "ลูกค้าชม/พอใจ (สำเร็จ!)",
+    negative: "ลูกค้าร้องเรียน/ไม่พอใจ (ล้มเหลว!)",
+  };
+
+  const aiMessages = [
+    {
+      role: "system",
+      content: `วิเคราะห์บทสนทนานี้ ผลลัพธ์คือ: ${outcomeLabels[outcomeType] || outcomeType}
+
+ตอบเป็น JSON สั้นๆ:
+{
+  "whatWorked": "อะไรที่ทำได้ดี (1 ประโยค)",
+  "whatFailed": "อะไรที่ควรปรับ (1 ประโยค)",
+  "rule": "กฎที่ควรจำ สำหรับใช้กับลูกค้าคนอื่นด้วย (1 ประโยค)",
+  "category": "sales|service|product|communication"
+}`
+    },
+    { role: "user", content: chatSample },
+  ];
+
+  const reply = await callLightAI(aiMessages, { maxTokens: 200, timeout: 15000 }).catch(() => null);
+  if (!reply) return;
+
+  let parsed = null;
+  try { parsed = JSON.parse(reply.trim()); } catch {}
+  if (!parsed) { try { const m = reply.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch {} }
+
+  if (parsed) {
+    await db.collection(SKILL_LESSONS_COLL).insertOne({
+      sourceId,
+      outcomeType,
+      whatWorked: parsed.whatWorked || "",
+      whatFailed: parsed.whatFailed || "",
+      rule: parsed.rule || "",
+      category: parsed.category || "general",
+      createdAt: new Date(),
+    });
+    console.log(`[Skill] 📝 Lesson (${outcomeType}): ${(parsed.rule || "").substring(0, 60)}`);
+  }
+}
+
+// ดึง skill lessons ล่าสุด (สำหรับ AI suggest/auto-reply)
+async function getSkillLessons(limit = 5) {
+  const db = await getDB();
+  if (!db) return [];
+  return db.collection(SKILL_LESSONS_COLL)
+    .find({}, { projection: { rule: 1, category: 1, outcomeType: 1 } })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+// ── Build AI Context (memory + skills + KB) ────────────────────────────────
+
+async function buildAIContext(sourceId, customerMessage) {
+  const [memory, kbResults, lessons] = await Promise.all([
+    getMemory(sourceId).catch(() => null),
+    searchKB(customerMessage, 3).catch(() => []),
+    getSkillLessons(5).catch(() => []),
+  ]);
+
+  let context = "";
+
+  // Memory
+  if (memory?.compactSummary) {
+    context += `\nข้อมูลลูกค้า: ${memory.compactSummary}`;
+    if (memory.personality) context += `\nสไตล์: ${memory.personality}`;
+    if (memory.bestApproach) context += `\nวิธีตอบที่เหมาะ: ${memory.bestApproach}`;
+    if (memory.interests?.length) context += `\nสนใจ: ${memory.interests.join(", ")}`;
+    if (memory.purchaseHistory) context += `\nเคยซื้อ: ${memory.purchaseHistory}`;
+  }
+
+  // KB
+  if (kbResults.length > 0) {
+    context += `\n\nฐานความรู้:\n${kbResults.map(k => `[${k.category}] ${k.title}: ${k.content.substring(0, 300)}`).join("\n")}`;
+  }
+
+  // Skill Lessons
+  if (lessons.length > 0) {
+    const rules = lessons.filter(l => l.rule).map(l => `- ${l.rule}`).join("\n");
+    if (rules) context += `\n\nบทเรียนที่เรียนรู้มา:\n${rules}`;
+  }
+
+  return context;
+}
 
 // === Telegram Bot (น้องกุ้ง) ===
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
