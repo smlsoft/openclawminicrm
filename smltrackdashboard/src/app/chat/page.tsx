@@ -913,7 +913,8 @@ export default function ChatPage() {
   const fetchConversations = useCallback(async () => {
     try {
       const res = await fetch("/dashboard/api/groups");
-      const data = await res.json();
+      const raw = await res.json();
+      const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
       setConversations(
         [...data].sort((a, b) => {
@@ -927,7 +928,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     fetchConversations();
-    const iv = setInterval(fetchConversations, 5000);
+    const iv = setInterval(fetchConversations, 15000);
     return () => clearInterval(iv);
   }, [fetchConversations]);
 
