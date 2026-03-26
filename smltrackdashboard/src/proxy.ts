@@ -10,12 +10,12 @@ export async function proxy(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // Public paths — ไม่ต้อง auth
+  // Public paths — ไม่ต้อง auth (basePath ถูก strip แล้ว)
   const publicPaths = [
-    "/dashboard/login",
-    "/dashboard/api/auth",
-    "/dashboard/_next",
-    "/dashboard/favicon.ico",
+    "/login",
+    "/api/auth",
+    "/_next",
+    "/favicon.ico",
   ];
 
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
@@ -38,6 +38,6 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Match ทุก path ใต้ /dashboard ยกเว้น static files
-  matcher: ["/dashboard/:path*"],
+  // basePath ถูก strip อัตโนมัติ — matcher ไม่ต้องใส่ /dashboard
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
