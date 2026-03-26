@@ -41,29 +41,20 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Batch queries — ดึงทุกอย่างใน $in เดียว (ไม่มี N+1)
-    const [allMeta, allAnalytics, allLogCounts, allMessages] = await Promise.all([
+    // Dashboard ไม่ต้องการ full messages — แค่ lastMessage ก็พอ
+    const [allMeta, allAnalytics, allLogCounts, lastMessages] = await Promise.all([
       db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray(),
       db.collection("chat_analytics").find({ sourceId: { $in: sourceIds } }).toArray(),
       db.collection("analysis_logs").aggregate([
         { $match: { sourceId: { $in: sourceIds } } },
         { $group: { _id: "$sourceId", count: { $sum: 1 } } },
       ]).toArray(),
-      // ดึง 50 messages ล่าสุดต่อ sourceId ด้วย aggregation
+      // ดึงแค่ข้อความล่าสุด 1 ข้อความต่อ sourceId (เร็วมาก)
       db.collection("messages").aggregate([
         { $match: { sourceId: { $in: sourceIds } } },
         { $sort: { createdAt: -1 } },
-        { $project: { embedding: 0, imageUrl: 0 } },
-        {
-          $group: {
-            _id: "$sourceId",
-            messages: { $push: "$$ROOT" },
-          },
-        },
-        {
-          $project: {
-            messages: { $slice: ["$messages", 50] },
-          },
-        },
+        { $group: { _id: "$sourceId", lastMsg: { $first: "$$ROOT" } } },
+        { $project: { "lastMsg.embedding": 0, "lastMsg.imageUrl": 0 } },
       ]).toArray(),
     ]);
 
@@ -71,7 +62,7 @@ export async function GET(request: NextRequest) {
     const metaMap = new Map(allMeta.map((m) => [m.sourceId, m]));
     const analyticsMap = new Map(allAnalytics.map((a) => [a.sourceId, a]));
     const logMap = new Map(allLogCounts.map((l) => [l._id, l.count]));
-    const msgMap = new Map(allMessages.map((m) => [m._id, m.messages || []]));
+    const lastMsgMap = new Map(lastMessages.map((m) => [m._id, m.lastMsg]));
 
     // 4. Assemble results (no DB calls in loop)
     const groups = sourceAgg.map((src) => {
@@ -79,8 +70,7 @@ export async function GET(request: NextRequest) {
       const meta = metaMap.get(sourceId);
       const analytics = analyticsMap.get(sourceId);
       const logCount = logMap.get(sourceId) || 0;
-      const messages = msgMap.get(sourceId) || [];
-      const lastMsg = messages[0];
+      const lastMsg = lastMsgMap.get(sourceId);
 
       return {
         id: sourceId,
@@ -96,11 +86,6 @@ export async function GET(request: NextRequest) {
         overallSentiment: analytics?.overallSentiment || analytics?.sentiment || null,
         purchaseIntent: analytics?.purchaseIntent || null,
         analysisLogsCount: logCount,
-        messages: messages.reverse().map((m: any) => ({
-          ...m,
-          _id: m._id.toString(),
-          hasImage: m.messageType === "image",
-        })),
       };
     });
 
