@@ -107,17 +107,24 @@ const AUTO_REPLY_DELAY_MS = 5 * 60 * 1000; // 5 นาที
 function scheduleAutoReply(sourceId, userName, messageText, sourceType) {
   // ตอบเฉพาะ 1-on-1 (sourceType === "user") ไม่ตอบในกลุ่ม
   if (sourceType !== "user") return;
-  // ลบ timer เก่าถ้ามี (ลูกค้าส่งข้อความใหม่ → reset timer)
-  cancelAutoReply(sourceId);
-  const timer = setTimeout(async () => {
-    pendingAutoReply.delete(sourceId);
-    try {
-      await doAutoReply(sourceId, userName, messageText);
-    } catch (e) {
-      console.error("[Auto-Reply] Error:", e.message);
-    }
-  }, AUTO_REPLY_DELAY_MS);
-  pendingAutoReply.set(sourceId, { timer, text: messageText, userName });
+  // Check opt-out before scheduling
+  getDB().then(db => {
+    if (!db) return;
+    db.collection("privacy_consent").findOne({ sourceId }).then(doc => {
+      if (doc?.optedOut) return; // Don't auto-reply if opted out
+      // ลบ timer เก่าถ้ามี (ลูกค้าส่งข้อความใหม่ → reset timer)
+      cancelAutoReply(sourceId);
+      const timer = setTimeout(async () => {
+        pendingAutoReply.delete(sourceId);
+        try {
+          await doAutoReply(sourceId, userName, messageText);
+        } catch (e) {
+          console.error("[Auto-Reply] Error:", e.message);
+        }
+      }, AUTO_REPLY_DELAY_MS);
+      pendingAutoReply.set(sourceId, { timer, text: messageText, userName });
+    });
+  }).catch(() => {});
 }
 
 function cancelAutoReply(sourceId) {
@@ -126,6 +133,66 @@ function cancelAutoReply(sourceId) {
     clearTimeout(pending.timer);
     pendingAutoReply.delete(sourceId);
   }
+}
+
+// === Privacy / Opt-out / Handoff Helpers ===
+const OPT_OUT_KEYWORDS = ["หยุด", "stop", "ยกเลิก", "unsubscribe"];
+const OPT_IN_KEYWORDS = ["เปิด", "start", "subscribe"];
+const DELETE_KEYWORDS = ["ลบข้อมูล", "delete my data", "ลบ"];
+const HANDOFF_REGEX = /คุยกับคน|ขอคุยกับพนักงาน|ต้องการคนจริง|ไม่ใช่ bot|talk to human|real person|agent/;
+
+async function checkOptedOut(sourceId) {
+  const database = await getDB();
+  if (!database) return false;
+  const doc = await database.collection("privacy_consent").findOne({ sourceId });
+  return doc?.optedOut === true;
+}
+
+async function setOptOut(sourceId, optedOut) {
+  const database = await getDB();
+  if (!database) return;
+  const update = optedOut
+    ? { $set: { optedOut: true, optedOutAt: new Date() } }
+    : { $set: { optedOut: false, optedInAt: new Date() } };
+  await database.collection("privacy_consent").updateOne({ sourceId }, update, { upsert: true });
+}
+
+async function createHandoffAlert(sourceId, customerName, text) {
+  const database = await getDB();
+  if (!database) return;
+  await database.collection("alerts").insertOne({
+    type: "human_handoff",
+    sourceId,
+    customerName,
+    message: `ลูกค้าขอคุยกับพนักงาน: "${(text || "").substring(0, 100)}"`,
+    level: "red",
+    read: false,
+    createdAt: new Date(),
+  });
+}
+
+async function createAiHandoffAlert(sourceId, customerName, text, platform) {
+  const database = await getDB();
+  if (!database) return;
+  await database.collection("alerts").insertOne({
+    type: "human_handoff",
+    sourceId,
+    customerName,
+    message: `AI ไม่แน่ใจ ส่งต่อทีมงาน: "${(text || "").substring(0, 100)}"`,
+    level: "yellow",
+    read: false,
+    createdAt: new Date(),
+  });
+  const label = platform ? `${platform} ${sourceId.substring(0, 12)}` : sourceId.substring(0, 8);
+  console.log(`[Handoff] AI ส่งต่อทีมงาน → ${label}`);
+}
+
+async function logDeletionRequest(sourceId, platform) {
+  const database = await getDB();
+  if (!database) return;
+  await database.collection("data_deletion_requests").insertOne({
+    sourceId, platform, requestedAt: new Date(), status: "pending",
+  });
 }
 
 async function doAutoReply(sourceId, userName, customerMessage) {
@@ -1627,6 +1694,11 @@ async function aiReplyToLine(event, sourceId, userName, text, config) {
     return;
   }
 
+  // AI บอก "รอทีมงาน" → สร้าง alert ให้ dashboard
+  if (/รอทีมงาน/.test(reply)) {
+    await createAiHandoffAlert(sourceId, userName, text);
+  }
+
   // ส่งกลับด้วย Reply API (ฟรี!)
   const sent = await replyToLine(event.replyToken, reply);
   if (sent) {
@@ -1659,6 +1731,11 @@ async function aiReplyToMeta(senderId, text, sourceId, platform) {
 
   const reply = await callLightAI(messages, { maxTokens: 300, timeout: 15000 }).catch(() => null);
   if (!reply) return;
+
+  // AI บอก "รอทีมงาน" → สร้าง alert ให้ dashboard
+  if (/รอทีมงาน/.test(reply)) {
+    await createAiHandoffAlert(sourceId, senderId, text, platform);
+  }
 
   const sent = await sendMetaMessage(senderId, reply);
   if (sent) {
@@ -2169,6 +2246,45 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
       // Save group meta
       saveGroupMeta(sourceId, userName, { type: "user" }, platform).catch(() => {})
 
+      // === Opt-out / Opt-in / PDPA / Human Handoff Detection (Meta) ===
+      const metaLowerText = (event.message?.text || "").toLowerCase().trim();
+
+      if (OPT_OUT_KEYWORDS.includes(metaLowerText)) {
+        await setOptOut(sourceId, true);
+        await sendMetaMessage(senderId, "✅ หยุดส่งข้อความอัตโนมัติแล้วค่ะ\nพิมพ์ \"เปิด\" เพื่อรับข้อความอีกครั้ง");
+        console.log(`[Opt-out] ${sourceId.substring(0, 12)} opted out (${platform})`);
+        continue;
+      }
+
+      if (OPT_IN_KEYWORDS.includes(metaLowerText)) {
+        await setOptOut(sourceId, false);
+        await sendMetaMessage(senderId, "✅ เปิดรับข้อความอัตโนมัติแล้วค่ะ");
+        console.log(`[Opt-in] ${sourceId.substring(0, 12)} opted in (${platform})`);
+        continue;
+      }
+
+      if (DELETE_KEYWORDS.includes(metaLowerText)) {
+        await sendMetaMessage(senderId, "📩 ได้รับคำขอลบข้อมูลแล้วค่ะ ทีมงานจะดำเนินการภายใน 30 วันตาม PDPA\n\nหากมีคำถามเพิ่มเติม สามารถติดต่อทีมงานได้ค่ะ");
+        await logDeletionRequest(sourceId, platform);
+        console.log(`[PDPA] ขอลบข้อมูล: ${sourceId.substring(0, 12)} (${platform})`);
+        continue;
+      }
+
+      if (HANDOFF_REGEX.test(metaLowerText)) {
+        await sendMetaMessage(senderId, "🙋 ส่งต่อให้ทีมงานแล้วค่ะ กรุณารอสักครู่ ทีมงานจะตอบกลับเร็วที่สุดค่ะ");
+        await createHandoffAlert(sourceId, userName, event.message?.text);
+        console.log(`[Handoff] ${sourceId.substring(0, 12)} ขอคุยกับพนักงาน (${platform})`);
+        if (event.message?.text) {
+          await saveMsg(sourceId, {
+            role: "user", userName, userId: senderId,
+            content: event.message.text, messageType: "text",
+            messageId: event.message.mid || null, timestamp: event.timestamp || null,
+            recipientId: recipient?.id || null,
+          }, platform);
+        }
+        continue;
+      }
+
       // handle text message
       if (event.message?.text) {
         const msgText = event.message.text
@@ -2194,13 +2310,16 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
         learnFromMessage(sourceId, userName, msgText, "text", "user").catch(() => {})
 
         // น้องกุ้งตอบแทนใน Facebook/Instagram (Send API — ฟรี!)
-        const metaConfig = await getBotConfig(sourceId)
-        const metaShouldReply = await shouldAiReply(metaConfig, msgText, userName, { type: "user" })
-        if (metaShouldReply) {
-          console.log(`[AI-Reply] น้องกุ้งตอบแทน → ${platform} ${sourceId.substring(0, 12)}`)
-          aiReplyToMeta(senderId, msgText, sourceId, platform).catch((e) =>
-            console.error(`[AI-Reply] ${platform} error:`, e.message)
-          )
+        const metaIsOptedOut = await checkOptedOut(sourceId).catch(() => false);
+        if (!metaIsOptedOut) {
+          const metaConfig = await getBotConfig(sourceId)
+          const metaShouldReply = await shouldAiReply(metaConfig, msgText, userName, { type: "user" })
+          if (metaShouldReply) {
+            console.log(`[AI-Reply] น้องกุ้งตอบแทน → ${platform} ${sourceId.substring(0, 12)}`)
+            aiReplyToMeta(senderId, msgText, sourceId, platform).catch((e) =>
+              console.error(`[AI-Reply] ${platform} error:`, e.message)
+            )
+          }
         }
       }
 
@@ -2355,6 +2474,47 @@ app.post("/webhook", express.raw({ type: "*/*" }), async (req, res) => {
       cacheReplyToken(sourceId, event.replyToken);
     }
 
+    // === Opt-out / Opt-in / PDPA / Human Handoff Detection ===
+    const lowerText = (msg.text || "").toLowerCase().trim();
+
+    if (OPT_OUT_KEYWORDS.includes(lowerText)) {
+      await setOptOut(sourceId, true);
+      if (event.replyToken) {
+        await replyToLine(event.replyToken, "✅ หยุดส่งข้อความอัตโนมัติแล้วค่ะ\nพิมพ์ \"เปิด\" เพื่อรับข้อความอีกครั้ง");
+      }
+      console.log(`[Opt-out] ${sourceId.substring(0, 8)} opted out`);
+      continue;
+    }
+
+    if (OPT_IN_KEYWORDS.includes(lowerText)) {
+      await setOptOut(sourceId, false);
+      if (event.replyToken) {
+        await replyToLine(event.replyToken, "✅ เปิดรับข้อความอัตโนมัติแล้วค่ะ");
+      }
+      console.log(`[Opt-in] ${sourceId.substring(0, 8)} opted in`);
+      continue;
+    }
+
+    if (DELETE_KEYWORDS.includes(lowerText)) {
+      if (event.replyToken) {
+        await replyToLine(event.replyToken, "📩 ได้รับคำขอลบข้อมูลแล้วค่ะ ทีมงานจะดำเนินการภายใน 30 วันตาม PDPA\n\nหากมีคำถามเพิ่มเติม สามารถติดต่อทีมงานได้ค่ะ");
+      }
+      await logDeletionRequest(sourceId, "line");
+      console.log(`[PDPA] ขอลบข้อมูล: ${sourceId.substring(0, 8)}`);
+      continue;
+    }
+
+    if (HANDOFF_REGEX.test(lowerText)) {
+      if (event.replyToken) {
+        await replyToLine(event.replyToken, "🙋 ส่งต่อให้ทีมงานแล้วค่ะ กรุณารอสักครู่ ทีมงานจะตอบกลับเร็วที่สุดค่ะ");
+      }
+      const userName = await getUserName(source).catch(() => "ลูกค้า");
+      await createHandoffAlert(sourceId, userName, msg.text);
+      console.log(`[Handoff] ${sourceId.substring(0, 8)} ขอคุยกับพนักงาน`);
+      await processEvent(event).catch(() => {});
+      continue;
+    }
+
     // === 5-นาที Auto-Reply Timer (เฉพาะ 1-on-1 LINE OA) ===
     if (source.type === "user" && msg.text) {
       const uName = await getUserName(source).catch(() => "ลูกค้า");
@@ -2387,7 +2547,8 @@ app.post("/webhook", express.raw({ type: "*/*" }), async (req, res) => {
       learnFromMessage(sourceId, userName, messageText, msg.type, source.type).catch(() => {});
 
       // === น้องกุ้งตอบแทน (LINE Reply API — ฟรี!) ===
-      if (msg.text && event.replyToken) {
+      const isOptedOut = await checkOptedOut(sourceId).catch(() => false);
+      if (msg.text && event.replyToken && !isOptedOut) {
         const config = await getBotConfig(sourceId);
         const shouldReply = await shouldAiReply(config, msg.text, userName, source);
         if (shouldReply) {
