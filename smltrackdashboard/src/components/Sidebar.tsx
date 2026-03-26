@@ -24,6 +24,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/inbox", icon: "💬", label: "Inbox" },
       { href: "/", icon: "📊", label: "Dashboard" },
       { href: "/crm", icon: "👥", label: "CRM" },
+      { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
       { href: "/kpi", icon: "📈", label: "KPI" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
       { href: "/costs", icon: "💰", label: "AI Cost" },

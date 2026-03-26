@@ -485,10 +485,63 @@ async function ensureIndexes() {
   const database = await getDB();
   if (!database) return;
   try {
-    const coll = database.collection(MESSAGES_COLL);
-    await coll.createIndex({ sourceId: 1, createdAt: -1 });
-    await coll.createIndex({ sourceId: 1, content: "text" });
-    // index สำหรับ user_skills + analysis_logs + alerts
+    // ── Messages (collection ใหญ่สุด — ต้องมี index ดี) ──
+    const msgColl = database.collection(MESSAGES_COLL);
+    await msgColl.createIndex({ sourceId: 1, createdAt: -1 });  // ดึงข้อความตาม source เรียงเวลา
+    await msgColl.createIndex({ sourceId: 1, content: "text" }); // keyword search
+    await msgColl.createIndex({ sourceId: 1, role: 1, createdAt: -1 }); // กรองเฉพาะ user/assistant
+    await msgColl.createIndex({ platform: 1, createdAt: -1 });  // กรองตาม platform
+    await msgColl.createIndex({ createdAt: -1 });               // เรียงตามเวลา (global)
+
+    // ── Customers (ค้นหาบ่อย) ──
+    const custColl = database.collection("customers");
+    await custColl.createIndex({ name: 1 });                     // upsert by name
+    await custColl.createIndex({ rooms: 1 });                    // ค้นหาจาก sourceId
+    await custColl.createIndex({ "platformIds.line": 1 }, { sparse: true });
+    await custColl.createIndex({ "platformIds.facebook": 1 }, { sparse: true });
+    await custColl.createIndex({ "platformIds.instagram": 1 }, { sparse: true });
+    await custColl.createIndex({ phone: 1 }, { sparse: true }); // ค้นหาเบอร์โทร
+    await custColl.createIndex({ email: 1 }, { sparse: true }); // ค้นหา email
+    await custColl.createIndex({ pipelineStage: 1, updatedAt: -1 }); // CRM pipeline
+    await custColl.createIndex({ updatedAt: -1 });               // เรียงตามอัพเดทล่าสุด
+    await custColl.createIndex({ totalMessages: -1 });           // เรียงตามจำนวนข้อความ
+
+    // ── Groups Meta (รายชื่อสนทนา) ──
+    const groupsColl = database.collection("groups_meta");
+    await groupsColl.createIndex({ sourceId: 1 }, { unique: true });
+    await groupsColl.createIndex({ platform: 1, updatedAt: -1 });
+
+    // ── Chat Analytics ──
+    await database.collection("chat_analytics").createIndex({ sourceId: 1 }, { unique: true });
+
+    // ── Knowledge Base ──
+    const kbColl = database.collection(KB_COLL);
+    await kbColl.createIndex({ active: 1, category: 1 });       // กรองตามหมวด + เปิด/ปิด
+    await kbColl.createIndex({ updatedAt: -1 });
+    await kbColl.createIndex({ tags: 1 });                      // ค้นหาตาม tag
+
+    // ── AI Memory (จำลูกค้า) ──
+    const memColl = database.collection(MEMORY_COLL);
+    await memColl.createIndex({ sourceId: 1 }, { unique: true });
+    await memColl.createIndex({ updatedAt: -1 });
+
+    // ── AI Skill Lessons ──
+    const skillColl = database.collection(SKILL_LESSONS_COLL);
+    await skillColl.createIndex({ sourceId: 1, createdAt: -1 }); // lessons per customer
+    await skillColl.createIndex({ createdAt: -1 });               // global lessons
+    await skillColl.createIndex({ outcomeType: 1, createdAt: -1 }); // filter by outcome
+
+    // ── Tasks ──
+    const tasksColl = database.collection("tasks");
+    await tasksColl.createIndex({ customerId: 1, status: 1 });
+    await tasksColl.createIndex({ dueDate: 1, status: 1 });
+    await tasksColl.createIndex({ assignee: 1, status: 1 });
+
+    // ── Reply Templates ──
+    await database.collection("reply_templates").createIndex({ usageCount: -1 });
+    await database.collection("reply_templates").createIndex({ category: 1 });
+
+    // ── เดิม (user_skills, analysis_logs, alerts, advisor, costs) ──
     await database.collection("user_skills").createIndex({ sourceId: 1, userId: 1 }, { unique: true });
     await database.collection("analysis_logs").createIndex({ sourceId: 1, analyzedAt: -1 });
     await database.collection("alerts").createIndex({ createdAt: -1 });
@@ -496,7 +549,8 @@ async function ensureIndexes() {
     await database.collection("advisor_pull_log").createIndex({ sourceId: 1 }, { unique: true });
     await database.collection("ai_costs").createIndex({ createdAt: -1 });
     await database.collection("ai_costs").createIndex({ feature: 1, createdAt: -1 });
-    console.log("[Index] ✅ messages + analysis_logs + advisor + ai_costs indexes ready");
+
+    console.log("[Index] ✅ All indexes ready (messages, customers, groups, KB, memory, skills, tasks, templates, analytics)");
   } catch (e) {
     if (!e.message?.includes("already exists")) {
       console.error("[Index] Error:", e.message);
@@ -3580,6 +3634,79 @@ app.post("/api/km/search", express.json(), async (req, res) => {
   try {
     const results = await searchKB(query);
     res.json(results);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// === Customer Merge — ค้นหาลูกค้าซ้ำ ===
+
+// GET /api/customers/duplicates — หาลูกค้าที่อาจเป็นคนเดียวกัน
+app.get("/api/customers/duplicates", async (req, res) => {
+  try {
+    const db = await getDB();
+    const customers = await db.collection("customers")
+      .find({}, {
+        projection: { name: 1, firstName: 1, lastName: 1, phone: 1, email: 1, rooms: 1, platformIds: 1, totalMessages: 1, avatarUrl: 1, updatedAt: 1, pipelineStage: 1 }
+      })
+      .sort({ name: 1 })
+      .toArray();
+
+    // หาลูกค้าที่อาจซ้ำ
+    const groups = [];
+    const used = new Set();
+
+    for (let i = 0; i < customers.length; i++) {
+      if (used.has(customers[i]._id.toString())) continue;
+      const matches = [];
+
+      for (let j = i + 1; j < customers.length; j++) {
+        if (used.has(customers[j]._id.toString())) continue;
+        const a = customers[i];
+        const b = customers[j];
+        const reasons = [];
+
+        // ชื่อเหมือนกัน
+        const nameA = (a.firstName || a.name || "").toLowerCase().trim();
+        const nameB = (b.firstName || b.name || "").toLowerCase().trim();
+        if (nameA && nameB && nameA.length >= 2 && nameA === nameB) reasons.push("ชื่อเหมือนกัน");
+
+        // เบอร์โทรเหมือนกัน
+        if (a.phone && b.phone && a.phone.replace(/\D/g, "") === b.phone.replace(/\D/g, "")) reasons.push("เบอร์โทรเดียวกัน");
+
+        // Email เหมือนกัน
+        if (a.email && b.email && a.email.toLowerCase() === b.email.toLowerCase()) reasons.push("Email เดียวกัน");
+
+        // ชื่อคล้ายกัน (3+ ตัวแรกเหมือน + ยาวพอ)
+        if (!reasons.length && nameA.length >= 4 && nameB.length >= 4 && nameA.substring(0, 4) === nameB.substring(0, 4)) {
+          reasons.push("ชื่อคล้ายกัน");
+        }
+
+        if (reasons.length > 0) {
+          matches.push({ customer: b, reasons });
+          used.add(b._id.toString());
+        }
+      }
+
+      if (matches.length > 0) {
+        used.add(customers[i]._id.toString());
+        groups.push({ primary: customers[i], duplicates: matches });
+      }
+    }
+
+    // แยกลูกค้า multi-platform ที่มีแค่ 1 platform (อาจมี account อื่นอีก)
+    const singlePlatform = customers.filter(c => {
+      const pids = c.platformIds || {};
+      const count = [pids.line, pids.facebook, pids.instagram].filter(Boolean).length;
+      return count === 1 && !used.has(c._id.toString());
+    });
+
+    res.json({
+      groups,
+      singlePlatform: singlePlatform.length,
+      totalCustomers: customers.length,
+      duplicateGroups: groups.length,
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
