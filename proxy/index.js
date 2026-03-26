@@ -600,6 +600,7 @@ async function saveGroupMeta(sourceId, groupName, source, platform = "line") {
 }
 
 // === Process LINE event → save to MongoDB ===
+// เก็บทุก message type: text, image, video, audio, sticker, location, file
 async function processEvent(event) {
   if (event.type !== "message") return;
 
@@ -617,14 +618,31 @@ async function processEvent(event) {
   const displayName = groupName || (source.type === "user" ? userName : null);
   saveGroupMeta(sourceId, displayName, source, "line").catch(() => {});
 
-  // Handle image → เก็บเป็น base64 ใน MongoDB + Vision AI วิเคราะห์รูป
+  // === เตรียม fields สำหรับเก็บ ===
   let imageData = null;
   let imageDescription = null;
+  let videoUrl = null;
+  let audioUrl = null;
+  let audioDuration = null;
+  let stickerData = null;
+  let locationData = null;
+  let fileData = null;
+  let msgContent = "";
+  const extras = []; // log suffixes
+
+  // === Handle แต่ละ message type ===
+
+  // 📝 Text
+  if (msg.type === "text") {
+    msgContent = msg.text || "";
+  }
+
+  // 🖼️ Image → download เก็บ base64 + Vision AI
   if (msg.type === "image") {
     const imgBuffer = await downloadLineImage(msg.id);
     if (imgBuffer) {
       imageData = `data:image/jpeg;base64,${imgBuffer.toString("base64")}`;
-      console.log(`[IMG] ${(imgBuffer.length / 1024).toFixed(0)}KB from ${userName}`);
+      extras.push(`+img(${(imgBuffer.length / 1024).toFixed(0)}KB)`);
 
       // Vision AI — วิเคราะห์รูปเป็นข้อความเก็บไว้สำหรับ RAG/analytics
       imageDescription = await analyzeImage(imgBuffer);
@@ -632,27 +650,110 @@ async function processEvent(event) {
         console.log(`[Vision] ${imageDescription.substring(0, 60)}`);
       }
     }
+    msgContent = imageDescription || "[รูปภาพ]";
   }
 
-  // content = text จาก user หรือ description จาก Vision AI (ถ้าเป็นรูป)
-  const msgContent = msg.text || imageDescription || `[${msg.type}]`;
+  // 🎥 Video → download เก็บ base64 (ถ้าไม่ใหญ่เกิน) หรือเก็บ messageId
+  if (msg.type === "video") {
+    const vidBuffer = await downloadLineImage(msg.id); // LINE Data API ใช้ endpoint เดียวกัน
+    if (vidBuffer && vidBuffer.length < 5 * 1024 * 1024) { // < 5MB → เก็บ base64
+      videoUrl = `data:video/mp4;base64,${vidBuffer.toString("base64")}`;
+      extras.push(`+vid(${(vidBuffer.length / 1024).toFixed(0)}KB)`);
+    } else if (vidBuffer) {
+      extras.push(`+vid(${(vidBuffer.length / 1024 / 1024).toFixed(1)}MB, too large for base64)`);
+      // เก็บ marker ว่ามีวิดีโอ แต่ไม่เก็บ base64 (ใหญ่เกิน)
+      videoUrl = `line-content://${msg.id}`;
+    }
+    msgContent = "[วิดีโอ]";
+    audioDuration = msg.duration || null;
+  }
 
-  // Save user message
+  // 🎵 Audio → download เก็บ base64
+  if (msg.type === "audio") {
+    const audBuffer = await downloadLineImage(msg.id);
+    if (audBuffer && audBuffer.length < 5 * 1024 * 1024) { // < 5MB
+      audioUrl = `data:audio/m4a;base64,${audBuffer.toString("base64")}`;
+      extras.push(`+aud(${(audBuffer.length / 1024).toFixed(0)}KB)`);
+    } else if (audBuffer) {
+      audioUrl = `line-content://${msg.id}`;
+      extras.push(`+aud(too large)`);
+    }
+    msgContent = "[เสียง]";
+    audioDuration = msg.duration || null;
+  }
+
+  // 😀 Sticker → เก็บ packageId + stickerId
+  if (msg.type === "sticker") {
+    stickerData = {
+      packageId: msg.packageId || msg.stickerId ? String(msg.packageId) : null,
+      stickerId: msg.stickerId ? String(msg.stickerId) : null,
+      stickerResourceType: msg.stickerResourceType || null, // STATIC, ANIMATION, SOUND, etc.
+      keywords: msg.keywords || [], // tags ของ sticker
+    };
+    msgContent = `[sticker:${msg.packageId}/${msg.stickerId}]`;
+    extras.push("+sticker");
+  }
+
+  // 📍 Location → เก็บ lat/lng/title/address
+  if (msg.type === "location") {
+    locationData = {
+      title: msg.title || "ตำแหน่งที่ตั้ง",
+      address: msg.address || "",
+      latitude: msg.latitude,
+      longitude: msg.longitude,
+    };
+    msgContent = `[ตำแหน่ง: ${msg.title || ""} ${msg.address || ""}]`.trim();
+    extras.push("+loc");
+  }
+
+  // 📎 File → download + เก็บข้อมูลไฟล์
+  if (msg.type === "file") {
+    const fileBuffer = await downloadLineImage(msg.id);
+    if (fileBuffer && fileBuffer.length < 5 * 1024 * 1024) {
+      const ext = (msg.fileName || "").split(".").pop() || "bin";
+      fileData = {
+        fileName: msg.fileName || "file",
+        fileSize: msg.fileSize || fileBuffer.length,
+        data: `data:application/octet-stream;base64,${fileBuffer.toString("base64")}`,
+      };
+      extras.push(`+file(${msg.fileName})`);
+    }
+    msgContent = `[ไฟล์: ${msg.fileName || "unknown"}]`;
+  }
+
+  // Fallback content
+  if (!msgContent) msgContent = `[${msg.type}]`;
+
+  // === Save to MongoDB — เก็บทุก field ===
   await saveMsg(sourceId, {
     role: "user",
     userName,
     userId: source.userId,
     content: msgContent,
     messageType: msg.type,
+    // Media fields
     imageUrl: imageData,
     imageDescription: imageDescription || null,
+    videoUrl: videoUrl,
+    audioUrl: audioUrl,
+    audioDuration: audioDuration,
+    sticker: stickerData,
+    location: locationData,
+    file: fileData,
+    // Metadata
+    hasImage: !!imageData,
+    hasVideo: !!videoUrl,
+    hasAudio: !!audioUrl,
+    hasSticker: !!stickerData,
+    hasLocation: !!locationData,
+    hasFile: !!fileData,
     groupId: source.groupId || source.roomId,
     messageId: msg.id,
     timestamp: event.timestamp,
   }, "line");
 
   console.log(
-    `[MSG] ${userName}: ${msgContent.substring(0, 60)}${imageData ? " +img" : ""}`
+    `[MSG] ${userName}: ${msgContent.substring(0, 60)} ${extras.join(" ")}`
   );
 }
 
@@ -1917,29 +2018,112 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
         }
       }
 
-      // handle image attachment
+      // handle ALL attachment types (image, video, audio, file, location, sticker)
       const attachments = event.message?.attachments || []
       for (const att of attachments) {
-        if (att.type === "image") {
-          const imgUrl = att.payload?.url || null
-          const imageDescription = null // Vision AI สำหรับ image URL จาก Meta ทำได้ในอนาคต
-          const content = `[image]${imgUrl ? ": " + imgUrl : ""}`
-          await saveMsg(sourceId, {
-            role: "user",
-            userName,
-            userId: senderId,
-            content,
-            messageType: "image",
-            imageUrl: imgUrl,
-            imageDescription,
-            messageId: event.message?.mid || null,
-            timestamp: event.timestamp || null,
-            recipientId: recipient?.id || null,
-          }, platform)
-
-          console.log(`[Meta/${platform}] ${userName}@${sourceId.substring(0, 12)}: [image]`)
-          analyzeChat(sourceId, userName, content, senderId, { type: "user" }).catch((e) => console.error("[Meta/Skill] Catch:", e.message))
+        const attUrl = att.payload?.url || null
+        const baseMsgFields = {
+          role: "user",
+          userName,
+          userId: senderId,
+          messageId: event.message?.mid || null,
+          timestamp: event.timestamp || null,
+          recipientId: recipient?.id || null,
         }
+
+        if (att.type === "image") {
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: `[รูปภาพ]`,
+            messageType: "image",
+            imageUrl: attUrl,
+            hasImage: true,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [image]`)
+
+        } else if (att.type === "video") {
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: "[วิดีโอ]",
+            messageType: "video",
+            videoUrl: attUrl,
+            hasVideo: true,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [video]`)
+
+        } else if (att.type === "audio") {
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: "[เสียง]",
+            messageType: "audio",
+            audioUrl: attUrl,
+            hasAudio: true,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [audio]`)
+
+        } else if (att.type === "file") {
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: `[ไฟล์: ${att.payload?.name || "unknown"}]`,
+            messageType: "file",
+            file: {
+              fileName: att.payload?.name || "file",
+              fileSize: att.payload?.size || null,
+              url: attUrl,
+            },
+            hasFile: true,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [file]`)
+
+        } else if (att.type === "location") {
+          const coords = att.payload?.coordinates || {}
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: `[ตำแหน่ง: ${coords.lat || 0}, ${coords.long || 0}]`,
+            messageType: "location",
+            location: {
+              title: att.title || "ตำแหน่งที่ตั้ง",
+              address: "",
+              latitude: coords.lat || 0,
+              longitude: coords.long || 0,
+            },
+            hasLocation: true,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [location]`)
+
+        } else if (att.type === "fallback") {
+          // sticker หรือ attachment ที่ Meta ส่งมาแบบ fallback
+          await saveMsg(sourceId, {
+            ...baseMsgFields,
+            content: att.payload?.title || `[${att.type}]`,
+            messageType: att.type,
+            attachmentUrl: attUrl,
+          }, platform)
+          console.log(`[Meta/${platform}] ${userName}: [${att.type}]`)
+        }
+
+        // Analyze ทุก attachment
+        const attContent = `[${att.type}]`
+        analyzeChat(sourceId, userName, attContent, senderId, { type: "user" }).catch(() => {})
+      }
+
+      // handle sticker (Meta ส่ง sticker_id แยก)
+      if (event.message?.sticker_id) {
+        await saveMsg(sourceId, {
+          role: "user",
+          userName,
+          userId: senderId,
+          content: `[sticker:${event.message.sticker_id}]`,
+          messageType: "sticker",
+          sticker: {
+            stickerId: String(event.message.sticker_id),
+            stickerUrl: `https://graph.facebook.com/v19.0/${event.message.sticker_id}/picture`,
+          },
+          hasSticker: true,
+          messageId: event.message?.mid || null,
+          timestamp: event.timestamp || null,
+        }, platform)
+        console.log(`[Meta/${platform}] ${userName}: [sticker]`)
       }
     }
   }
