@@ -76,6 +76,15 @@ export default function MergePage() {
   const [merging, setMerging] = useState<string | null>(null);
   const [mergedCount, setMergedCount] = useState(0);
 
+  // Manual merge
+  const [showManual, setShowManual] = useState(false);
+  const [manualSearchA, setManualSearchA] = useState("");
+  const [manualSearchB, setManualSearchB] = useState("");
+  const [resultsA, setResultsA] = useState<Customer[]>([]);
+  const [resultsB, setResultsB] = useState<Customer[]>([]);
+  const [selectedA, setSelectedA] = useState<Customer | null>(null);
+  const [selectedB, setSelectedB] = useState<Customer | null>(null);
+
   useEffect(() => {
     if (authStatus === "unauthenticated") router.replace("/dashboard/login");
   }, [authStatus, router]);
@@ -93,6 +102,41 @@ export default function MergePage() {
   }, []);
 
   useEffect(() => { fetchDuplicates(); }, [fetchDuplicates]);
+
+  // Manual search
+  const searchCustomers = async (q: string, side: "A" | "B") => {
+    if (side === "A") setManualSearchA(q); else setManualSearchB(q);
+    if (q.length < 2) { side === "A" ? setResultsA([]) : setResultsB([]); return; }
+    try {
+      const res = await fetch(`/dashboard/api/customers?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      const exclude = side === "A" ? selectedB?._id : selectedA?._id;
+      const filtered = (data || []).filter((c: Customer) => c._id !== exclude).slice(0, 8);
+      side === "A" ? setResultsA(filtered) : setResultsB(filtered);
+    } catch {}
+  };
+
+  const handleManualMerge = async (primaryId: string, secondaryId: string) => {
+    setMerging(secondaryId);
+    try {
+      const res = await fetch("/dashboard/api/customers/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ primaryId, secondaryId }),
+      });
+      if (res.ok) {
+        setMergedCount(prev => prev + 1);
+        setSelectedA(null);
+        setSelectedB(null);
+        setManualSearchA("");
+        setManualSearchB("");
+        setResultsA([]);
+        setResultsB([]);
+        fetchDuplicates();
+      }
+    } catch {}
+    setMerging(null);
+  };
 
   // Merge
   const handleMerge = async (primaryId: string, secondaryId: string) => {
@@ -133,6 +177,14 @@ export default function MergePage() {
           </div>
           <div className="ml-auto flex gap-2">
             <button
+              onClick={() => setShowManual(v => !v)}
+              className={`px-4 py-2 text-sm rounded-lg transition font-medium ${
+                showManual ? "bg-amber-600 text-white" : "bg-amber-900/40 text-amber-400 border border-amber-700/30 hover:bg-amber-800/40"
+              }`}
+            >
+              ✋ รวมเอง
+            </button>
+            <button
               onClick={fetchDuplicates}
               disabled={loading}
               className="px-4 py-2 theme-bg-card border theme-border text-sm rounded-lg hover:theme-bg-hover transition disabled:opacity-50"
@@ -151,7 +203,118 @@ export default function MergePage() {
           <p>• <strong className="theme-text">เบอร์โทร/Email เดียวกัน</strong> — ข้อมูลติดต่อตรงกัน</p>
           <p>• <strong className="theme-text">ชื่อคล้ายกัน</strong> — 4 ตัวอักษรแรกเหมือนกัน (เช่น "สมชาย" กับ "สมชายดี")</p>
           <p className="text-amber-400 mt-1">⚠️ ตรวจสอบให้ดีก่อนกด "รวม" — รวมแล้วย้อนกลับไม่ได้ ประวัติสนทนาจะรวมเป็นลูกค้าเดียว</p>
+          <p className="text-cyan-400">💡 ระบบหาไม่เจอ? กดปุ่ม <strong>"✋ รวมเอง"</strong> ด้านบน เลือกลูกค้า 2 คนมารวมได้เลย</p>
         </div>
+
+        {/* ── Manual Merge ── */}
+        {showManual && (
+          <div className="mb-6 theme-bg-secondary border-2 border-amber-700/40 rounded-xl p-4">
+            <h2 className="text-sm font-bold text-amber-400 mb-3">✋ รวมลูกค้าแบบ Manual — เลือก 2 คนมารวม</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ── ลูกค้า A (ตัวหลัก) ── */}
+              <div>
+                <label className="text-[11px] font-bold text-indigo-400 block mb-1">ลูกค้าตัวหลัก (เก็บไว้)</label>
+                <input
+                  type="text"
+                  value={manualSearchA}
+                  onChange={(e) => searchCustomers(e.target.value, "A")}
+                  placeholder="🔍 พิมพ์ชื่อ / เบอร์ / email..."
+                  className="w-full theme-input border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 mb-1"
+                />
+                {/* Selected */}
+                {selectedA && (
+                  <div className="p-2 bg-indigo-950/40 border border-indigo-700/30 rounded-lg mb-1 flex items-center gap-2">
+                    <div className="flex-1 min-w-0"><CustomerCard c={selectedA} size="small" /></div>
+                    <button onClick={() => { setSelectedA(null); setManualSearchA(""); }} className="text-red-400 text-xs shrink-0">✕</button>
+                  </div>
+                )}
+                {/* Results */}
+                {!selectedA && resultsA.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto space-y-0.5 theme-bg-card rounded-lg border theme-border">
+                    {resultsA.map(c => (
+                      <button
+                        key={c._id}
+                        onClick={() => { setSelectedA(c); setResultsA([]); }}
+                        className="w-full text-left p-2 hover:theme-bg-hover transition"
+                      >
+                        <CustomerCard c={c} size="small" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── ลูกค้า B (จะลบ) ── */}
+              <div>
+                <label className="text-[11px] font-bold text-red-400 block mb-1">ลูกค้าที่จะรวมเข้า (จะถูกลบ)</label>
+                <input
+                  type="text"
+                  value={manualSearchB}
+                  onChange={(e) => searchCustomers(e.target.value, "B")}
+                  placeholder="🔍 พิมพ์ชื่อ / เบอร์ / email..."
+                  className="w-full theme-input border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 mb-1"
+                />
+                {selectedB && (
+                  <div className="p-2 bg-red-950/30 border border-red-700/30 rounded-lg mb-1 flex items-center gap-2">
+                    <div className="flex-1 min-w-0"><CustomerCard c={selectedB} size="small" /></div>
+                    <button onClick={() => { setSelectedB(null); setManualSearchB(""); }} className="text-red-400 text-xs shrink-0">✕</button>
+                  </div>
+                )}
+                {!selectedB && resultsB.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto space-y-0.5 theme-bg-card rounded-lg border theme-border">
+                    {resultsB.map(c => (
+                      <button
+                        key={c._id}
+                        onClick={() => { setSelectedB(c); setResultsB([]); }}
+                        className="w-full text-left p-2 hover:theme-bg-hover transition"
+                      >
+                        <CustomerCard c={c} size="small" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Merge preview + button */}
+            {selectedA && selectedB && (
+              <div className="mt-4 p-3 bg-amber-950/30 border border-amber-700/30 rounded-lg">
+                <p className="text-xs theme-text mb-2">
+                  <strong className="text-indigo-400">{selectedA.firstName || selectedA.name}</strong>
+                  {" ← รวมข้อมูลจาก ← "}
+                  <strong className="text-red-400">{selectedB.firstName || selectedB.name}</strong>
+                  <span className="text-red-400"> (จะถูกลบ)</span>
+                </p>
+                <div className="text-[10px] theme-text-muted mb-3 space-y-0.5">
+                  <p>✓ rooms (ห้องสนทนา) จะรวมกัน — ประวัติแชทไม่หาย</p>
+                  <p>✓ platformIds (LINE/FB/IG) จะรวมกัน</p>
+                  <p>✓ tags, notes, totalMessages จะรวมกัน</p>
+                  <p>✓ ข้อมูลที่ตัวหลักไม่มี จะดึงจากตัวที่ลบ (เบอร์, email, ที่อยู่)</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (confirm(`รวม "${selectedB.firstName || selectedB.name}" เข้ากับ "${selectedA.firstName || selectedA.name}"?\n\n"${selectedB.firstName || selectedB.name}" จะถูกลบ ย้อนกลับไม่ได้`)) {
+                        handleManualMerge(selectedA._id, selectedB._id);
+                      }
+                    }}
+                    disabled={!!merging}
+                    className="px-5 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-gray-700 text-white text-sm rounded-lg transition font-medium"
+                  >
+                    {merging ? "กำลังรวม..." : "🔀 ยืนยันรวมลูกค้า"}
+                  </button>
+                  <button
+                    onClick={() => { setSelectedA(null); setSelectedB(null); setManualSearchA(""); setManualSearchB(""); }}
+                    className="px-4 py-2 theme-bg-card text-sm rounded-lg hover:theme-bg-hover transition"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
