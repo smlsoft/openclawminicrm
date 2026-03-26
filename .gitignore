@@ -40,3 +40,4 @@ openclaw/*.bak
 openclaw/*.bak.*
 *.png
 .playwright-mcp/
+.claude/worktrees/

@@ -7,7 +7,7 @@
       "name": "problem-solver",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774253797616,
+      "updatedAtMs": 1774492094797,
       "schedule": {
         "kind": "cron",
         "expr": "15 * * * *",
@@ -24,13 +24,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774257397616,
-        "lastRunAtMs": 1774253764207,
+        "nextRunAtMs": 1774495694797,
+        "lastRunAtMs": 1774492075140,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 33409,
+        "lastDurationMs": 19657,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 24,
+        "consecutiveErrors": 33,
         "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
       }
     },
@@ -40,7 +40,7 @@
       "name": "sales-hunter",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774254704054,
+      "updatedAtMs": 1774494922655,
       "schedule": {
         "kind": "cron",
         "expr": "30 * * * *",
@@ -57,13 +57,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774258304054,
-        "lastRunAtMs": 1774254669584,
+        "nextRunAtMs": 1774498522655,
+        "lastRunAtMs": 1774494902757,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 34470,
+        "lastDurationMs": 19898,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 24,
+        "consecutiveErrors": 51,
         "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
       }
     },
@@ -73,7 +73,7 @@
       "name": "team-coach",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774242054009,
+      "updatedAtMs": 1774479619867,
       "schedule": {
         "kind": "cron",
         "expr": "0 */6 * * *",
@@ -90,13 +90,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774263600000,
-        "lastRunAtMs": 1774242000025,
+        "nextRunAtMs": 1774501200000,
+        "lastRunAtMs": 1774479600017,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 53984,
+        "lastDurationMs": 19850,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 4,
+        "consecutiveErrors": 7,
         "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
       }
     },
@@ -139,7 +139,7 @@
       "name": "health-monitor",
       "enabled": true,
       "createdAtMs": 1774008018371,
-      "updatedAtMs": 1774252833297,
+      "updatedAtMs": 1774490420015,
       "schedule": {
         "kind": "cron",
         "expr": "0 */3 * * *",
@@ -156,13 +156,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774263600000,
-        "lastRunAtMs": 1774252800022,
+        "nextRunAtMs": 1774501200000,
+        "lastRunAtMs": 1774490400017,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 33275,
+        "lastDurationMs": 19998,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 8,
+        "consecutiveErrors": 16,
         "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
       }
     }

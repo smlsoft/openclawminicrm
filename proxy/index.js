@@ -215,6 +215,10 @@ async function doAutoReply(sourceId, userName, customerMessage) {
   // ดึง memory + KB + skill lessons
   const aiContext = await buildAIContext(sourceId, customerMessage, allSourceIds);
 
+  // [A/B] Append A/B variant instruction
+  const variant = getABVariant(sourceId);
+  const abInstruction = AB_PROMPTS[variant];
+
   // เรียก AI
   const messages = [
     {
@@ -225,7 +229,8 @@ async function doAutoReply(sourceId, userName, customerMessage) {
 ปรับวิธีตอบตามสไตล์ลูกค้า (ถ้ารู้)
 ห้ามสัญญาเรื่องราคา/โปรโมชั่นที่ไม่ได้อยู่ในฐานความรู้
 ถ้าไม่แน่ใจให้บอกว่า "รอทีมงานตอบนะคะ"
-ตอบไม่เกิน 2 ประโยค${aiContext}`
+ตอบไม่เกิน 2 ประโยค
+สไตล์การตอบ: ${abInstruction}${aiContext}`
     },
     { role: "user", content: cleanForAI(customerMessage) },
   ];
@@ -247,6 +252,7 @@ async function doAutoReply(sourceId, userName, customerMessage) {
       content: fullReply,
       messageType: "text",
       isAutoReply: true,
+      abVariant: variant,
     }, "line");
     console.log(`[Auto-Reply] ✅ AI ตอบแทนสำเร็จ → ${sourceId.substring(0, 8)}`);
   }
@@ -845,6 +851,32 @@ async function saveGroupMeta(sourceId, groupName, source, platform = "line") {
   } catch (e) {}
 }
 
+// === [Route] Smart Routing — detect message topic ===
+function detectMessageTopic(text) {
+  if (!text) return "general";
+  const lower = text.toLowerCase();
+  if (/ราคา|เท่าไหร่|กี่บาท|cost|price|โปร|ลด/.test(lower)) return "sales";
+  if (/ส่ง|จัดส่ง|delivery|shipping|track|ติดตาม|พัสดุ/.test(lower)) return "shipping";
+  if (/เสีย|พัง|ซ่อม|ไม่ทำงาน|broken|fix|repair/.test(lower)) return "support";
+  if (/คืน|เปลี่ยน|refund|return|ยกเลิก|cancel/.test(lower)) return "returns";
+  if (/สั่ง|ซื้อ|order|จ่าย|โอน|ชำระ|สลิป/.test(lower)) return "orders";
+  if (/ขอบคุณ|ดีมาก|สุดยอด|ประทับใจ/.test(lower)) return "feedback";
+  if (/ร้องเรียน|ไม่พอใจ|แย่|ผิดหวัง|complaint/.test(lower)) return "complaint";
+  return "general";
+}
+
+// === [A/B] A/B Testing AI Response Styles ===
+const AB_PROMPTS = {
+  A: "ตอบสั้นๆ กระชับ ไม่เกิน 2 ประโยค",
+  B: "ตอบอย่างเป็นมิตร ใส่ emoji ให้รู้สึกอบอุ่น ไม่เกิน 3 ประโยค",
+};
+
+function getABVariant(sourceId) {
+  // Deterministic hash based on sourceId → consistent for same customer
+  const hash = sourceId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return hash % 2 === 0 ? "A" : "B";
+}
+
 // === Process LINE event → save to MongoDB ===
 // เก็บทุก message type: text, image, video, audio, sticker, location, file
 async function processEvent(event) {
@@ -970,6 +1002,9 @@ async function processEvent(event) {
   // Fallback content
   if (!msgContent) msgContent = `[${msg.type}]`;
 
+  // === [Route] Detect topic for smart routing ===
+  const topic = detectMessageTopic(msgContent);
+
   // === Save to MongoDB — เก็บทุก field ===
   await saveMsg(sourceId, {
     role: "user",
@@ -977,6 +1012,7 @@ async function processEvent(event) {
     userId: source.userId,
     content: msgContent,
     messageType: msg.type,
+    topic,
     // Media fields
     imageUrl: imageData,
     imageDescription: imageDescription || null,
@@ -1681,9 +1717,13 @@ async function aiReplyToLine(event, sourceId, userName, text, config) {
     .map((d) => `[${d.role === "assistant" ? config.botName || "น้องกุ้ง" : d.userName || "User"}] ${d.content}`)
     .join("\n");
 
+  // [A/B] Append A/B variant instruction to system prompt
+  const variant = getABVariant(sourceId);
+  const abInstruction = AB_PROMPTS[variant];
+
   const systemPrompt = config.systemPrompt || DEFAULT_PROMPT;
   const messages = [
-    { role: "system", content: `${systemPrompt}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
+    { role: "system", content: `${systemPrompt}\n\nสไตล์การตอบ: ${abInstruction}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
     { role: "user", content: cleanForAI(text) },
   ];
 
@@ -1709,6 +1749,7 @@ async function aiReplyToLine(event, sourceId, userName, text, config) {
       content: reply,
       messageType: "text",
       isAiReply: true,
+      abVariant: variant,
     }, "line");
 
     // Track cost
@@ -1724,8 +1765,12 @@ async function aiReplyToMeta(senderId, text, sourceId, platform) {
     .map((d) => `[${d.role === "assistant" ? "น้องกุ้ง" : d.userName || "User"}] ${d.content}`)
     .join("\n");
 
+  // [A/B] Append A/B variant instruction
+  const variant = getABVariant(sourceId);
+  const abInstruction = AB_PROMPTS[variant];
+
   const messages = [
-    { role: "system", content: `${DEFAULT_PROMPT}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
+    { role: "system", content: `${DEFAULT_PROMPT}\n\nสไตล์การตอบ: ${abInstruction}\n\nประวัติสนทนา:\n${contextStr || "(ไม่มี)"}` },
     { role: "user", content: cleanForAI(text) },
   ];
 
@@ -1745,6 +1790,7 @@ async function aiReplyToMeta(senderId, text, sourceId, platform) {
       content: reply,
       messageType: "text",
       isAiReply: true,
+      abVariant: variant,
     }, platform);
     console.log(`[AI-Reply] ✅ ${platform}: ${reply.substring(0, 50)}`);
   }
@@ -2288,12 +2334,14 @@ app.post("/webhook/meta", express.raw({ type: "*/*" }), async (req, res) => {
       // handle text message
       if (event.message?.text) {
         const msgText = event.message.text
+        const topic = detectMessageTopic(msgText)
         await saveMsg(sourceId, {
           role: "user",
           userName,
           userId: senderId,
           content: msgText,
           messageType: "text",
+          topic,
           messageId: event.message.mid || null,
           timestamp: event.timestamp || null,
           recipientId: recipient?.id || null,
@@ -4597,6 +4645,87 @@ app.get("/setup-telegram-webhook", async (req, res) => {
     const data = await resp.json();
     res.json(data);
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// === [Churn] Churn Prediction — ทำนายลูกค้าที่กำลังจะหาย ===
+app.get("/api/customers/churn-risk", async (req, res) => {
+  try {
+    const database = await getDB();
+    if (!database) return res.status(500).json({ error: "DB not connected" });
+    const now = new Date();
+
+    const customers = await database.collection("customers")
+      .find({}, { projection: { name: 1, firstName: 1, lastName: 1, rooms: 1, platformIds: 1, totalMessages: 1, updatedAt: 1, pipelineStage: 1 } })
+      .toArray();
+
+    const risks = [];
+    for (const c of customers) {
+      if (!c.rooms?.length) continue;
+
+      const lastMsg = await database.collection("messages")
+        .findOne({ sourceId: { $in: c.rooms } }, { sort: { createdAt: -1 }, projection: { createdAt: 1 } });
+
+      if (!lastMsg) continue;
+      const lastActivity = lastMsg.createdAt;
+      const daysSinceLastActivity = Math.floor((now - new Date(lastActivity)) / (24 * 60 * 60 * 1000));
+
+      let riskLevel = "low";
+      let riskReason = "";
+
+      if (daysSinceLastActivity > 30) {
+        riskLevel = "critical";
+        riskReason = `ไม่มีข้อความ ${daysSinceLastActivity} วัน — อาจหายไปแล้ว`;
+      } else if (daysSinceLastActivity > 7) {
+        riskLevel = "high";
+        riskReason = `ไม่มีข้อความ ${daysSinceLastActivity} วัน — เสี่ยงหลุด`;
+      } else if (daysSinceLastActivity > 3) {
+        riskLevel = "medium";
+        riskReason = `ไม่มีข้อความ ${daysSinceLastActivity} วัน — ควรติดตาม`;
+      }
+
+      if (riskLevel !== "low") {
+        risks.push({
+          ...c,
+          _id: c._id.toString(),
+          lastActivity,
+          daysSinceLastActivity,
+          riskLevel,
+          riskReason,
+        });
+      }
+    }
+
+    const order = { critical: 0, high: 1, medium: 2 };
+    risks.sort((a, b) => (order[a.riskLevel] || 3) - (order[b.riskLevel] || 3));
+
+    console.log(`[Churn] Found ${risks.length} at-risk customers`);
+    res.json({ risks, total: risks.length });
+  } catch (e) {
+    console.error("[Churn] Error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// === [A/B] A/B Testing Results ===
+app.get("/api/ab-results", async (req, res) => {
+  try {
+    const database = await getDB();
+    if (!database) return res.status(500).json({ error: "DB not connected" });
+
+    const results = await database.collection("messages").aggregate([
+      { $match: { abVariant: { $exists: true }, role: "assistant" } },
+      { $group: {
+        _id: "$abVariant",
+        count: { $sum: 1 },
+      }},
+    ]).toArray();
+
+    console.log(`[A/B] Results: ${JSON.stringify(results)}`);
+    res.json(results);
+  } catch (e) {
+    console.error("[A/B] Error:", e.message);
     res.status(500).json({ error: e.message });
   }
 });
