@@ -476,7 +476,7 @@ export default function InboxPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-screen theme-bg theme-text overflow-hidden">
+    <div className="flex h-[calc(100dvh-4rem)] md:h-screen theme-bg theme-text overflow-hidden">
 
       {/* ── Zoom Lightbox ── */}
       {zoomImage && (
@@ -495,10 +495,10 @@ export default function InboxPage() {
       {/* ═══════════════════════════════════════════════════════════════════
           LEFT PANEL — Conversation List
       ══════════════════════════════════════════════════════════════════════ */}
-      <aside className={`flex flex-col w-80 shrink-0 theme-bg-secondary border-r theme-border ${selectedId ? "hidden md:flex" : "flex"}`}>
+      <aside className={`flex flex-col w-full md:w-80 shrink-0 theme-bg-secondary border-r theme-border ${selectedId ? "hidden md:flex" : "flex"}`}>
 
         {/* Header */}
-        <div className="px-4 pt-4 pb-3 border-b theme-border">
+        <div className="px-3 md:px-4 pt-4 pb-3 border-b theme-border">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-base font-bold theme-text">Inbox</h1>
             <span className="text-xs theme-text-muted theme-bg-card px-2 py-0.5 rounded-full">

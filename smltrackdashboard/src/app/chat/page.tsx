@@ -964,9 +964,9 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen theme-bg theme-text overflow-hidden">
+    <div className="flex h-[calc(100dvh-4rem)] md:h-screen theme-bg theme-text overflow-hidden">
       {/* ═══ LEFT — Conversation List ═══ */}
-      <aside className="flex flex-col w-64 shrink-0 theme-bg-secondary border-r theme-border">
+      <aside className={`flex flex-col w-full md:w-64 shrink-0 theme-bg-secondary border-r theme-border ${openPanels.length > 0 ? "hidden md:flex" : "flex"}`}>
         {/* Header */}
         <div className="px-3 pt-3 pb-2 border-b theme-border">
           <div className="flex items-center justify-between mb-2">
@@ -1082,7 +1082,7 @@ export default function ChatPage() {
       </aside>
 
       {/* ═══ RIGHT — Chat Panels (side by side) ═══ */}
-      <div className="flex-1 flex min-w-0 gap-[2px] bg-black/40">
+      <div className={`flex-1 min-w-0 gap-[2px] bg-black/40 ${openPanels.length > 0 ? "flex" : "hidden md:flex"}`}>
         {openPanels.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
             <div className="w-16 h-16 theme-bg-card rounded-2xl flex items-center justify-center text-3xl">💬</div>

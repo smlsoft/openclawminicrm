@@ -115,14 +115,14 @@ export default function ConfigPage() {
   // ---- Config Panel ----
   return (
     <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
-        <div className="pl-10 md:pl-0">
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
+        <div>
           <h1 className="text-base font-bold">🔗 ช่องทางเชื่อมต่อ</h1>
           <p className="text-xs theme-text-secondary">ตั้งค่า LINE, Facebook, Instagram, Telegram</p>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-6 space-y-6">
+      <main className="max-w-2xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-6">
 
         {/* MongoDB Atlas */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">

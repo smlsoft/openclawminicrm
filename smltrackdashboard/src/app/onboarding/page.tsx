@@ -146,7 +146,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b theme-border">
+      <div className="relative z-10 flex items-center justify-between px-3 md:px-6 py-4 border-b theme-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-base shadow-lg shadow-indigo-500/20">
             💬
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-3 md:px-6 py-8 pb-24 md:pb-8">
         <div className="w-full max-w-lg">
 
           {/* Step 1 — ยินดีต้อนรับ */}

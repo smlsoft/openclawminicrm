@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface Step {
   number: number;
@@ -8,6 +9,7 @@ interface Step {
   icon: string;
   summary: string;
   details: string[];
+  link?: { label: string; href: string };
 }
 
 const STEPS: Step[] = [
@@ -21,40 +23,39 @@ const STEPS: Step[] = [
       "สร้าง Cluster ชนิด M0 (Free) เลือก Region ใกล้ที่สุด",
       "ไปที่ Database Access → สร้าง user + password",
       "ไปที่ Network Access → เพิ่ม 0.0.0.0/0 (Allow from anywhere)",
-      "คัดลอก Connection String รูปแบบ: mongodb+srv://user:pass@cluster.mongodb.net/smltrack",
-      "วาง Connection String ใน .env ที่ MONGODB_URI=",
+      "คัดลอก Connection String วาง Connection String ใน .env ที่ MONGODB_URI=",
       "รีสตาร์ท Docker: docker compose up -d --build",
     ],
+    link: { label: "ไปตั้งค่า", href: "/settings" },
   },
   {
     number: 2,
     icon: "🤖",
     title: "ตั้งค่า AI API Key",
-    summary: "ใส่ API Key เพื่อให้น้องกุ้งและน้องกุ้งทำงานได้",
+    summary: "ใส่ API Key เพื่อให้ AI วิเคราะห์แชทและตอบอัตโนมัติ",
     details: [
       "สมัคร OpenRouter ที่ openrouter.ai → รับ API Key ฟรี",
       "สมัคร SambaNova ที่ cloud.sambanova.ai → ฟรี 100K tokens/วัน",
       "สมัคร Groq ที่ console.groq.com → ฟรี มี rate limit",
       "สมัคร Cerebras ที่ cloud.cerebras.ai → ฟรี เร็วมาก",
-      "สมัคร Google AI Studio ที่ aistudio.google.com → ฟรี Gemini",
-      "ใส่ API Keys ทั้งหมดใน .env แล้ว docker compose up -d --build",
+      "สมัคร Google AI Studio → ฟรี Gemini",
       "ระบบจะ fallback อัตโนมัติ: OpenRouter → SambaNova → Groq → Cerebras → Gemini",
     ],
+    link: { label: "ไปตั้งค่า", href: "/settings" },
   },
   {
     number: 3,
     icon: "📱",
-    title: "เชื่อม LINE OA / Facebook / Instagram",
-    summary: "ต่อ webhook เพื่อให้น้องกุ้งรับ-ส่งข้อความในแชทได้",
+    title: "เชื่อม LINE / Facebook / Instagram",
+    summary: "ต่อ webhook เพื่อให้ระบบรับ-ส่งข้อความในแชทได้",
     details: [
-      "LINE OA: ไปที่ developers.line.biz → สร้าง Messaging API channel",
-      "LINE: คัดลอก Channel Access Token และ Channel Secret ใส่ .env",
+      "LINE OA: สร้าง Messaging API channel → ใส่ Token + Secret",
       "LINE: ตั้ง Webhook URL เป็น https://crm.satistang.com/webhook",
-      "Facebook: ไปที่ developers.facebook.com → สร้าง App → เพิ่ม Messenger",
-      "Facebook: ตั้ง Webhook URL: https://crm.satistang.com/webhook/facebook",
-      "Instagram: เชื่อมกับ Facebook Page แล้วเปิด Instagram Messaging",
+      "Facebook: สร้าง App → เพิ่ม Messenger → ตั้ง Webhook",
+      "Instagram: เชื่อมกับ Facebook Page → เปิด Instagram Messaging",
       "ทดสอบส่งข้อความ → ดูใน Dashboard → ถ้าขึ้น Live แสดงว่าเชื่อมสำเร็จ",
     ],
+    link: { label: "ไปเชื่อมต่อ", href: "/connections" },
   },
   {
     number: 4,
@@ -63,66 +64,107 @@ const STEPS: Step[] = [
     summary: "รับ advice วิเคราะห์ธุรกิจส่วนตัวผ่าน Telegram",
     details: [
       "ไปหา @BotFather ใน Telegram → พิมพ์ /newbot",
-      "ตั้งชื่อ bot เช่น 'SML น้องกุ้ง' และ username เช่น sml_nong_kung_bot",
-      "BotFather จะให้ Bot Token ยาว รูปแบบ 123456:ABC-DEF...",
+      "ตั้งชื่อ bot เช่น 'SML น้องกุ้ง' → รับ Bot Token",
       "ใส่ Token ใน .env ที่ TELEGRAM_BOT_TOKEN=",
-      "รีสตาร์ท Docker แล้วเปิดเบราว์เซอร์ไปที่: https://crm.satistang.com/setup-telegram-webhook",
-      "ถ้าขึ้น ok: true แสดงว่า webhook ตั้งสำเร็จ",
-      "เปิด Telegram bot ของคุณแล้วส่ง /start — น้องกุ้งจะตอบทันที",
-      "ทดสอบ: พิมพ์ 'สรุปแชทวันนี้' → น้องกุ้งวิเคราะห์ให้เลย",
+      "รีสตาร์ท Docker → เปิด /setup-telegram-webhook",
+      "เปิด Telegram bot ส่ง /start → น้องกุ้งจะตอบทันที",
     ],
+    link: { label: "ไปตั้งค่า", href: "/settings" },
   },
   {
     number: 5,
     icon: "📊",
-    title: "เริ่มดูข้อมูลใน Dashboard",
-    summary: "ใช้งาน features ต่าง ๆ ของ OpenClaw Mini CRM",
+    title: "เริ่มใช้งาน Dashboard",
+    summary: "ดูข้อมูล, วิเคราะห์, จัดการลูกค้า",
     details: [
-      "Dashboard: ดูแชทแบบ Real-time ทุก 5 วินาที จัด drag-drop ได้",
-      "Filter: กรองตาม sentiment ลูกค้า (ปกติ/ติดตาม/ไม่พอใจ) และโอกาสซื้อ",
-      "CRM: ดูประวัติลูกค้าทั้งหมด ค้นหา กรองตาม stage",
-      "KPI: ดู KPI ปิดการขาย, ลูกค้าหลุด, ยอดขาย รายวัน/สัปดาห์/เดือน",
-      "น้องกุ้ง: ดู AI Advice ที่วิเคราะห์ทุก 1 ชั่วโมง เรียงตาม priority",
-      "AI Cost: ดูค่าใช้จ่าย AI tokens แยกตาม provider และ feature",
-      "Config: ตั้ง personality น้องกุ้งแยกต่อห้อง, ตั้งเตือนตอบช้า",
+      "Dashboard: ดูแชท Real-time ทุก 5 วินาที กรองตาม sentiment",
+      "CRM: ดูประวัติลูกค้าทั้งหมด ค้นหา กรองตาม pipeline stage",
+      "KPI: ดู performance พนักงาน, อัตราปิดการขาย, ลูกค้าหลุด",
+      "น้องกุ้ง: ดู AI Advice วิเคราะห์ทุก 1 ชั่วโมง เรียงตาม priority",
+      "AI Cost: ดูค่าใช้จ่าย AI tokens แยก provider/feature",
+      "Knowledge: จัดการ KB สำหรับ AI ตอบคำถามลูกค้า",
     ],
+    link: { label: "ไป Dashboard", href: "/" },
   },
 ];
 
-function StepCard({ step }: { step: Step }) {
-  const [open, setOpen] = useState(false);
+const FEATURES = [
+  { icon: "💬", title: "Multi-Channel", desc: "LINE · Facebook · Instagram รวมที่เดียว" },
+  { icon: "🧠", title: "AI วิเคราะห์", desc: "Sentiment · Purchase Intent · Auto Tags" },
+  { icon: "📈", title: "KPI & Analytics", desc: "Response time · Conversion · Pipeline" },
+  { icon: "🦐", title: "น้องกุ้ง Advisor", desc: "วิเคราะห์ธุรกิจ แจ้งเตือนทาง Telegram" },
+  { icon: "👥", title: "CRM", desc: "จัดการลูกค้า Pipeline รวมข้าม platform" },
+  { icon: "📚", title: "Knowledge Base", desc: "สอน AI ตอบคำถามจาก KB ของคุณ" },
+];
+
+function StepCard({ step, defaultOpen }: { step: Step; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen || false);
 
   return (
-    <div className="theme-bg-secondary border theme-border rounded-xl overflow-hidden transition-all">
+    <div className={`card overflow-hidden transition-all duration-200 ${open ? "ring-1 ring-indigo-500/20" : ""}`}>
       <button
-        className="w-full flex items-start gap-4 px-5 py-4 text-left hover:theme-bg-hover transition"
+        className="w-full flex items-start gap-3 md:gap-4 px-4 md:px-5 py-4 text-left hover:bg-[var(--bg-hover)] transition-colors"
         onClick={() => setOpen((v) => !v)}
       >
-        <div className="w-10 h-10 rounded-xl bg-indigo-900/40 border border-indigo-700/40 flex items-center justify-center text-xl shrink-0 mt-0.5">
-          {step.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-indigo-400 font-semibold">ขั้นตอนที่ {step.number}</span>
+        {/* Number badge */}
+        <div className="relative shrink-0">
+          <div className="w-11 h-11 rounded-2xl gradient-bg flex items-center justify-center text-xl shadow-md"
+            style={{ boxShadow: "0 4px 12px rgba(99,102,241,0.25)" }}>
+            {step.icon}
           </div>
-          <p className="text-sm font-semibold theme-text mt-0.5">{step.title}</p>
-          <p className="text-xs theme-text-secondary mt-0.5">{step.summary}</p>
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full gradient-bg text-white text-[10px] font-bold flex items-center justify-center ring-2"
+            style={{ outlineColor: "var(--bg-card)" }}>
+            {step.number}
+          </span>
         </div>
-        <span className="theme-text-muted text-xs mt-1 shrink-0 pt-1">{open ? "▲" : "▼"}</span>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--primary)" }}>
+            ขั้นตอนที่ {step.number}
+          </p>
+          <p className="text-sm md:text-base font-bold mt-0.5" style={{ color: "var(--text-primary)" }}>
+            {step.title}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+            {step.summary}
+          </p>
+        </div>
+
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-1 transition-all ${
+          open ? "bg-indigo-600/20 text-indigo-400 rotate-180" : ""
+        }`} style={{ color: open ? undefined : "var(--text-muted)" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M3 5l4 4 4-4" />
+          </svg>
+        </div>
       </button>
 
       {open && (
-        <div className="border-t theme-border px-5 py-4">
-          <ol className="space-y-2">
+        <div className="border-t px-4 md:px-5 py-4 animate-fade-in" style={{ borderColor: "var(--border)", background: "var(--bg-elevated)" }}>
+          <ol className="space-y-2.5">
             {step.details.map((detail, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-indigo-900/60 border border-indigo-700/50 text-indigo-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-6 h-6 rounded-lg text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: "var(--primary-bg)", color: "var(--primary)" }}>
                   {i + 1}
                 </span>
-                <span className="text-sm theme-text-secondary leading-relaxed">{detail}</span>
+                <span className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                  {detail}
+                </span>
               </li>
             ))}
           </ol>
+
+          {step.link && (
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+              <Link href={step.link.href}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition gradient-bg text-white hover:opacity-90 shadow-md"
+                style={{ boxShadow: "0 4px 12px rgba(99,102,241,0.25)" }}>
+                {step.link.label}
+                <span className="text-xs">→</span>
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -131,35 +173,90 @@ function StepCard({ step }: { step: Step }) {
 
 export default function GuidePage() {
   return (
-    <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b theme-border px-4 py-3 sticky top-0 theme-bg backdrop-blur z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center gap-3 pl-10 md:pl-0">
-          <div>
-            <h1 className="text-base font-bold">คู่มือการใช้งาน</h1>
-            <p className="text-xs theme-text-muted">OpenClaw Mini CRM — เริ่มต้นใช้งาน 5 ขั้นตอน</p>
-          </div>
+    <div className="page-container">
+      {/* Header */}
+      <header className="page-header">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-lg md:text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+            📖 คู่มือการใช้งาน
+          </h1>
+          <p className="text-xs md:text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+            OpenClaw Mini CRM — เริ่มต้นใช้งาน 5 ขั้นตอน
+          </p>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        <div className="mb-6 p-4 bg-indigo-900/20 border border-indigo-700/30 rounded-xl">
-          <p className="text-sm text-indigo-300 leading-relaxed">
-            ยินดีต้อนรับสู่ <strong>OpenClaw Mini CRM</strong> ระบบ AI Chat Intelligence สำหรับธุรกิจ<br />
-            ทำตาม 5 ขั้นตอนด้านล่างเพื่อเริ่มใช้งานได้เลย คลิกแต่ละขั้นตอนเพื่อดูรายละเอียด
-          </p>
-        </div>
+      <main className="page-content">
+        <div className="max-w-3xl mx-auto">
+          {/* Hero */}
+          <div className="card p-5 md:p-6 mb-6 overflow-hidden relative">
+            <div className="absolute inset-0 opacity-[0.03]"
+              style={{ background: "linear-gradient(135deg, var(--gradient-from), var(--gradient-to))" }} />
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg"
+                  style={{ boxShadow: "0 4px 16px rgba(99,102,241,0.3)" }}>
+                  💬
+                </div>
+                <div>
+                  <h2 className="text-base md:text-lg font-bold gradient-text">OpenClaw Mini CRM</h2>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>AI Chat Intelligence Platform</p>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                ระบบ CRM อัจฉริยะ วิเคราะห์สนทนาจาก LINE, Facebook, Instagram อัตโนมัติ
+                พร้อม AI Advisor ช่วยวิเคราะห์ธุรกิจ แจ้งเตือนลูกค้าหลุด และให้คำแนะนำเชิงรุก
+              </p>
+            </div>
+          </div>
 
-        <div className="space-y-3">
-          {STEPS.map((step) => (
-            <StepCard key={step.number} step={step} />
-          ))}
-        </div>
+          {/* Features grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-3 mb-6">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="stat-card text-center">
+                <span className="text-2xl md:text-3xl block mb-1.5">{f.icon}</span>
+                <p className="text-xs md:text-sm font-bold" style={{ color: "var(--text-primary)" }}>{f.title}</p>
+                <p className="text-[10px] md:text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
 
-        <div className="mt-6 p-4 theme-bg-secondary border theme-border rounded-xl">
-          <p className="text-xs theme-text-muted text-center leading-relaxed">
-            มีปัญหา? ติดต่อ Line: @smlclaw หรือดูโค้ดที่ GitHub<br />
-            <span className="text-indigo-400">https://github.com/smltrack</span>
-          </p>
+          {/* Steps heading */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+            <span className="text-xs font-bold uppercase tracking-widest px-2" style={{ color: "var(--text-muted)" }}>
+              เริ่มต้นใช้งาน
+            </span>
+            <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-3">
+            {STEPS.map((step) => (
+              <StepCard key={step.number} step={step} defaultOpen={step.number === 1} />
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="card p-4 md:p-5 mt-6 text-center">
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              ต้องการความช่วยเหลือ?
+            </p>
+            <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
+              ติดต่อ LINE: @smlclaw
+            </p>
+            <div className="flex items-center justify-center gap-3 mt-3">
+              <Link href="/connections"
+                className="px-4 py-2 rounded-xl text-xs font-medium transition"
+                style={{ background: "var(--primary-bg)", color: "var(--primary)" }}>
+                🔗 เชื่อมต่อช่องทาง
+              </Link>
+              <Link href="/"
+                className="px-4 py-2 rounded-xl text-xs font-medium gradient-bg text-white hover:opacity-90 transition">
+                📊 ไป Dashboard
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     </div>

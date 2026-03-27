@@ -143,7 +143,7 @@ export default function TemplatesPage() {
       )}
 
       {/* Header */}
-      <header className="border-b theme-border px-6 py-4 sticky top-0 z-10" style={{ background: "var(--bg-primary)" }}>
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 z-10" style={{ background: "var(--bg-primary)" }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="theme-text-muted hover:theme-text text-xl">&larr;</Link>
@@ -159,7 +159,7 @@ export default function TemplatesPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-4xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-6">
         {/* Category Filter */}
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => setCatFilter("all")}

@@ -124,7 +124,7 @@ export default function BotConfigPage() {
   return (
     <div className="min-h-screen theme-bg theme-text">
       {/* Header */}
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-6 pb-24 md:pb-6 space-y-5">
         <div className="flex items-center gap-3">
           <Link href="/" className="theme-text-muted hover:theme-text text-sm">
             &larr; กลับ

@@ -172,8 +172,8 @@ export default function MergePage() {
   return (
     <div className="min-h-screen theme-bg theme-text">
       {/* Header */}
-      <header className="border-b theme-border px-4 py-3 sticky top-0 theme-bg z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center gap-3 pl-10 md:pl-0 flex-wrap">
+      <header className="border-b theme-border px-3 md:px-6 py-3 sticky top-0 theme-bg z-10" style={{ background: "var(--bg-primary)" }}>
+        <div className="flex items-center gap-3 flex-wrap">
           <div>
             <h1 className="text-base font-bold flex items-center gap-2">
               🔀 รวมลูกค้า
@@ -204,7 +204,7 @@ export default function MergePage() {
         </div>
       </header>
 
-      <div className="p-4 max-w-5xl mx-auto">
+      <div className="p-3 md:p-6 pb-24 md:pb-6 max-w-7xl mx-auto">
         {/* How it works */}
         <div className="mb-4 p-3 bg-indigo-950/30 border border-indigo-800/30 rounded-xl text-xs theme-text-muted space-y-1">
           <p className="font-medium text-indigo-400">ระบบค้นหาลูกค้าซ้ำอัตโนมัติ:</p>

@@ -69,7 +69,7 @@ export default function ConnectionsPage() {
   return (
     <div className="min-h-screen theme-bg theme-text">
       {/* Header */}
-      <header className="border-b theme-border px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; Dashboard</Link>
           <div className="w-px h-5 theme-border" />
@@ -78,10 +78,10 @@ export default function ConnectionsPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-6 space-y-4">
+      <main className="max-w-2xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-4">
 
         {/* Summary row */}
-        <div className="grid grid-cols-4 gap-3 mb-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
           {[
             { label: "LINE", ok: lineOk, icon: "💬" },
             { label: "Facebook", ok: fbOk, icon: "📘" },

@@ -464,10 +464,9 @@ export default function AdvicePage() {
     <div className="min-h-screen theme-bg">
       {/* Header */}
       <header
-        className="sticky top-0 z-30 backdrop-blur-md border-b theme-border"
-        style={{ background: "var(--bg-secondary)" }}
+        className="sticky top-0 z-30 backdrop-blur-md border-b theme-border theme-bg"
       >
-        <div className="max-w-5xl mx-auto px-4 py-3 pl-10 md:pl-4">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 py-3">
           <div className="flex items-center justify-between">
             <h1 className="text-base font-bold theme-text">น้องกุ้ง — AI Advisor</h1>
             <button
@@ -486,7 +485,7 @@ export default function AdvicePage() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-5xl mx-auto px-4 pl-10 md:pl-4 pb-0">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 pb-0">
           <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
             {TAB_ORDER.map((tab) => {
               const cfg = TYPE_CONFIG[tab];
@@ -522,7 +521,7 @@ export default function AdvicePage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-5 space-y-6">
+      <main className="max-w-7xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-6">
         {/* Summary bar */}
         <p className="text-xs theme-text-muted">
           {loading

@@ -110,8 +110,8 @@ export default function CrmPage() {
 
   return (
     <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b theme-border px-6 py-4 sticky top-0 z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center justify-between pl-10 md:pl-0">
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 z-10 theme-bg backdrop-blur">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold">👥 CRM</h1>
             <p className="text-xs theme-text-muted">ลูกค้าเพิ่มอัตโนมัติ &middot; {customers.length} ราย</p>
@@ -122,10 +122,10 @@ export default function CrmPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-6">
         {/* Pipeline Value Banner */}
         {(totalPipelineValue > 0 || wonValue > 0) && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
               <p className="text-[11px] text-blue-400 mb-1">💼 Pipeline รวม</p>
               <p className="text-xl font-bold text-blue-300">{totalPipelineValue > 0 ? formatTHB(totalPipelineValue) : "-"}</p>

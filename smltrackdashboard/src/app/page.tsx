@@ -233,8 +233,8 @@ export default function Home() {
       )}
 
       {/* Header */}
-      <header className="border-b theme-border px-4 py-3 sticky top-0 theme-bg backdrop-blur z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center gap-3 pl-10 md:pl-0">
+      <header className="border-b theme-border px-3 md:px-6 py-3 sticky top-0 theme-bg backdrop-blur z-10">
+        <div className="flex items-center gap-3">
           <div>
             <h1 className="text-base font-bold">Dashboard</h1>
             <p className="text-xs theme-text-muted">LINE · Facebook · Instagram</p>
@@ -324,7 +324,7 @@ export default function Home() {
       </header>
 
       {/* Platform Filter Tabs */}
-      <div className="border-b theme-border px-4 py-2 flex items-center gap-2" style={{ background: "var(--bg-primary)" }}>
+      <div className="border-b theme-border px-3 md:px-6 py-2 flex items-center gap-2">
         <span className="text-[11px] theme-text-muted mr-1 shrink-0">Platform:</span>
         {([
           { value: "all", label: "ทั้งหมด", badgeClass: "theme-bg-card theme-text-secondary hover:theme-bg-hover", activeClass: "bg-white text-black" },
@@ -351,7 +351,7 @@ export default function Home() {
       </div>
 
       {/* iPhone Grid */}
-      <main className="p-4">
+      <main className="p-3 md:p-6 pb-24 md:pb-6">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={order} strategy={rectSortingStrategy}>
             <div className="flex flex-wrap gap-4 justify-center">

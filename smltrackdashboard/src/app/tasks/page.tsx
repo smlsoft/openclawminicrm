@@ -205,8 +205,8 @@ export default function TasksPage() {
       )}
 
       {/* Header */}
-      <header className="border-b theme-border px-6 py-4 sticky top-0 z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center justify-between pl-10 md:pl-0">
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 z-10" style={{ background: "var(--bg-primary)" }}>
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold">📋 งานและติดตาม</h1>
             <p className="text-xs theme-text-muted">Task Management &middot; {tasks.length} งาน</p>
@@ -221,7 +221,7 @@ export default function TasksPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-4xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-6">
         {/* Filter Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           {([

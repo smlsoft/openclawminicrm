@@ -72,9 +72,9 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       )}
 
       {/* Header */}
-      <header className="border-b theme-border px-4 py-3 sticky top-0 theme-bg z-10">
+      <header className="border-b theme-border px-3 md:px-6 py-3 sticky top-0 theme-bg z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 pl-10 md:pl-0">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard" className="theme-text-secondary hover:theme-text text-xl">
               &larr;
             </Link>
@@ -98,7 +98,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
       {/* Messages */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-4 space-y-3">
+        <div className="max-w-3xl mx-auto p-3 md:p-6 pb-24 md:pb-6 space-y-3">
           {loading ? (
             <div className="text-center theme-text-muted py-20">Loading...</div>
           ) : messages.length === 0 ? (

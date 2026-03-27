@@ -6,25 +6,37 @@
 }
 
 /* ============================================
-   OpenClaw Mini CRM — Brand Theme System
-   Primary: Indigo (#6366f1)
-   Accent: Cyan (#06b6d4)
+   OpenClaw Mini CRM — Design System v2
+   Modern Glass Minimal
    ============================================ */
 
-/* Dark theme (default) — Professional dark blue */
+/* Dark theme (default) */
 .dark {
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #161d2f;
-  --bg-hover: #1e2740;
-  --border: #252f45;
-  --text-primary: #e8ecf4;
-  --text-secondary: #8b95a8;
-  --text-muted: #5a6478;
+  --bg-primary: #070a12;
+  --bg-secondary: #0c1021;
+  --bg-card: #111628;
+  --bg-elevated: #161c30;
+  --bg-hover: #1a2138;
+  --bg-active: #222a42;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.12);
+  --text-primary: #edf0f7;
+  --text-secondary: #8b95b0;
+  --text-muted: #565f78;
   --primary: #818cf8;
-  --primary-bg: rgba(99,102,241,0.15);
+  --primary-darker: #6366f1;
+  --primary-bg: rgba(99,102,241,0.12);
   --accent: #22d3ee;
-  --accent-bg: rgba(6,182,212,0.15);
+  --accent-darker: #06b6d4;
+  --accent-bg: rgba(6,182,212,0.12);
+  --gradient-from: #6366f1;
+  --gradient-to: #06b6d4;
+  --glass-bg: rgba(17,22,40,0.75);
+  --glass-border: rgba(255,255,255,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 20px rgba(99,102,241,0.15);
 
   /* iPhone chat */
   --iphone-frame: #000000;
@@ -47,22 +59,35 @@
   --iphone-home-bar: #4b5563;
 }
 
-/* Light theme — Clean & professional */
+/* Light theme */
 .light {
-  --bg-primary: #f8f9fc;
+  --bg-primary: #f6f8fb;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --bg-hover: #f1f3f8;
-  --border: #e2e5ef;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f0f2f7;
+  --bg-active: #e5e8f0;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
   --primary: #6366f1;
-  --primary-bg: rgba(99,102,241,0.08);
+  --primary-darker: #4f46e5;
+  --primary-bg: rgba(99,102,241,0.07);
   --accent: #0891b2;
-  --accent-bg: rgba(8,145,178,0.08);
+  --accent-darker: #0e7490;
+  --accent-bg: rgba(8,145,178,0.07);
+  --gradient-from: #6366f1;
+  --gradient-to: #06b6d4;
+  --glass-bg: rgba(255,255,255,0.85);
+  --glass-border: rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+  --shadow-glow: 0 0 20px rgba(99,102,241,0.08);
 
-  /* iPhone chat — white/LINE style */
+  /* iPhone chat — light */
   --iphone-frame: #ffffff;
   --iphone-frame-border: #d1d5db;
   --iphone-island: #1f2937;
@@ -83,18 +108,30 @@
   --iphone-home-bar: #d1d5db;
 }
 
+/* ============================================
+   Base
+   ============================================ */
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth theme transition — ใช้ * แต่จำกัด properties ให้น้อย */
+/* Safe area for iPhone notch/home bar */
+@supports (padding: env(safe-area-inset-bottom)) {
+  :root {
+    --sai-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Smooth theme transition */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
   transition-delay: 0s !important;
 }
 
@@ -104,17 +141,49 @@ html.theme-transition *::after {
 .theme-bg { background: var(--bg-primary); }
 .theme-bg-secondary { background: var(--bg-secondary); }
 .theme-bg-card { background: var(--bg-card); }
+.theme-bg-elevated { background: var(--bg-elevated); }
 .theme-bg-hover:hover { background: var(--bg-hover); }
+.theme-bg-active { background: var(--bg-active); }
 .theme-border { border-color: var(--border); }
+.theme-border-strong { border-color: var(--border-strong); }
 .theme-text { color: var(--text-primary); }
 .theme-text-secondary { color: var(--text-secondary); }
 .theme-text-muted { color: var(--text-muted); }
+
+/* Glass card */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+.glass-card-hover:hover {
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Gradient accent */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-bg {
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+}
+.gradient-border {
+  border-image: linear-gradient(135deg, var(--gradient-from), var(--gradient-to)) 1;
+}
 
 /* Input styling */
 .theme-input {
   background: var(--bg-card);
   color: var(--text-primary);
   border-color: var(--border);
+  border-radius: 0.75rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .theme-input::placeholder {
   color: var(--text-muted);
@@ -131,15 +200,103 @@ html.theme-transition *::after {
 }
 
 /* ============================================
+   Modern card styles
+   ============================================ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.card-interactive:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.card-glow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Stat card */
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+.stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   Responsive page structure
+   ============================================ */
+.page-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+@media (min-width: 768px) {
+  .page-header {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.page-content {
+  padding: 0.75rem;
+  padding-bottom: calc(5rem + var(--sai-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .page-content {
+    padding: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* ============================================
+   Bottom navigation (mobile)
+   ============================================ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: calc(4rem + var(--sai-bottom, 0px));
+  padding-bottom: var(--sai-bottom, 0px);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+@media (min-width: 768px) {
+  .bottom-nav { display: none; }
+}
+
+/* ============================================
    Light theme — Tailwind class overrides
    ============================================ */
 .light .bg-gray-950 { background: var(--bg-primary); }
-.light .bg-gray-950\/95 { background: rgba(248,249,252,0.97); }
+.light .bg-gray-950\/95 { background: rgba(246,248,251,0.97); }
 .light .bg-gray-900 { background: var(--bg-secondary); }
 .light .bg-gray-900\/50 { background: rgba(255,255,255,0.85); }
 .light .bg-gray-900\/80 { background: rgba(255,255,255,0.92); }
-.light .bg-gray-800 { background: #e5e7f0; }
-.light .bg-gray-800\/50 { background: rgba(229,231,240,0.5); }
+.light .bg-gray-800 { background: #e5e8f0; }
+.light .bg-gray-800\/50 { background: rgba(229,232,240,0.5); }
 .light .border-gray-800 { border-color: var(--border); }
 .light .border-gray-700 { border-color: #d1d5e4; }
 .light .text-white { color: var(--text-primary); }
@@ -150,7 +307,6 @@ html.theme-transition *::after {
 .light .text-green-400 { color: #16a34a; }
 .light .text-green-200 { color: #15803d; }
 
-/* Light — brand color buttons */
 .light .bg-emerald-900\/30 { background: #dcfce7; color: #166534; }
 .light .bg-amber-900\/30 { background: #fef9c3; color: #854d0e; }
 .light .bg-red-900\/30 { background: #fee2e2; color: #991b1b; }
@@ -162,16 +318,13 @@ html.theme-transition *::after {
 .light .bg-cyan-900\/50 { background: var(--accent-bg); border-color: #a5f3fc !important; }
 .light .bg-purple-900\/50 { background: var(--primary-bg); border-color: #c4b5fd !important; }
 .light .bg-purple-600\/30 { background: var(--primary-bg); }
-.light .text-purple-300 { color: var(--primary); }
 .light .border-purple-500\/30 { border-color: rgba(99,102,241,0.2); }
 .light .border-purple-700\/50 { border-color: rgba(99,102,241,0.25) !important; }
 .light .border-cyan-700\/50 { border-color: rgba(8,145,178,0.25) !important; }
 
-/* Light — hover & tables */
-.light .hover\:bg-gray-700:hover { background: #e5e7f0; }
+.light .hover\:bg-gray-700:hover { background: #e5e8f0; }
 .light .hover\:bg-gray-900\/50:hover { background: rgba(0,0,0,0.03); }
 
-/* Light — inputs & forms */
 .light input, .light textarea, .light select {
   background: #ffffff !important;
   color: var(--text-primary) !important;
@@ -186,14 +339,13 @@ html.theme-transition *::after {
   box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
-/* Light — alert banner */
 .light .bg-red-950\/80 { background: #fef2f2; border-color: #fca5a5 !important; }
 .light .bg-red-950\/80 .text-red-400 { color: #dc2626; }
 .light .bg-red-900\/50 { background: #fee2e2; border-color: #fca5a5; }
 .light .bg-amber-900\/50 { background: #fef3c7; border-color: #fcd34d; }
 
 /* ============================================
-   iPhone theme classes (ใช้ CSS variables)
+   iPhone theme classes
    ============================================ */
 .iphone-frame {
   background-color: var(--iphone-frame);
@@ -226,18 +378,44 @@ html.theme-transition *::after {
 .iphone-time { color: var(--iphone-time-text); }
 .iphone-history { background-color: var(--iphone-history-bg); }
 .iphone-history-card { background-color: var(--iphone-history-card); }
-.iphone-home {
-  background-color: var(--iphone-home-bg);
-}
-.iphone-home-bar {
-  background-color: var(--iphone-home-bar);
-}
+.iphone-home { background-color: var(--iphone-home-bg); }
+.iphone-home-bar { background-color: var(--iphone-home-bar); }
 
 /* ============================================
    Scrollbar
    ============================================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-.dark ::-webkit-scrollbar-thumb { background: #252f45; border-radius: 3px; }
-.light ::-webkit-scrollbar-thumb { background: #d1d5e4; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+.light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
+
+/* ============================================
+   Utility
+   ============================================ */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Tap highlight for mobile */
+@media (hover: none) {
+  button, a { -webkit-tap-highlight-color: rgba(99,102,241,0.1); }
+}

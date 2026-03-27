@@ -140,8 +140,8 @@ export default function KMPage() {
   return (
     <div className="min-h-screen theme-bg theme-text">
       {/* Header */}
-      <header className="border-b theme-border px-4 py-3 sticky top-0 theme-bg z-10" style={{ background: "var(--bg-primary)" }}>
-        <div className="flex items-center gap-3 pl-10 md:pl-0 flex-wrap">
+      <header className="border-b theme-border px-3 md:px-6 py-3 sticky top-0 theme-bg z-10" style={{ background: "var(--bg-primary)" }}>
+        <div className="flex items-center gap-3 flex-wrap">
           <div>
             <h1 className="text-base font-bold flex items-center gap-2">
               📚 Knowledge Base
@@ -162,7 +162,7 @@ export default function KMPage() {
         </div>
       </header>
 
-      <div className="p-4 max-w-6xl mx-auto">
+      <div className="p-3 md:p-6 pb-24 md:pb-6 max-w-7xl mx-auto">
         {/* Filter + Search */}
         <div className="flex gap-2 mb-4 flex-wrap items-center">
           <input

@@ -17,24 +17,35 @@ interface NavGroup {
   items: NavItem[];
 }
 
+// Bottom tab bar items (mobile — 5 items max)
+const BOTTOM_TABS: NavItem[] = [
+  { href: "/", icon: "📊", label: "หน้าหลัก" },
+  { href: "/chat", icon: "💬", label: "แชท" },
+  { href: "/crm", icon: "👥", label: "CRM" },
+  { href: "/kpi", icon: "📈", label: "KPI" },
+];
+
+// Full navigation groups
 const NAV_GROUPS: NavGroup[] = [
   {
     items: [
-      { href: "/chat", icon: "🗨️", label: "แชท" },
-      { href: "/inbox", icon: "💬", label: "Inbox" },
       { href: "/", icon: "📊", label: "Dashboard" },
+      { href: "/chat", icon: "💬", label: "แชท" },
+      { href: "/inbox", icon: "📥", label: "Inbox" },
       { href: "/crm", icon: "👥", label: "CRM" },
       { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
       { href: "/kpi", icon: "📈", label: "KPI" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
       { href: "/costs", icon: "💰", label: "AI Cost" },
-      { href: "/km", icon: "📚", label: "Knowledge Base" },
+      { href: "/km", icon: "📚", label: "Knowledge" },
     ],
   },
   {
     groupLabel: "เชื่อมต่อ",
     items: [
-      { href: "/config", icon: "🔗", label: "ช่องทาง" },
+      { href: "/connections", icon: "🔗", label: "ช่องทาง" },
+      { href: "/bot-config", icon: "🤖", label: "บอท" },
+      { href: "/templates", icon: "📝", label: "Templates" },
     ],
   },
   {
@@ -42,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/settings", icon: "⚙️", label: "ตั้งค่า" },
       { href: "/team", icon: "👔", label: "ทีมงาน" },
+      { href: "/tasks", icon: "📋", label: "งาน" },
     ],
   },
   {
@@ -52,47 +64,51 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-function NavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => void }) {
+function isActivePath(pathname: string, href: string) {
+  if (href === "/") return pathname === "/dashboard" || pathname === "/";
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
+/* ──────────────────────────────────────────
+   Desktop Sidebar Nav Link
+   ────────────────────────────────────────── */
+function SidebarNavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => void }) {
   const pathname = usePathname();
-  // Match exact for /dashboard and /inbox, prefix for others
-  const isActive =
-    href === "/"
-      ? pathname === "/dashboard" || pathname === "/"
-      : href === "/inbox"
-      ? pathname === "/inbox" || pathname.startsWith("/inbox/")
-      : href === "/chat"
-      ? pathname === "/chat" || pathname.startsWith("/chat/")
-      : pathname.startsWith(href);
+  const active = isActivePath(pathname, href);
 
   return (
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center gap-3 py-2 px-3 rounded-lg text-sm transition-all ${
-        isActive
-          ? "bg-indigo-900/50 text-indigo-400 font-medium"
-          : "theme-text-secondary hover:theme-bg-hover hover:theme-text"
+      className={`flex items-center gap-3 py-2.5 px-3 rounded-xl text-[13px] transition-all duration-150 ${
+        active
+          ? "bg-gradient-to-r from-indigo-600/20 to-cyan-600/10 text-indigo-400 font-semibold shadow-sm"
+          : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
       }`}
     >
-      <span className="text-base leading-none">{icon}</span>
-      <span>{label}</span>
+      <span className="text-base leading-none w-5 text-center">{icon}</span>
+      <span className="truncate">{label}</span>
+      {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400" />}
     </Link>
   );
 }
 
-function UserSection() {
+/* ──────────────────────────────────────────
+   User Section
+   ────────────────────────────────────────── */
+function UserSection({ compact = false }: { compact?: boolean }) {
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
 
   if (status === "loading") {
-    return <div className="w-full h-9 rounded-lg theme-bg-card animate-pulse" />;
+    return <div className="w-full h-10 rounded-xl animate-pulse" style={{ background: "var(--bg-hover)" }} />;
   }
 
   if (!session) {
     return (
       <button
         onClick={() => signIn("google")}
-        className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition font-medium text-center"
+        className="w-full px-4 py-2.5 gradient-bg text-white text-sm rounded-xl transition font-medium text-center hover:opacity-90"
       >
         เข้าสู่ระบบ
       </button>
@@ -108,43 +124,45 @@ function UserSection() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:theme-bg-hover transition"
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition"
+        style={{ background: open ? "var(--bg-hover)" : "transparent" }}
       >
         {user?.image ? (
-          <img
-            src={user.image}
-            alt={user.name || ""}
-            className="w-7 h-7 rounded-full object-cover border theme-border shrink-0"
-          />
+          <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/20 shrink-0" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+          <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-xs font-bold text-white shrink-0">
             {initials}
           </div>
         )}
-        <div className="flex-1 text-left min-w-0">
-          <p className="text-xs theme-text truncate font-medium">{user?.name || user?.email}</p>
-          <p className="text-[10px] theme-text-muted truncate">{user?.email}</p>
-        </div>
-        <span className="theme-text-muted text-xs shrink-0">{open ? "▲" : "▼"}</span>
+        {!compact && (
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{user?.name || user?.email}</p>
+            <p className="text-[10px] truncate" style={{ color: "var(--text-muted)" }}>{user?.email}</p>
+          </div>
+        )}
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full left-0 right-0 mb-1 theme-bg-secondary border theme-border rounded-xl shadow-xl z-50 overflow-hidden">
-            <div className="px-3 py-2.5 border-b theme-border">
-              <p className="text-xs font-medium theme-text truncate">{user?.name || "ผู้ใช้"}</p>
-              <p className="text-[11px] theme-text-secondary truncate">{user?.email}</p>
-              <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 rounded-full">
+          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border overflow-hidden z-50 animate-scale-in"
+            style={{ background: "var(--bg-elevated)", borderColor: "var(--border)" }}
+          >
+            <div className="px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+              <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{user?.name || "ผู้ใช้"}</p>
+              <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-secondary)" }}>{user?.email}</p>
+              <span className="inline-block mt-1.5 text-[10px] px-2.5 py-0.5 rounded-full font-medium gradient-bg text-white">
                 {(user as any)?.plan === "pro" ? "Pro" : "Free"}
               </span>
             </div>
+            <Link href="/settings" onClick={() => setOpen(false)}
+              className="block w-full text-left px-4 py-2.5 text-sm transition hover:bg-[var(--bg-hover)]"
+              style={{ color: "var(--text-secondary)" }}>
+              ⚙️ ตั้งค่า
+            </Link>
             <button
-              onClick={() => {
-                setOpen(false);
-                signOut({ callbackUrl: "/login" });
-              }}
-              className="w-full text-left px-3 py-2.5 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
+              onClick={() => { setOpen(false); signOut({ callbackUrl: "/login" }); }}
+              className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/30 transition"
             >
               ออกจากระบบ
             </button>
@@ -155,6 +173,9 @@ function UserSection() {
   );
 }
 
+/* ──────────────────────────────────────────
+   Rebuild Button
+   ────────────────────────────────────────── */
 function RebuildButton() {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -162,32 +183,25 @@ function RebuildButton() {
   const handleRebuild = useCallback(async () => {
     if (loading) return;
     setLoading(true);
-    setLogs(["🔄 เริ่ม Rebuild..."]);
+    setLogs(["เริ่ม Rebuild..."]);
     try {
       const res = await fetch("/dashboard/api/rebuild", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
         const r = data.results;
         setLogs([
-          `🗑️ Clean: ลบข้อมูลเก่า`,
-          `📁 Groups: ${r.groups_meta} กลุ่ม`,
-          `👥 Customers: ${r.customers} ลูกค้า`,
-          `📊 Analytics: ${r.chat_analytics} รายการ`,
-          `🧠 Skills: ${r.user_skills} คน`,
-          `───────────`,
-          `💬 Messages: ${r.total_messages}`,
-          `📁 Groups: ${r.total_groups}`,
-          `👥 Customers: ${r.total_customers}`,
-          `📊 Analytics: ${r.total_analytics}`,
-          `⏱️ ${r.time_ms}ms`,
-          `✅ เสร็จ! กำลัง reload...`,
+          `Groups: ${r.groups_meta}`,
+          `Customers: ${r.customers}`,
+          `Analytics: ${r.chat_analytics}`,
+          `Skills: ${r.user_skills}`,
+          `${r.time_ms}ms — reload...`,
         ]);
-        setTimeout(() => window.location.reload(), 3000);
+        setTimeout(() => window.location.reload(), 2000);
       } else {
-        setLogs((prev) => [...prev, `❌ ${data.error}`]);
+        setLogs([`Error: ${data.error}`]);
       }
     } catch {
-      setLogs((prev) => [...prev, "❌ Error"]);
+      setLogs(["Error"]);
     } finally {
       setLoading(false);
     }
@@ -198,19 +212,25 @@ function RebuildButton() {
       <button
         onClick={handleRebuild}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition bg-amber-900/30 text-amber-400 border border-amber-800/30 hover:bg-amber-800/40 disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded-xl transition disabled:opacity-50"
+        style={{
+          background: "rgba(245,158,11,0.1)",
+          color: "rgb(245,158,11)",
+          border: "1px solid rgba(245,158,11,0.15)",
+        }}
       >
         {loading ? (
           <>
             <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-            กำลัง Rebuild...
+            Rebuild...
           </>
         ) : (
-          <>🔄 Rebuild Data</>
+          "🔄 Rebuild Data"
         )}
       </button>
       {logs.length > 0 && (
-        <div className="mt-1.5 px-2 py-1.5 bg-black/30 rounded-lg text-[9px] font-mono theme-text-muted space-y-0.5 max-h-40 overflow-y-auto">
+        <div className="mt-1.5 px-2.5 py-2 rounded-lg text-[10px] font-mono space-y-0.5 max-h-32 overflow-y-auto"
+          style={{ background: "var(--bg-primary)", color: "var(--text-muted)" }}>
           {logs.map((l, i) => <p key={i}>{l}</p>)}
         </div>
       )}
@@ -218,100 +238,182 @@ function RebuildButton() {
   );
 }
 
-export default function Sidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+/* ──────────────────────────────────────────
+   Mobile Bottom Tab Bar
+   ────────────────────────────────────────── */
+function BottomTabBar({ onMorePress }: { onMorePress: () => void }) {
+  const pathname = usePathname();
 
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-4 py-4 border-b theme-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-xl flex items-center justify-center text-sm shadow-lg shadow-indigo-500/20 shrink-0">
-            💬
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold theme-text leading-tight">OpenClaw Mini CRM</h1>
-            <p className="text-[10px] theme-text-muted leading-tight">AI Chat Intelligence</p>
-          </div>
-        </div>
+  return (
+    <nav className="bottom-nav md:hidden">
+      <div className="h-16 flex items-center justify-around px-2">
+        {BOTTOM_TABS.map((tab) => {
+          const active = isActivePath(pathname, tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`flex flex-col items-center justify-center gap-0.5 w-16 py-1 rounded-xl transition-all ${
+                active ? "text-indigo-400" : "text-[var(--text-muted)]"
+              }`}
+            >
+              <span className={`text-xl leading-none transition-transform ${active ? "scale-110" : ""}`}>{tab.icon}</span>
+              <span className={`text-[10px] leading-tight ${active ? "font-semibold" : ""}`}>{tab.label}</span>
+              {active && <span className="w-1 h-1 rounded-full bg-indigo-400 mt-0.5" />}
+            </Link>
+          );
+        })}
+        {/* More button */}
+        <button
+          onClick={onMorePress}
+          className="flex flex-col items-center justify-center gap-0.5 w-16 py-1 rounded-xl text-[var(--text-muted)]"
+        >
+          <span className="text-xl leading-none">☰</span>
+          <span className="text-[10px] leading-tight">เพิ่มเติม</span>
+        </button>
       </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-        {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className={gi > 0 ? "mt-4" : ""}>
-            {group.groupLabel && (
-              <p className="text-[11px] theme-text-muted uppercase tracking-wider px-3 mb-1.5 mt-1">
-                {group.groupLabel}
-              </p>
-            )}
-            {group.items.map((item) => (
-              <NavLink
-                key={item.href}
-                {...item}
-                onClick={() => setMobileOpen(false)}
-              />
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      {/* Bottom: Rebuild + Theme + User */}
-      <div className="px-3 pb-3 pt-2 border-t theme-border space-y-2">
-        <RebuildButton />
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] theme-text-muted">Theme</span>
-          <ThemeToggle />
-        </div>
-        <UserSection />
-      </div>
-    </div>
+    </nav>
   );
+}
+
+/* ──────────────────────────────────────────
+   Mobile "More" Drawer (slides up from bottom)
+   ────────────────────────────────────────── */
+function MoreDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 theme-bg border-r theme-border h-screen sticky top-0 overflow-hidden">
-        {sidebarContent}
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden" onClick={onClose} />
+
+      {/* Drawer */}
+      <div className="fixed bottom-0 left-0 right-0 z-[60] md:hidden animate-slide-up"
+        style={{ maxHeight: "85dvh" }}>
+        <div className="rounded-t-2xl overflow-hidden" style={{ background: "var(--bg-secondary)" }}>
+          {/* Handle */}
+          <div className="flex justify-center py-3">
+            <div className="w-10 h-1 rounded-full" style={{ background: "var(--border-strong)" }} />
+          </div>
+
+          {/* Nav items */}
+          <nav className="px-4 pb-4 overflow-y-auto" style={{ maxHeight: "65dvh" }}>
+            {NAV_GROUPS.map((group, gi) => (
+              <div key={gi} className={gi > 0 ? "mt-3 pt-3 border-t" : ""} style={{ borderColor: "var(--border)" }}>
+                {group.groupLabel && (
+                  <p className="text-[11px] uppercase tracking-wider px-2 mb-2 font-medium"
+                    style={{ color: "var(--text-muted)" }}>
+                    {group.groupLabel}
+                  </p>
+                )}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {group.items.map((item) => (
+                    <MoreDrawerItem key={item.href} {...item} onClick={onClose} />
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Rebuild + Theme + User */}
+            <div className="mt-4 pt-4 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
+              <RebuildButton />
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Theme</span>
+                <ThemeToggle />
+              </div>
+              <UserSection />
+            </div>
+          </nav>
+
+          {/* Safe area */}
+          <div style={{ height: "var(--sai-bottom, 0px)" }} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function MoreDrawerItem({ href, icon, label, onClick }: NavItem & { onClick: () => void }) {
+  const pathname = usePathname();
+  const active = isActivePath(pathname, href);
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition ${
+        active
+          ? "bg-indigo-600/15 text-indigo-400"
+          : "hover:bg-[var(--bg-hover)]"
+      }`}
+      style={{ color: active ? undefined : "var(--text-secondary)" }}
+    >
+      <span className="text-2xl leading-none">{icon}</span>
+      <span className={`text-[11px] ${active ? "font-semibold" : ""}`}>{label}</span>
+    </Link>
+  );
+}
+
+/* ──────────────────────────────────────────
+   Main Sidebar Export
+   ────────────────────────────────────────── */
+export default function Sidebar() {
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  return (
+    <>
+      {/* ── Desktop Sidebar ── */}
+      <aside className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 overflow-hidden border-r"
+        style={{ background: "var(--bg-secondary)", borderColor: "var(--border)" }}>
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="px-4 py-4 border-b" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-lg shadow-lg shrink-0"
+                style={{ boxShadow: "0 4px 12px rgba(99,102,241,0.3)" }}>
+                💬
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold leading-tight" style={{ color: "var(--text-primary)" }}>OpenClaw</h1>
+                <p className="text-[10px] leading-tight" style={{ color: "var(--text-muted)" }}>Mini CRM</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 no-scrollbar">
+            {NAV_GROUPS.map((group, gi) => (
+              <div key={gi} className={gi > 0 ? "mt-5" : ""}>
+                {group.groupLabel && (
+                  <p className="text-[10px] uppercase tracking-widest px-3 mb-2 font-semibold"
+                    style={{ color: "var(--text-muted)" }}>
+                    {group.groupLabel}
+                  </p>
+                )}
+                {group.items.map((item) => (
+                  <SidebarNavLink key={item.href} {...item} />
+                ))}
+              </div>
+            ))}
+          </nav>
+
+          {/* Bottom */}
+          <div className="px-3 pb-3 pt-2 border-t space-y-2.5" style={{ borderColor: "var(--border)" }}>
+            <RebuildButton />
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>Theme</span>
+              <ThemeToggle />
+            </div>
+            <UserSection />
+          </div>
+        </div>
       </aside>
 
-      {/* Mobile: hamburger button */}
-      <button
-        className="md:hidden fixed top-3 left-3 z-50 w-9 h-9 theme-bg-secondary border theme-border rounded-lg flex items-center justify-center theme-text-secondary hover:theme-bg-hover transition shadow-lg"
-        onClick={() => setMobileOpen(true)}
-        aria-label="เปิดเมนู"
-      >
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <line x1="2" y1="4.5" x2="16" y2="4.5" />
-          <line x1="2" y1="9" x2="16" y2="9" />
-          <line x1="2" y1="13.5" x2="16" y2="13.5" />
-        </svg>
-      </button>
+      {/* ── Mobile Bottom Tab Bar ── */}
+      <BottomTabBar onMorePress={() => setMoreOpen(true)} />
 
-      {/* Mobile: backdrop */}
-      {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile: slide-in sidebar */}
-      <aside
-        className={`md:hidden fixed top-0 left-0 z-50 h-full w-60 theme-bg border-r theme-border transform transition-transform duration-200 ease-in-out ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Close button */}
-        <button
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center theme-text-secondary hover:theme-text"
-          onClick={() => setMobileOpen(false)}
-          aria-label="ปิดเมนู"
-        >
-          ✕
-        </button>
-        {sidebarContent}
-      </aside>
+      {/* ── Mobile More Drawer ── */}
+      <MoreDrawer open={moreOpen} onClose={() => setMoreOpen(false)} />
     </>
   );
 }
