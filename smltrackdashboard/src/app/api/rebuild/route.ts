@@ -3,98 +3,122 @@ import { getDB } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 
+function isStaffName(name: string | null) {
+  return (name || "").toUpperCase().startsWith("SML");
+}
+
 export async function POST() {
   const t0 = Date.now();
   try {
     const db = await getDB();
     const results: Record<string, any> = {};
 
-    // 1. Rebuild groups_meta จาก messages
+    // === 1. Rebuild groups_meta ===
     const sourceIds = await db.collection("messages").distinct("sourceId");
     let groupsUpdated = 0;
 
     for (const sid of sourceIds) {
       if (!sid) continue;
-      const msgs = await db.collection("messages")
-        .find({ sourceId: sid })
-        .sort({ createdAt: -1 })
-        .limit(1)
-        .toArray();
-
+      const lastMsg = await db.collection("messages")
+        .findOne({ sourceId: sid }, { sort: { createdAt: -1 }, projection: { embedding: 0 } });
       const allNames = await db.collection("messages").distinct("userName", { sourceId: sid });
       const count = await db.collection("messages").countDocuments({ sourceId: sid });
-      const lastMsg = msgs[0];
       const platform = lastMsg?.platform || "line";
       const sourceType = sid.startsWith("U") ? "user" : sid.startsWith("C") ? "group" : "unknown";
-
-      // สร้างชื่อกลุ่มจากชื่อสมาชิก
       const groupName = allNames.filter(Boolean).join(", ") || sid;
 
       await db.collection("groups_meta").updateOne(
         { sourceId: sid },
-        {
-          $set: {
-            sourceId: sid,
-            groupName,
-            sourceType,
-            platform,
-            messageCount: count,
-            lastMessageAt: lastMsg?.createdAt || null,
-          },
-        },
+        { $set: { sourceId: sid, groupName, sourceType, platform, messageCount: count, lastMessageAt: lastMsg?.createdAt || null } },
         { upsert: true }
       );
       groupsUpdated++;
     }
     results.groups_meta = groupsUpdated;
 
-    // 2. Rebuild customers จาก user sourceIds
-    const userSourceIds = sourceIds.filter((s: string) => s?.startsWith("U"));
+    // === 2. Rebuild customers — ทุก sourceId สร้าง customer (ไม่ใช่แค่ U-type) ===
     let customersUpdated = 0;
+    for (const sid of sourceIds) {
+      if (!sid) continue;
+      const existing = await db.collection("customers").findOne({
+        $or: [{ sourceId: sid }, { rooms: sid }, { "platformIds.id": sid }],
+      });
+      if (existing) continue;
 
-    for (const sid of userSourceIds) {
       const lastMsg = await db.collection("messages")
-        .findOne({ sourceId: sid }, { sort: { createdAt: -1 } });
-
+        .findOne({ sourceId: sid }, { sort: { createdAt: -1 }, projection: { embedding: 0 } });
       const names = await db.collection("messages").distinct("userName", { sourceId: sid });
-      const name = names.find((n: string) => n && !n.startsWith("SML")) || names[0] || sid;
+      // ใช้ชื่อที่ไม่ใช่ staff (SML)
+      const customerName = names.find((n: string) => n && !isStaffName(n)) || names[0] || sid;
+      const platform = lastMsg?.platform || "line";
 
-      const existing = await db.collection("customers").findOne({ $or: [{ sourceId: sid }, { "rooms": sid }] });
-      if (!existing) {
-        await db.collection("customers").insertOne({
-          name,
-          firstName: name.split(" ")[0] || "",
-          lastName: name.split(" ").slice(1).join(" ") || "",
-          platformIds: [{ platform: lastMsg?.platform || "line", id: sid }],
-          rooms: [sid],
-          tags: [],
-          pipeline: "new",
-          source: lastMsg?.platform || "line",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        customersUpdated++;
-      }
+      await db.collection("customers").insertOne({
+        name: customerName,
+        firstName: customerName.split(" ")[0] || "",
+        lastName: customerName.split(" ").slice(1).join(" ") || "",
+        sourceId: sid,
+        platformIds: [{ platform, id: sid }],
+        rooms: [sid],
+        tags: [],
+        pipeline: "new",
+        source: platform,
+        assignedTo: null,
+        dealValue: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      customersUpdated++;
     }
     results.customers = customersUpdated;
 
-    // 3. Rebuild chat_analytics — sentiment + purchase intent per sourceId
+    // === 3. Rebuild chat_analytics — คำนวณจาก messages โดยตรง ===
     let analyticsUpdated = 0;
-    const userSkills = await db.collection("user_skills").find().toArray();
+    for (const sid of sourceIds) {
+      if (!sid) continue;
+      const msgs = await db.collection("messages")
+        .find({ sourceId: sid }, { projection: { role: 1, userName: 1, content: 1, createdAt: 1 } })
+        .sort({ createdAt: 1 })
+        .toArray();
 
-    for (const skill of userSkills) {
-      if (!skill.sourceId) continue;
+      if (msgs.length === 0) continue;
+
+      // นับข้อความ customer vs staff
+      const customerMsgs = msgs.filter((m) => m.role === "user" && !isStaffName(m.userName));
+      const staffMsgs = msgs.filter((m) => m.role === "user" && isStaffName(m.userName));
+      const botMsgs = msgs.filter((m) => m.role === "assistant");
+
+      // Simple sentiment — ดูจากจำนวนข้อความและ response pattern
+      const hasRecentActivity = msgs.some((m) => {
+        const d = new Date(m.createdAt);
+        return Date.now() - d.getTime() < 7 * 24 * 60 * 60 * 1000; // 7 วัน
+      });
+
+      const lastCustomerMsg = customerMsgs[customerMsgs.length - 1];
+      const lastStaffMsg = staffMsgs[staffMsgs.length - 1];
+
+      // Simple purchase intent based on keywords
+      const allContent = customerMsgs.map((m) => m.content || "").join(" ").toLowerCase();
+      const buyKeywords = ["ราคา", "สั่ง", "ซื้อ", "โอน", "จ่าย", "ผ่อน", "ส่ง", "สนใจ", "เท่าไหร่"];
+      const buyScore = buyKeywords.filter((k) => allContent.includes(k)).length;
+
+      const purchaseLevel = buyScore >= 3 ? "red" : buyScore >= 1 ? "yellow" : "green";
+      const sentimentLevel = hasRecentActivity ? "green" : "yellow";
+
       await db.collection("chat_analytics").updateOne(
-        { sourceId: skill.sourceId },
+        { sourceId: sid },
         {
           $set: {
-            sourceId: skill.sourceId,
-            sentiment: skill.sentiment || null,
-            customerSentiment: skill.customerSentiment || null,
-            staffSentiment: skill.staffSentiment || null,
-            overallSentiment: skill.overallSentiment || skill.sentiment || null,
-            purchaseIntent: skill.purchaseIntent || null,
-            tags: skill.tags || [],
+            sourceId: sid,
+            sentiment: { score: sentimentLevel === "green" ? 3 : 2, level: sentimentLevel, reason: sentimentLevel === "green" ? "มี activity ล่าสุด" : "ไม่มี activity 7 วัน" },
+            overallSentiment: { score: sentimentLevel === "green" ? 3 : 2, level: sentimentLevel, reason: sentimentLevel === "green" ? "ปกติ" : "ควรติดตาม" },
+            customerSentiment: { score: 3, level: sentimentLevel, reason: `${customerMsgs.length} ข้อความ` },
+            staffSentiment: { score: 3, level: "green", reason: `${staffMsgs.length} ข้อความ` },
+            purchaseIntent: { score: buyScore, level: purchaseLevel, reason: buyScore >= 3 ? "สนใจซื้อ!" : buyScore >= 1 ? "เริ่มสนใจ" : "ไม่สนใจ" },
+            messageCount: msgs.length,
+            customerMessageCount: customerMsgs.length,
+            staffMessageCount: staffMsgs.length,
+            botMessageCount: botMsgs.length,
+            lastActivity: msgs[msgs.length - 1]?.createdAt || null,
             updatedAt: new Date(),
           },
         },
@@ -104,16 +128,48 @@ export async function POST() {
     }
     results.chat_analytics = analyticsUpdated;
 
-    // 4. Summary
+    // === 4. Rebuild user_skills (per-user analysis) ===
+    let skillsUpdated = 0;
+    const allUserNames = await db.collection("messages").distinct("userName");
+    for (const userName of allUserNames) {
+      if (!userName) continue;
+      const userMsgs = await db.collection("messages")
+        .find({ userName }, { projection: { sourceId: 1, content: 1, createdAt: 1, role: 1 } })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+
+      if (userMsgs.length === 0) continue;
+      const userSourceIds = [...new Set(userMsgs.map((m) => m.sourceId))];
+
+      await db.collection("user_skills").updateOne(
+        { userName },
+        {
+          $set: {
+            userName,
+            isStaff: isStaffName(userName),
+            messageCount: userMsgs.length,
+            sourceIds: userSourceIds,
+            lastActivity: userMsgs[0]?.createdAt || null,
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+      skillsUpdated++;
+    }
+    results.user_skills = skillsUpdated;
+
+    // === Summary ===
     const tEnd = Date.now();
     results.time_ms = tEnd - t0;
     results.total_messages = await db.collection("messages").estimatedDocumentCount();
     results.total_groups = await db.collection("groups_meta").countDocuments();
     results.total_customers = await db.collection("customers").countDocuments();
     results.total_analytics = await db.collection("chat_analytics").countDocuments();
+    results.total_user_skills = await db.collection("user_skills").countDocuments();
 
     console.log(`[Rebuild] Done in ${results.time_ms}ms:`, JSON.stringify(results));
-
     return NextResponse.json({ ok: true, results });
   } catch (err: any) {
     console.error("[Rebuild] Error:", err.message);
