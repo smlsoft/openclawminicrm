@@ -14,6 +14,11 @@ export async function POST() {
     const results: Record<string, any> = {};
 
     // === 0. Clean derived data (keep messages + auth + ai_advice + ai_costs) ===
+    // Drop problematic indexes first to avoid duplicate key errors
+    await Promise.all([
+      db.collection("user_skills").dropIndexes().catch(() => {}),
+      db.collection("chat_analytics").dropIndexes().catch(() => {}),
+    ]);
     const cleaned = await Promise.all([
       db.collection("groups_meta").deleteMany({}),
       db.collection("customers").deleteMany({}),
