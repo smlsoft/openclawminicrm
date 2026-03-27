@@ -75,26 +75,31 @@ const STEPS: Step[] = [
     number: 5,
     icon: "📊",
     title: "เริ่มใช้งาน Dashboard",
-    summary: "ดูข้อมูล, วิเคราะห์, จัดการลูกค้า",
+    summary: "ดูข้อมูล, วิเคราะห์, จัดการลูกค้า, แจ้งเตือน real-time",
     details: [
-      "Dashboard: ดูแชท Real-time ทุก 5 วินาที กรองตาม sentiment",
-      "CRM: ดูประวัติลูกค้าทั้งหมด ค้นหา กรองตาม pipeline stage",
-      "KPI: ดู performance พนักงาน, อัตราปิดการขาย, ลูกค้าหลุด",
-      "น้องกุ้ง: ดู AI Advice วิเคราะห์ทุก 1 ชั่วโมง เรียงตาม priority",
-      "AI Cost: ดูค่าใช้จ่าย AI tokens แยก provider/feature",
-      "Knowledge: จัดการ KB สำหรับ AI ตอบคำถามลูกค้า",
+      "Dashboard: ดูแชท Real-time กรองตาม platform/sentiment/purchase intent",
+      "Chat: เปิดพร้อม 4 จอ LINE/FB/IG รวมที่เดียว ค้นหาได้",
+      "CRM: ดูประวัติลูกค้า Pipeline ครบ, รวมลูกค้าซ้ำข้าม platform",
+      "KPI: performance พนักงาน, อัตราปิดการขาย, ลูกค้าหลุด, revenue",
+      "แจ้งเตือน: Real-time SSE เฉพาะคนที่ดูแล Toast + เสียง + badge",
+      "น้องกุ้ง: AI Advice วิเคราะห์ทุก 1 ชั่วโมง เรียงตาม priority",
+      "Knowledge Base: จัดการ KB สินค้า โปรโมชั่น นโยบาย FAQ",
+      "Responsive: ใช้ได้ทุกอุปกรณ์ มือถือ/Tablet/Desktop",
     ],
     link: { label: "ไป Dashboard", href: "/" },
   },
 ];
 
 const FEATURES = [
-  { icon: "💬", title: "Multi-Channel", desc: "LINE · Facebook · Instagram รวมที่เดียว" },
-  { icon: "🧠", title: "AI วิเคราะห์", desc: "Sentiment · Purchase Intent · Auto Tags" },
-  { icon: "📈", title: "KPI & Analytics", desc: "Response time · Conversion · Pipeline" },
-  { icon: "🦐", title: "น้องกุ้ง Advisor", desc: "วิเคราะห์ธุรกิจ แจ้งเตือนทาง Telegram" },
-  { icon: "👥", title: "CRM", desc: "จัดการลูกค้า Pipeline รวมข้าม platform" },
-  { icon: "📚", title: "Knowledge Base", desc: "สอน AI ตอบคำถามจาก KB ของคุณ" },
+  { icon: "💬", title: "Multi-Channel Chat", desc: "LINE · Facebook · Instagram รวมที่เดียว เปิดได้ 4 จอพร้อมกัน" },
+  { icon: "🧠", title: "AI วิเคราะห์", desc: "Sentiment · Purchase Intent · Auto Tags อัตโนมัติ" },
+  { icon: "📈", title: "KPI & Analytics", desc: "Response time · Conversion · Pipeline · Revenue" },
+  { icon: "🦐", title: "น้องกุ้ง Advisor", desc: "AI วิเคราะห์ธุรกิจ แจ้งเตือน Telegram" },
+  { icon: "👥", title: "CRM อัตโนมัติ", desc: "จัดการลูกค้า Pipeline รวมข้าม platform" },
+  { icon: "📚", title: "Knowledge Base", desc: "สอน AI ตอบจาก KB ของร้าน" },
+  { icon: "🔔", title: "แจ้งเตือน Real-time", desc: "SSE stream · Toast · เสียง · Badge เฉพาะคนที่ดูแล" },
+  { icon: "🔀", title: "Merge ลูกค้าซ้ำ", desc: "หาลูกค้าซ้ำอัตโนมัติ รวมข้าม LINE/FB/IG" },
+  { icon: "📱", title: "Responsive", desc: "มือถือ Tablet Desktop ใช้ได้ทุกจอ" },
 ];
 
 function StepCard({ step, defaultOpen }: { step: Step; defaultOpen?: boolean }) {
@@ -211,7 +216,7 @@ export default function GuidePage() {
           </div>
 
           {/* Features grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 md:gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-2.5 md:gap-3 mb-6">
             {FEATURES.map((f) => (
               <div key={f.title} className="stat-card text-center">
                 <span className="text-2xl md:text-3xl block mb-1.5">{f.icon}</span>
