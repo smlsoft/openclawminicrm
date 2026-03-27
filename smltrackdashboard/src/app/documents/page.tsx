@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { MiniPieChart } from "@/components/charts";
+import { ChartCard } from "@/components/charts/ChartCard";
 
 // ─── Category Config ───
 const CATEGORIES: Record<string, { label: string; icon: string; group: string }> = {
@@ -190,6 +192,22 @@ export default function DocumentsPage() {
               <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>ยอดยืนยัน</p>
               <p className="text-lg font-bold gradient-text">{formatTHB(stats.totalConfirmedAmount)}</p>
             </div>
+          </div>
+        )}
+
+        {/* Group Donut Chart */}
+        {stats && stats.total > 0 && (
+          <div className="mb-5">
+            <ChartCard title="📊 สัดส่วนเอกสาร">
+              <MiniPieChart
+                data={Object.entries(GROUPS).map(([key, g]) => ({
+                  name: g.label,
+                  value: stats.byGroup?.[key] || 0,
+                }))}
+                colors={["#34d399", "#60a5fa", "#a78bfa"]}
+                size={160}
+              />
+            </ChartCard>
           </div>
         )}
 

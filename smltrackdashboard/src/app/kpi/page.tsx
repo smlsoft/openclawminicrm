@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { MiniBarChart } from "@/components/charts";
+import { ChartCard } from "@/components/charts/ChartCard";
+import { PIPELINE_COLORS as PIPELINE_HEX } from "@/components/charts/theme";
 
 interface ScoreData { score: number; level: "green" | "yellow" | "red"; reason?: string; }
 interface ResponseTime { avgMinutes: number; level: "green" | "yellow" | "red"; totalResponses: number; fastCount: number; mediumCount: number; slowCount: number; }
@@ -196,6 +199,48 @@ export default function KpiPage() {
               <p className="text-[11px] theme-text-secondary mt-1">{c.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Mini Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <ChartCard title="Pipeline ลูกค้า" subtitle="จำนวนลูกค้าแต่ละสถานะ">
+            <MiniBarChart
+              data={Object.entries(pipeline.counts)
+                .filter(([, v]) => v > 0)
+                .map(([k, v]) => ({ name: PIPELINE_LABELS[k] || k, value: v, key: k }))}
+              nameKey="name"
+              dataKey="value"
+              colors={Object.fromEntries(
+                Object.entries(PIPELINE_HEX).map(([k, hex]) => [PIPELINE_LABELS[k] || k, hex])
+              )}
+              height={220}
+              layout="vertical"
+            />
+          </ChartCard>
+          <ChartCard title="เวลาตอบกลับพนักงาน" subtitle="เวลาตอบกลับเฉลี่ย (นาที)">
+            <MiniBarChart
+              data={staffKpi
+                .filter((st) => st.responseTime.totalResponses > 0)
+                .sort((a, b) => b.responseTime.avgMinutes - a.responseTime.avgMinutes)
+                .map((st) => ({
+                  name: st.name.replace(/^SML\s*-?\s*/i, ""),
+                  value: Math.round(st.responseTime.avgMinutes),
+                  level: st.responseTime.level,
+                }))}
+              nameKey="name"
+              dataKey="value"
+              colors={Object.fromEntries(
+                staffKpi
+                  .filter((st) => st.responseTime.totalResponses > 0)
+                  .map((st) => [
+                    st.name.replace(/^SML\s*-?\s*/i, ""),
+                    st.responseTime.level === "red" ? "#f87171" : st.responseTime.level === "yellow" ? "#fbbf24" : "#34d399",
+                  ])
+              )}
+              height={200}
+              layout="vertical"
+            />
+          </ChartCard>
         </div>
 
         {/* Tabs */}

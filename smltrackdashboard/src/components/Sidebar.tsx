@@ -37,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/crm", icon: "👥", label: "CRM" },
       { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
       { href: "/kpi", icon: "📈", label: "KPI" },
+      { href: "/analytics", icon: "📊", label: "Analytics" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
       { href: "/payments", icon: "💸", label: "เงินเข้า" },
       { href: "/documents", icon: "📑", label: "เอกสาร" },

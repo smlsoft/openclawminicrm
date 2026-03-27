@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { MiniBarChart } from "@/components/charts";
+import { ChartCard } from "@/components/charts/ChartCard";
+import { PIPELINE_COLORS } from "@/components/charts/theme";
 
 interface Customer {
   _id: string;
@@ -159,6 +162,18 @@ export default function CrmPage() {
             </button>
           ))}
         </div>
+
+        {/* Pipeline Bar Chart */}
+        {stageCounts.some(s => s.count > 0) && (
+          <ChartCard title="📊 Pipeline">
+            <MiniBarChart
+              data={stageCounts.map(s => ({ name: s.label, value: s.count }))}
+              colors={Object.fromEntries(stageCounts.map(s => [s.label, PIPELINE_COLORS[s.key] || "#6b7280"]))}
+              height={180}
+              layout="vertical"
+            />
+          </ChartCard>
+        )}
 
         {/* Search + Filter */}
         <div className="flex items-center gap-3 flex-wrap">

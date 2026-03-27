@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { MiniLineChart } from "@/components/charts";
+import { ChartCard } from "@/components/charts/ChartCard";
 
 interface DailyCost { _id: string; totalTokens: number; totalCost: number; calls: number; }
 interface FeatureCost { _id: string; totalTokens: number; totalCost: number; calls: number; avgTokens: number; }
@@ -112,6 +114,17 @@ export default function CostsPage() {
             </div>
           ))}
         </div>
+
+        {/* Daily Cost Line Chart */}
+        {daily.length > 0 && (
+          <ChartCard title="📈 Token รายวัน" subtitle={`${daily.length} วันล่าสุด`}>
+            <MiniLineChart
+              data={daily.map(d => ({ name: d._id.substring(5), value: d.totalTokens }))}
+              height={180}
+              area={true}
+            />
+          </ChartCard>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Daily Chart */}

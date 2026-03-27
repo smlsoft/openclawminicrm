@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { MiniPieChart } from "@/components/charts";
+import { ChartCard } from "@/components/charts/ChartCard";
 
 interface Payment {
   _id: string;
@@ -144,6 +146,23 @@ export default function PaymentsPage() {
               <p className="text-lg font-bold gradient-text">{formatTHB(stats.monthAmount)}</p>
               <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{stats.monthCount} รายการ</p>
             </div>
+          </div>
+        )}
+
+        {/* Status Donut Chart */}
+        {stats && (stats.pending + stats.confirmed + stats.rejected) > 0 && (
+          <div className="mb-5">
+            <ChartCard title="📊 สถานะการชำระเงิน">
+              <MiniPieChart
+                data={[
+                  { name: "รอตรวจ", value: stats.pending },
+                  { name: "ยืนยัน", value: stats.confirmed },
+                  { name: "ปฏิเสธ", value: stats.rejected },
+                ]}
+                colors={["#fbbf24", "#34d399", "#f87171"]}
+                size={160}
+              />
+            </ChartCard>
           </div>
         )}
 
