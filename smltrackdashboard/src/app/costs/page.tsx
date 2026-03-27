@@ -19,6 +19,7 @@ interface CostData {
 }
 
 const FEATURE_LABELS: Record<string, string> = {
+  // Agent features
   "chat-reply": "💬 ตอบแชท",
   "chat-tools": "🔧 เรียก MCP",
   "light-ai": "⚡ AI เบา",
@@ -29,6 +30,20 @@ const FEATURE_LABELS: Record<string, string> = {
   "advisor-sentiment": "🦐 กุ้ง: Sentiment",
   "advisor-pipeline": "🦐 กุ้ง: Pipeline",
   "advisor-summary": "🦐 กุ้ง: สรุป",
+  // น้องกุ้ง 13 บทบาท
+  "problem-solver": "🔍 กุ้ง: Problem Solver",
+  "sales-hunter": "💰 กุ้ง: Sales Hunter",
+  "team-coaching": "👨‍🏫 กุ้ง: Team Coach",
+  "weekly-strategy": "📋 กุ้ง: Weekly Strategist",
+  "health-monitor": "❤️ กุ้ง: Health Monitor",
+  "payment-guardian": "💳 กุ้ง: Payment Guardian",
+  "order-tracker": "📦 กุ้ง: Order Tracker",
+  "re-engagement": "🔄 กุ้ง: Re-engagement",
+  "upsell-crosssell": "🎯 กุ้ง: Upsell/Cross-sell",
+  "daily-report": "📊 กุ้ง: Daily Report",
+  "lead-scorer": "🏆 กุ้ง: Lead Scorer",
+  "appointment-reminder": "📅 กุ้ง: Appointment",
+  "price-watcher": "📈 กุ้ง: Price Watcher",
 };
 
 function formatTokens(n: number) {
