@@ -2,205 +2,298 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>OpenClaw Mini CRM — AI Chat Intelligence</title>
   <meta name="description" content="ระบบ CRM อัจฉริยะ ฟรี 100% สำหรับ SMEs ไทย — LINE, Facebook, Instagram รวมจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า">
+  <meta name="theme-color" content="#070a12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="/dashboard/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { thai: ['IBM Plex Sans Thai', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'IBM Plex Sans Thai', sans-serif; }
-    .glow { box-shadow: 0 0 60px rgba(99, 102, 241, 0.15), 0 0 120px rgba(6, 182, 212, 0.08); }
-    .gradient-text { background: linear-gradient(135deg, #818cf8, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .card-hover { transition: all 0.3s; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
-    .fade-in { animation: fadeIn 0.8s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    body { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; }
+    .gradient-text { background: linear-gradient(135deg, #818cf8, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gradient-bg { background: linear-gradient(135deg, #6366f1, #06b6d4); }
+    .gradient-border { border-image: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(6,182,212,0.4)) 1; }
+    .glow { box-shadow: 0 0 80px rgba(99, 102, 241, 0.12), 0 0 160px rgba(6, 182, 212, 0.06); }
+    .glow-sm { box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15); }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1.25rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .glass { background: rgba(7,10,18,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes pulse-glow { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+    .anim-fade-up { animation: fadeUp 0.8s ease-out both; }
+    .anim-fade-up-d1 { animation: fadeUp 0.8s 0.1s ease-out both; }
+    .anim-fade-up-d2 { animation: fadeUp 0.8s 0.2s ease-out both; }
+    .anim-fade-up-d3 { animation: fadeUp 0.8s 0.3s ease-out both; }
+    .anim-fade-up-d4 { animation: fadeUp 0.8s 0.4s ease-out both; }
+    .anim-float { animation: float 4s ease-in-out infinite; }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Mobile touch */
+    @media (hover: none) { button, a { -webkit-tap-highlight-color: rgba(99,102,241,0.15); } }
   </style>
 </head>
-<body class="bg-[#0a0a0f] text-white min-h-screen">
+<body class="bg-[#070a12] text-white min-h-screen overflow-x-hidden">
 
-  <!-- Background -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-3xl"></div>
+  <!-- Background orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="absolute top-[10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] md:w-[900px] md:h-[900px] bg-indigo-500/[0.04] rounded-full blur-[120px]"></div>
+    <div class="absolute top-[60%] left-[20%] w-[400px] h-[400px] bg-cyan-500/[0.03] rounded-full blur-[100px]"></div>
+    <div class="absolute top-[40%] right-[10%] w-[300px] h-[300px] bg-purple-500/[0.02] rounded-full blur-[80px]"></div>
   </div>
 
-  <!-- Nav -->
-  <nav class="relative z-10 border-b border-white/5 backdrop-blur-xl">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-indigo-500/20">
-          🦐
+  <!-- ── Nav ── -->
+  <nav class="sticky top-0 z-50 glass border-b border-white/[0.04]">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5 group">
+        <div class="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-lg shadow-lg glow-sm transition-transform group-hover:scale-105">
+          💬
         </div>
-        <div>
-          <h1 class="text-lg font-bold">OpenClaw Mini CRM</h1>
-          <p class="text-[10px] text-gray-400 -mt-0.5">AI Chat Intelligence</p>
+        <div class="hidden sm:block">
+          <h1 class="text-sm font-bold leading-tight">OpenClaw</h1>
+          <p class="text-[10px] text-gray-500 leading-tight">Mini CRM</p>
         </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <a href="/dashboard/login" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-sm font-medium rounded-xl transition shadow-lg shadow-indigo-500/20">
-          เข้าสู่ระบบ
+      </a>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="https://github.com/smlsoft/openclawminicrm" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 hover:text-white transition rounded-lg hover:bg-white/5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="/dashboard/login" class="px-4 sm:px-5 py-2 sm:py-2.5 gradient-bg text-white text-sm font-medium rounded-xl transition hover:opacity-90 shadow-lg glow-sm">
+          เข้าใช้งาน
         </a>
       </div>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 pt-20 pb-16 text-center fade-in">
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-xs text-indigo-300 mb-6">
-      <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-      ฟรี 100% — ไม่มีค่าใช้จ่ายรายเดือน
+  <!-- ── Hero ── -->
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-12 md:pb-20 text-center">
+    <!-- Badge -->
+    <div class="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-300 mb-6 md:mb-8">
+      <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+      Open Source &middot; ฟรี 100% &middot; Self-hosted
     </div>
-    <h2 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
-      รวมทุกแชทในจอเดียว<br>
-      <span class="gradient-text">AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า</span>
+
+    <!-- Headline -->
+    <h2 class="anim-fade-up-d1 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] mb-5 md:mb-6">
+      <span class="block">รวมทุกแชทในจอเดียว</span>
+      <span class="gradient-text">AI ช่วยตอบ ช่วยขาย ช่วยจำ</span>
     </h2>
-    <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-      LINE · Facebook · Instagram — AI วิเคราะห์ทุกข้อความอัตโนมัติ
-      แนะนำคำตอบ ตอบแทนลูกค้า จำลูกค้าทุกคน เรียนรู้ตลอดเวลา
+
+    <p class="anim-fade-up-d2 text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
+      LINE &middot; Facebook &middot; Instagram รวมที่เดียว<br class="sm:hidden">
+      AI วิเคราะห์ทุกข้อความ แนะนำคำตอบ จำลูกค้าทุกคน
     </p>
-    <div class="flex items-center justify-center gap-4 flex-wrap">
-      <a href="/dashboard/login" class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition shadow-xl shadow-indigo-500/25 text-base">
+
+    <!-- CTA -->
+    <div class="anim-fade-up-d3 flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-10 md:mb-14">
+      <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
         เริ่มต้นใช้งาน — ฟรี
       </a>
-      <a href="/dashboard/login" class="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-xl transition text-base">
+      <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium rounded-xl transition text-sm sm:text-base">
         🦐 ทดลอง Demo
       </a>
     </div>
+
+    <!-- Platform pills -->
+    <div class="anim-fade-up-d4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/15 rounded-full text-xs text-green-400">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span> LINE OA
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/15 rounded-full text-xs text-blue-400">
+        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Facebook
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pink-500/10 border border-pink-500/15 rounded-full text-xs text-pink-400">
+        <span class="w-2 h-2 bg-pink-500 rounded-full"></span> Instagram
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 border border-sky-500/15 rounded-full text-xs text-sky-400">
+        <span class="w-2 h-2 bg-sky-500 rounded-full"></span> Telegram
+      </span>
+    </div>
   </section>
 
-  <!-- Platform badges -->
-  <section class="relative z-10 max-w-4xl mx-auto px-4 pb-16">
-    <div class="flex items-center justify-center gap-4 flex-wrap">
-      <div class="flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-green-800/30 rounded-xl">
-        <span class="text-lg">💚</span>
-        <span class="text-sm text-green-400 font-medium">LINE OA</span>
+  <!-- ── How it works ── -->
+  <section class="relative z-10 max-w-5xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+      <div class="reveal text-center p-6 md:p-8 card">
+        <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:0s">
+          📱
+        </div>
+        <h4 class="font-bold mb-2">1. เชื่อมช่องทาง</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ใส่ Token ของ LINE OA, Facebook, Instagram — เสร็จใน 5 นาที</p>
       </div>
-      <div class="flex items-center gap-2 px-4 py-2 bg-blue-900/20 border border-blue-800/30 rounded-xl">
-        <span class="text-lg">💙</span>
-        <span class="text-sm text-blue-400 font-medium">Facebook</span>
+      <div class="reveal text-center p-6 md:p-8 card">
+        <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:0.5s">
+          🤖
+        </div>
+        <h4 class="font-bold mb-2">2. AI เริ่มทำงาน</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">วิเคราะห์ sentiment, purchase intent, สร้าง CRM อัตโนมัติ</p>
       </div>
-      <div class="flex items-center gap-2 px-4 py-2 bg-pink-900/20 border border-pink-800/30 rounded-xl">
-        <span class="text-lg">💜</span>
-        <span class="text-sm text-pink-400 font-medium">Instagram</span>
-      </div>
-      <div class="flex items-center gap-2 px-4 py-2 bg-sky-900/20 border border-sky-800/30 rounded-xl">
-        <span class="text-lg">📱</span>
-        <span class="text-sm text-sky-400 font-medium">Telegram</span>
+      <div class="reveal text-center p-6 md:p-8 card">
+        <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:1s">
+          📊
+        </div>
+        <h4 class="font-bold mb-2">3. ดู Dashboard</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">KPI, ยอดขาย, ลูกค้าหลุด, AI advice — ทุกอย่างในจอเดียว</p>
       </div>
     </div>
   </section>
 
-  <!-- Features Grid -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 pb-20">
-    <h3 class="text-2xl font-bold text-center mb-12">ทุกอย่างที่ SMEs ต้องการ</h3>
-    <div class="grid md:grid-cols-3 gap-5">
+  <!-- ── Features Grid ── -->
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+    <div class="text-center mb-10 md:mb-14">
+      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">ทุกอย่างที่ SMEs ต้องการ</h3>
+      <p class="reveal text-sm md:text-base text-gray-400">ครบจบในระบบเดียว ไม่ต้องใช้หลายแอป</p>
+    </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6 glow">
-        <div class="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">🗨️</div>
-        <h4 class="text-lg font-semibold mb-2">Multi-Panel Chat</h4>
-        <p class="text-sm text-gray-400">เปิดได้ 4 จอพร้อมกัน LINE, Facebook, Instagram เรียงข้างกัน ไม่ต้องสลับแอป</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🗨️</div>
+        <h4 class="text-base font-bold mb-1.5">Multi-Panel Chat</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">เปิดได้ 4 จอพร้อมกัน LINE, Facebook, Instagram เรียงข้างกัน</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">🤖</div>
-        <h4 class="text-lg font-semibold mb-2">AI ตอบแทนอัตโนมัติ</h4>
-        <p class="text-sm text-gray-400">ไม่มีคนตอบ 5 นาที AI ตอบให้ ดึงข้อมูลจากฐานความรู้ร้าน ตอบแม่นยำ</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-cyan-500/10 border border-cyan-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🤖</div>
+        <h4 class="text-base font-bold mb-1.5">AI ตอบแทนอัตโนมัติ</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ไม่มีคนตอบ 5 นาที AI ตอบให้ ดึงจาก Knowledge Base</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">💡</div>
-        <h4 class="text-lg font-semibold mb-2">AI แนะนำคำตอบ</h4>
-        <p class="text-sm text-gray-400">กดปุ่มเดียว AI แนะนำ 2-3 คำตอบ พร้อมเหตุผล เลือก tone ได้</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-purple-500/10 border border-purple-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">💡</div>
+        <h4 class="text-base font-bold mb-1.5">AI แนะนำคำตอบ</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">กดปุ่มเดียว AI แนะนำ 2-3 คำตอบ พร้อมเหตุผล เลือก tone ได้</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">🦐</div>
-        <h4 class="text-lg font-semibold mb-2">น้องกุ้ง AI Advisor</h4>
-        <p class="text-sm text-gray-400">5 บทบาท ทำงาน 24/7 — Problem Solver, Sales Hunter, Team Coach, Strategist, Health Monitor</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-amber-500/10 border border-amber-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🦐</div>
+        <h4 class="text-base font-bold mb-1.5">น้องกุ้ง AI Advisor</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">วิเคราะห์ธุรกิจ 24/7 — หาปัญหา, โอกาสขาย, โค้ชทีม, วางกลยุทธ์</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">🧠</div>
-        <h4 class="text-lg font-semibold mb-2">AI จำลูกค้าทุกคน</h4>
-        <p class="text-sm text-gray-400">จำว่าลูกค้าชอบอะไร เคยซื้ออะไร ยิ่งใช้ AI ยิ่งแนะนำดีขึ้น</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-emerald-500/10 border border-emerald-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🧠</div>
+        <h4 class="text-base font-bold mb-1.5">AI จำลูกค้าทุกคน</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">จำว่าชอบอะไร เคยซื้ออะไร ยิ่งใช้ AI ยิ่งแนะนำดีขึ้น</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">📉</div>
-        <h4 class="text-lg font-semibold mb-2">ทำนายลูกค้าหาย</h4>
-        <p class="text-sm text-gray-400">Churn Prediction เตือนก่อนลูกค้าหายไป 3/7/30 วัน ติดตามทัน</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-red-500/10 border border-red-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📉</div>
+        <h4 class="text-base font-bold mb-1.5">ทำนายลูกค้าหาย</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Churn Prediction เตือนก่อนลูกค้าหาย 3/7/30 วัน</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">📚</div>
-        <h4 class="text-lg font-semibold mb-2">Knowledge Base</h4>
-        <p class="text-sm text-gray-400">ใส่ราคา โปรโมชั่น นโยบาย AI ดึงไปตอบลูกค้าให้ถูกต้อง</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-blue-500/10 border border-blue-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📚</div>
+        <h4 class="text-base font-bold mb-1.5">Knowledge Base</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ใส่ราคา โปรโมชั่น นโยบาย AI ดึงไปตอบลูกค้าถูกต้อง</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-rose-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">🔒</div>
-        <h4 class="text-lg font-semibold mb-2">PDPA ครบจบ</h4>
-        <p class="text-sm text-gray-400">PII Masking, Audit Log, Privacy Notice, Opt-out, Right to Delete อัตโนมัติ</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-teal-500/10 border border-teal-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📈</div>
+        <h4 class="text-base font-bold mb-1.5">KPI + CRM อัตโนมัติ</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ลูกค้าทักมา สร้าง CRM Pipeline ให้อัตโนมัติ KPI ครบ</p>
       </div>
 
-      <div class="card-hover bg-white/[0.03] border border-white/5 rounded-2xl p-6">
-        <div class="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-2xl mb-4">📈</div>
-        <h4 class="text-lg font-semibold mb-2">KPI + CRM อัตโนมัติ</h4>
-        <p class="text-sm text-gray-400">ลูกค้าทักมา สร้าง CRM อัตโนมัติ KPI พนักงาน Pipeline ครบ</p>
+      <div class="reveal card p-5 md:p-6 group">
+        <div class="w-11 h-11 bg-rose-500/10 border border-rose-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🔒</div>
+        <h4 class="text-base font-bold mb-1.5">PDPA Ready</h4>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">PII Masking, Audit Log, Privacy Notice, Right to Delete</p>
       </div>
 
     </div>
   </section>
 
-  <!-- Pricing -->
-  <section class="relative z-10 max-w-4xl mx-auto px-4 pb-20">
-    <div class="bg-gradient-to-br from-indigo-900/30 to-cyan-900/20 border border-indigo-500/20 rounded-2xl p-8 md:p-12 text-center glow">
-      <h3 class="text-3xl font-bold mb-4">ฟรี 100%</h3>
-      <p class="text-gray-400 mb-8 text-lg">ไม่มีค่าใช้จ่ายรายเดือน ไม่มีค่าแรกเข้า ข้อมูลเป็นของคุณ</p>
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div class="bg-black/30 rounded-xl p-3">
-          <p class="text-xs text-gray-400">CRM</p>
-          <p class="text-lg font-bold text-white">ฟรี</p>
+  <!-- ── Pricing ── -->
+  <section class="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+    <div class="reveal rounded-3xl p-6 sm:p-8 md:p-12 text-center glow overflow-hidden relative"
+      style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(6,182,212,0.05)); border: 1px solid rgba(99,102,241,0.15);">
+      <!-- Decorative -->
+      <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full blur-[60px]" aria-hidden="true"></div>
+      <div class="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[50px]" aria-hidden="true"></div>
+
+      <div class="relative">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400 mb-4">
+          <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Open Source
+        </span>
+        <h3 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">ฟรี 100%</h3>
+        <p class="text-sm sm:text-base text-gray-400 mb-8 max-w-lg mx-auto">ไม่มีค่าใช้จ่ายรายเดือน ไม่มีค่าแรกเข้า<br>ข้อมูลเป็นของคุณ 100% — Self-hosted</p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-8 max-w-xl mx-auto">
+          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
+            <p class="text-[10px] sm:text-xs text-gray-500">CRM</p>
+            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+          </div>
+          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
+            <p class="text-[10px] sm:text-xs text-gray-500">Database</p>
+            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+          </div>
+          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
+            <p class="text-[10px] sm:text-xs text-gray-500">AI</p>
+            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+          </div>
+          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
+            <p class="text-[10px] sm:text-xs text-gray-500">Vector DB</p>
+            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-indigo-500/10 rounded-xl p-3 border border-indigo-500/20">
+            <p class="text-[10px] sm:text-xs text-indigo-300">รวมต่อเดือน</p>
+            <p class="text-base sm:text-lg font-bold gradient-text">฿0</p>
+          </div>
         </div>
-        <div class="bg-black/30 rounded-xl p-3">
-          <p class="text-xs text-gray-400">MongoDB</p>
-          <p class="text-lg font-bold text-white">ฟรี</p>
-        </div>
-        <div class="bg-black/30 rounded-xl p-3">
-          <p class="text-xs text-gray-400">AI</p>
-          <p class="text-lg font-bold text-white">ฟรี</p>
-        </div>
-        <div class="bg-black/30 rounded-xl p-3">
-          <p class="text-xs text-gray-400">Qdrant</p>
-          <p class="text-lg font-bold text-white">ฟรี</p>
-        </div>
-        <div class="bg-black/30 rounded-xl p-3">
-          <p class="text-xs text-gray-400">รวม</p>
-          <p class="text-lg font-bold gradient-text">฿0/เดือน</p>
-        </div>
+
+        <a href="/dashboard/login" class="inline-flex px-8 sm:px-10 py-3.5 sm:py-4 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
+          เริ่มต้นใช้งาน — ฟรี
+        </a>
       </div>
-      <a href="/dashboard/login" class="inline-flex px-10 py-4 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition shadow-xl shadow-indigo-500/25 text-lg">
-        เริ่มต้นใช้งาน — ฟรี
-      </a>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="relative z-10 border-t border-white/5 py-8">
-    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <span class="text-xl">🦐</span>
-        <span class="text-sm text-gray-400">OpenClaw Mini CRM — AI Chat Intelligence</span>
+  <!-- ── Footer ── -->
+  <footer class="relative z-10 border-t border-white/[0.04] py-8 md:py-10">
+    <div class="max-w-6xl mx-auto px-4 md:px-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 gradient-bg rounded-lg flex items-center justify-center text-sm">💬</div>
+          <span class="text-sm text-gray-400">OpenClaw Mini CRM</span>
+        </div>
+        <div class="flex items-center gap-5">
+          <a href="https://github.com/smlsoft/openclawminicrm" target="_blank" class="text-xs text-gray-500 hover:text-white transition">GitHub</a>
+          <a href="/dashboard/guide" class="text-xs text-gray-500 hover:text-white transition">คู่มือ</a>
+          <a href="/dashboard/login" class="text-xs text-gray-500 hover:text-white transition">เข้าสู่ระบบ</a>
+        </div>
+        <p class="text-[11px] text-gray-600">Made with ❤️ for Thai SMEs</p>
       </div>
-      <div class="flex items-center gap-6">
-        <a href="https://github.com/smlsoft/openclawminicrm" class="text-sm text-gray-500 hover:text-white transition">GitHub</a>
-        <a href="/dashboard/login" class="text-sm text-gray-500 hover:text-white transition">เข้าสู่ระบบ</a>
-      </div>
-      <p class="text-xs text-gray-600">Made with ❤️ for Thai SMEs</p>
     </div>
   </footer>
+
+  <!-- Scroll reveal script -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
 
 </body>
 </html>
