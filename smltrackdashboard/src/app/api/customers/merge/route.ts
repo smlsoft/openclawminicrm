@@ -32,11 +32,16 @@ export async function POST(request: NextRequest) {
     const mergedTags = [...new Set([...(primary.tags || []), ...(secondary.tags || [])])];
     const mergedCustomTags = [...new Set([...(primary.customTags || []), ...(secondary.customTags || [])])];
 
-    // รวม platformIds — ใช้ค่าที่มีอยู่ ถ้า primary ไม่มีก็เอาจาก secondary
+    // รวม platformIds — รองรับทั้ง string เดิม และ array ใหม่
+    function toIdArray(val: any): string[] {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.filter(Boolean);
+      return val ? [String(val)] : [];
+    }
     const mergedPlatformIds = {
-      line: primary.platformIds?.line || secondary.platformIds?.line || primary.lineId || secondary.lineId || "",
-      facebook: primary.platformIds?.facebook || secondary.platformIds?.facebook || primary.facebookId || secondary.facebookId || "",
-      instagram: primary.platformIds?.instagram || secondary.platformIds?.instagram || primary.instagramId || secondary.instagramId || "",
+      line: [...new Set([...toIdArray(primary.platformIds?.line), ...toIdArray(secondary.platformIds?.line), ...toIdArray(primary.lineId), ...toIdArray(secondary.lineId)])],
+      facebook: [...new Set([...toIdArray(primary.platformIds?.facebook), ...toIdArray(secondary.platformIds?.facebook), ...toIdArray(primary.facebookId), ...toIdArray(secondary.facebookId)])],
+      instagram: [...new Set([...toIdArray(primary.platformIds?.instagram), ...toIdArray(secondary.platformIds?.instagram), ...toIdArray(primary.instagramId), ...toIdArray(secondary.instagramId)])],
     };
 
     // รวม totalMessages
@@ -53,9 +58,9 @@ export async function POST(request: NextRequest) {
           tags: mergedTags,
           customTags: mergedCustomTags,
           platformIds: mergedPlatformIds,
-          lineId: mergedPlatformIds.line,
-          facebookId: mergedPlatformIds.facebook,
-          instagramId: mergedPlatformIds.instagram,
+          lineId: mergedPlatformIds.line[0] || "",
+          facebookId: mergedPlatformIds.facebook[0] || "",
+          instagramId: mergedPlatformIds.instagram[0] || "",
           totalMessages: mergedMessages,
           // เติมข้อมูลที่ primary ไม่มี
           firstName: fillFrom("firstName"),

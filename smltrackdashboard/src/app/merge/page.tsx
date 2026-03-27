@@ -12,7 +12,7 @@ interface Customer {
   phone?: string;
   email?: string;
   rooms?: string[];
-  platformIds?: { line?: string; facebook?: string; instagram?: string };
+  platformIds?: { line?: string | string[]; facebook?: string | string[]; instagram?: string | string[] };
   totalMessages?: number;
   avatarUrl?: string;
   updatedAt?: string;
@@ -24,15 +24,21 @@ interface DuplicateGroup {
   duplicates: { customer: Customer; reasons: string[] }[];
 }
 
+function hasIds(val: string | string[] | undefined): boolean {
+  if (!val) return false;
+  if (Array.isArray(val)) return val.filter(Boolean).length > 0;
+  return !!val;
+}
+
 function platformBadges(c: Customer) {
   const pids = c.platformIds || {};
   const rooms = c.rooms || [];
   const badges = [];
-  if (pids.line || rooms.some(r => !r.startsWith("fb_") && !r.startsWith("ig_")))
+  if (hasIds(pids.line) || rooms.some(r => !r.startsWith("fb_") && !r.startsWith("ig_")))
     badges.push({ label: "LINE", color: "bg-green-600" });
-  if (pids.facebook || rooms.some(r => r.startsWith("fb_")))
+  if (hasIds(pids.facebook) || rooms.some(r => r.startsWith("fb_")))
     badges.push({ label: "FB", color: "bg-blue-600" });
-  if (pids.instagram || rooms.some(r => r.startsWith("ig_")))
+  if (hasIds(pids.instagram) || rooms.some(r => r.startsWith("ig_")))
     badges.push({ label: "IG", color: "bg-pink-600" });
   return badges;
 }

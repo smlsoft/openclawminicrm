@@ -1984,14 +1984,29 @@ pipelineStage: new=ใหม่, interested=สนใจ, quoting=เสนอ�
         } catch {}
       }
 
-      // platformIds — เก็บ ID ของแต่ละ platform แยก
-      const platformIdUpdate = {};
+      // platformIds — เก็บ ID ของแต่ละ platform เป็น array (รองรับหลาย ID ต่อ platform)
+      const addToSetOps = { tags: { $each: tags }, rooms: sourceId };
       if (platform === "line" && lineUserId) {
-        platformIdUpdate["platformIds.line"] = lineUserId;
+        addToSetOps["platformIds.line"] = lineUserId;
       } else if (platform === "facebook" && userId) {
-        platformIdUpdate["platformIds.facebook"] = userId;
+        addToSetOps["platformIds.facebook"] = userId;
       } else if (platform === "instagram" && userId) {
-        platformIdUpdate["platformIds.instagram"] = userId;
+        addToSetOps["platformIds.instagram"] = userId;
+      }
+
+      // ตรวจว่า platformIds เดิมเป็น string หรือ array — ถ้าเป็น string ต้อง convert ก่อน
+      const existingCust = await database.collection("customers").findOne({ name: userName });
+      if (existingCust?.platformIds) {
+        const pids = existingCust.platformIds;
+        for (const k of ["line", "facebook", "instagram"]) {
+          if (pids[k] && !Array.isArray(pids[k])) {
+            // Convert string → array ก่อน addToSet
+            await database.collection("customers").updateOne(
+              { name: userName },
+              { $set: { [`platformIds.${k}`]: [pids[k]] } }
+            );
+          }
+        }
       }
 
       await database.collection("customers").updateOne(
@@ -2003,12 +2018,11 @@ pipelineStage: new=ใหม่, interested=สนใจ, quoting=เสนอ�
             lastPurchaseIntent: skill.purchaseIntent,
             pipelineStage,
             ...lineProfile,
-            ...platformIdUpdate,
             updatedAt: new Date(),
           },
-          $addToSet: { tags: { $each: tags }, rooms: sourceId },
+          $addToSet: addToSetOps,
           $inc: { totalMessages: 1 },
-          $setOnInsert: { createdAt: new Date(), firstName: "", lastName: "", company: "", position: "", phone: "", email: "", address: "", notes: "", customTags: [], platformIds: {} },
+          $setOnInsert: { createdAt: new Date(), firstName: "", lastName: "", company: "", position: "", phone: "", email: "", address: "", notes: "", customTags: [], platformIds: { line: [], facebook: [], instagram: [] } },
         },
         { upsert: true }
       );
@@ -4051,9 +4065,10 @@ app.get("/api/customers/duplicates", async (req, res) => {
     }
 
     // แยกลูกค้า multi-platform ที่มีแค่ 1 platform (อาจมี account อื่นอีก)
+    function hasAnyId(val) { return Array.isArray(val) ? val.filter(Boolean).length > 0 : !!val; }
     const singlePlatform = customers.filter(c => {
       const pids = c.platformIds || {};
-      const count = [pids.line, pids.facebook, pids.instagram].filter(Boolean).length;
+      const count = [pids.line, pids.facebook, pids.instagram].filter(v => hasAnyId(v)).length;
       return count === 1 && !used.has(c._id.toString());
     });
 

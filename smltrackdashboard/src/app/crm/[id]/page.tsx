@@ -5,9 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface PlatformIds {
-  line?: string;
-  facebook?: string;
-  instagram?: string;
+  line?: string | string[];
+  facebook?: string | string[];
+  instagram?: string | string[];
+}
+
+// Normalize platformIds — รองรับทั้ง string เดิม และ array ใหม่
+function toIdArray(val: string | string[] | undefined): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter(Boolean);
+  return val ? [val] : [];
 }
 
 interface Customer {
@@ -82,9 +89,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [position, setPosition] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [lineId, setLineId] = useState("");
-  const [facebookId, setFacebookId] = useState("");
-  const [instagramId, setInstagramId] = useState("");
+  const [lineIds, setLineIds] = useState<string[]>([]);
+  const [facebookIds, setFacebookIds] = useState<string[]>([]);
+  const [instagramIds, setInstagramIds] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -121,9 +128,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           setPosition(d.position || "");
           setPhone(d.phone || "");
           setEmail(d.email || "");
-          setLineId(d.lineId || d.platformIds?.line || "");
-          setFacebookId(d.facebookId || d.platformIds?.facebook || "");
-          setInstagramId(d.instagramId || d.platformIds?.instagram || "");
+          setLineIds(toIdArray(d.platformIds?.line).length > 0 ? toIdArray(d.platformIds?.line) : d.lineId ? [d.lineId] : []);
+          setFacebookIds(toIdArray(d.platformIds?.facebook).length > 0 ? toIdArray(d.platformIds?.facebook) : d.facebookId ? [d.facebookId] : []);
+          setInstagramIds(toIdArray(d.platformIds?.instagram).length > 0 ? toIdArray(d.platformIds?.instagram) : d.instagramId ? [d.instagramId] : []);
           setAddress(d.address || "");
           setNotes(d.notes || "");
           setAvatarUrl(d.avatarUrl || "");
@@ -145,7 +152,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         firstName, lastName, company, position,
-        phone, email, lineId, facebookId, instagramId, address, notes, avatarUrl,
+        phone, email, address, notes, avatarUrl,
+        platformIds: {
+          line: lineIds.filter(Boolean),
+          facebook: facebookIds.filter(Boolean),
+          instagram: instagramIds.filter(Boolean),
+        },
         customTags: customTags.split(",").map((t) => t.trim()).filter(Boolean),
         dealValue: dealValue !== "" ? parseFloat(dealValue) : undefined,
         expectedCloseDate: expectedCloseDate || undefined,
@@ -458,33 +470,69 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text resize-none" style={{ background: "var(--bg-primary)" }} />
           </div>
 
-          {/* Channel IDs Section */}
+          {/* Channel IDs Section — รองรับหลาย ID ต่อ platform */}
           <div className="mt-6 pt-4 border-t theme-border">
             <h3 className="text-xs font-bold theme-text-muted mb-3 uppercase tracking-wide">🔗 ช่องทาง (Platform IDs)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-4">
+              {/* LINE */}
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">
-                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> LINE</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> LINE ({lineIds.length})</span>
                 </label>
-                <input type="text" value={lineId} onChange={(e) => setLineId(e.target.value)}
-                  placeholder="Uxxxxxxxxxx"
-                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                <div className="space-y-1">
+                  {lineIds.map((id, i) => (
+                    <div key={i} className="flex gap-1">
+                      <input type="text" value={id}
+                        onChange={(e) => { const arr = [...lineIds]; arr[i] = e.target.value; setLineIds(arr); }}
+                        placeholder="Uxxxxxxxxxx"
+                        className="flex-1 px-3 py-1.5 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                      <button onClick={() => setLineIds(lineIds.filter((_, j) => j !== i))}
+                        className="px-2 text-red-400 hover:text-red-300 text-sm">✕</button>
+                    </div>
+                  ))}
+                  <button onClick={() => setLineIds([...lineIds, ""])}
+                    className="text-[11px] text-green-400 hover:text-green-300 px-1">+ เพิ่ม LINE ID</button>
+                </div>
               </div>
+              {/* Facebook */}
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">
-                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Facebook</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Facebook ({facebookIds.length})</span>
                 </label>
-                <input type="text" value={facebookId} onChange={(e) => setFacebookId(e.target.value)}
-                  placeholder="fb_xxxxxxxxxx"
-                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                <div className="space-y-1">
+                  {facebookIds.map((id, i) => (
+                    <div key={i} className="flex gap-1">
+                      <input type="text" value={id}
+                        onChange={(e) => { const arr = [...facebookIds]; arr[i] = e.target.value; setFacebookIds(arr); }}
+                        placeholder="fb_xxxxxxxxxx"
+                        className="flex-1 px-3 py-1.5 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                      <button onClick={() => setFacebookIds(facebookIds.filter((_, j) => j !== i))}
+                        className="px-2 text-red-400 hover:text-red-300 text-sm">✕</button>
+                    </div>
+                  ))}
+                  <button onClick={() => setFacebookIds([...facebookIds, ""])}
+                    className="text-[11px] text-blue-400 hover:text-blue-300 px-1">+ เพิ่ม Facebook ID</button>
+                </div>
               </div>
+              {/* Instagram */}
               <div>
                 <label className="block text-[11px] theme-text-muted mb-1">
-                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 inline-block" /> Instagram</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 inline-block" /> Instagram ({instagramIds.length})</span>
                 </label>
-                <input type="text" value={instagramId} onChange={(e) => setInstagramId(e.target.value)}
-                  placeholder="ig_xxxxxxxxxx"
-                  className="w-full px-3 py-2 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                <div className="space-y-1">
+                  {instagramIds.map((id, i) => (
+                    <div key={i} className="flex gap-1">
+                      <input type="text" value={id}
+                        onChange={(e) => { const arr = [...instagramIds]; arr[i] = e.target.value; setInstagramIds(arr); }}
+                        placeholder="ig_xxxxxxxxxx"
+                        className="flex-1 px-3 py-1.5 rounded-lg border theme-border text-sm theme-bg theme-text font-mono text-xs" style={{ background: "var(--bg-primary)" }} />
+                      <button onClick={() => setInstagramIds(instagramIds.filter((_, j) => j !== i))}
+                        className="px-2 text-red-400 hover:text-red-300 text-sm">✕</button>
+                    </div>
+                  ))}
+                  <button onClick={() => setInstagramIds([...instagramIds, ""])}
+                    className="text-[11px] text-pink-400 hover:text-pink-300 px-1">+ เพิ่ม Instagram ID</button>
+                </div>
               </div>
             </div>
             {(customer.rooms || []).length > 0 && (

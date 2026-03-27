@@ -31,12 +31,19 @@ export async function PUT(
     // อนุญาตให้แก้ไขเฉพาะ fields ที่กำหนด
     const allowed = [
       "firstName", "lastName", "company", "position", "phone", "email",
-      "lineId", "facebookId", "instagramId", "address", "notes", "customTags", "avatarUrl",
+      "address", "notes", "customTags", "avatarUrl", "platformIds",
       "dealValue", "expectedCloseDate", "winLossReason", "assignedTo",
     ];
     const updates: any = { updatedAt: new Date() };
     for (const key of allowed) {
       if (body[key] !== undefined) updates[key] = body[key];
+    }
+    // Sync legacy fields from platformIds (backward compat)
+    if (body.platformIds) {
+      const pids = body.platformIds;
+      updates.lineId = Array.isArray(pids.line) ? pids.line[0] || "" : pids.line || "";
+      updates.facebookId = Array.isArray(pids.facebook) ? pids.facebook[0] || "" : pids.facebook || "";
+      updates.instagramId = Array.isArray(pids.instagram) ? pids.instagram[0] || "" : pids.instagram || "";
     }
 
     await db.collection("customers").updateOne(

@@ -96,14 +96,14 @@ export async function GET() {
         const msgCount = await db.collection("messages").countDocuments({ userName: name });
 
         const rooms = staffSkills
-          .filter((s) => s.userName === name)
+          .filter((s) => s.userName === name && s.sourceId)
           .map((s) => {
             const meta = allMeta.find((m) => m.sourceId === s.sourceId);
             return {
               sourceId: s.sourceId,
-              roomName: meta?.groupName || s.sourceId.substring(0, 12),
-              sentiment: s.sentiment,
-              purchaseIntent: s.purchaseIntent,
+              roomName: meta?.groupName || (s.sourceId || "unknown").substring(0, 12),
+              sentiment: s.sentiment || null,
+              purchaseIntent: s.purchaseIntent || null,
             };
           });
 
@@ -134,11 +134,11 @@ export async function GET() {
     );
 
     // Customer KPI
-    const customerNames = [...new Set(customerSkills.map((s) => s.userId))];
+    const customerNames = [...new Set(customerSkills.map((s) => s.userId || s.userName).filter(Boolean))];
     const customerKpi = await Promise.all(
       customerNames.slice(0, 50).map(async (name) => {
         const msgCount = await db.collection("messages").countDocuments({ userName: name });
-        const skills = customerSkills.filter((s) => s.userId === name);
+        const skills = customerSkills.filter((s) => (s.userId || s.userName) === name);
         const roomCount = skills.length;
 
         // ความพอใจรวมของลูกค้าคนนี้
@@ -203,8 +203,12 @@ export async function GET() {
     const pipelineCounts: Record<string, number> = {};
     for (const stage of pipelineStages) pipelineCounts[stage] = 0;
     for (const s of customerSkills) {
-      const stage = s.pipelineStage || "new";
-      pipelineCounts[stage] = (pipelineCounts[stage] || 0) + 1;
+      const stage = (s.pipelineStage || "new") as string;
+      if (pipelineCounts[stage] !== undefined) {
+        pipelineCounts[stage]++;
+      } else {
+        pipelineCounts["new"]++;
+      }
     }
 
     const totalPipeline = customerSkills.length || 1;
@@ -242,6 +246,7 @@ export async function GET() {
     // หา lastMessageAt ของแต่ละลูกค้า
     const customerLastMsg: Record<string, { userName: string; lastAt: Date; sourceId: string; roomName: string; pipelineStage: string }> = {};
     for (const s of customerSkills) {
+      if (!s.sourceId || !s.userName) continue;
       const roomMsgs = messagesByRoom[s.sourceId] || [];
       const userMsgs = roomMsgs.filter((m: any) => m.userName === s.userName);
       if (userMsgs.length === 0) continue;
@@ -254,7 +259,7 @@ export async function GET() {
           userName: s.userName,
           lastAt,
           sourceId: s.sourceId,
-          roomName: meta?.groupName || s.sourceId.substring(0, 12),
+          roomName: meta?.groupName || (s.sourceId || "unknown").substring(0, 12),
           pipelineStage: s.pipelineStage || "new",
         };
       }

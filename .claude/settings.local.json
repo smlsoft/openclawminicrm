@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/jatur/**)",
+      "Read(//c/Users/jatur/AppData/**)",
+      "Bash(npm ls:*)",
+      "Bash(tasklist)",
+      "Bash(find /c/Users/jatur/AppData -maxdepth 3 -iname *claude* -type d)",
+      "Bash(find /c/Users/jatur -maxdepth 3 -name .claude -type d -not -path */node_modules/*)",
+      "Bash(find /d -maxdepth 4 -name .claude -type d -not -path */node_modules/*)",
+      "Bash(du -sh /c/Users/jatur/AppData/Roaming/Claude/*/)",
+      "WebSearch",
+      "Bash(ls /c/Users/jatur/.claude/*.*)",
+      "Bash(taskkill /IM M365Copilot.exe /F)",
+      "Bash(taskkill //IM M365Copilot.exe //F)",
+      "Bash(code --uninstall-extension openai.chatgpt)",
+      "Bash(reg query:*)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_StartupCommand | Where-Object { $_.Name -like ''*Copilot*'' -or $_.Command -like ''*Copilot*'' } | Format-Table Name,Command,Location -AutoSize\")",
+      "Bash(powershell -Command \"Get-ScheduledTask | Where-Object { $_.TaskName -like ''*Copilot*'' -or $_.TaskName -like ''*M365*'' } | Format-Table TaskName,State -AutoSize\")",
+      "Bash(powershell -Command \"Get-AppxPackage *copilot* | Format-Table Name,Status -AutoSize\")"
+    ]
+  }
+}

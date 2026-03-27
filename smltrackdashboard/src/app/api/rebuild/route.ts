@@ -57,7 +57,13 @@ export async function POST() {
     for (const sid of sourceIds) {
       if (!sid) continue;
       const existing = await db.collection("customers").findOne({
-        $or: [{ sourceId: sid }, { rooms: sid }, { "platformIds.id": sid }],
+        $or: [
+          { sourceId: sid },
+          { rooms: sid },
+          { "platformIds.line": sid },
+          { "platformIds.facebook": sid },
+          { "platformIds.instagram": sid },
+        ],
       });
       if (existing) continue;
 
@@ -68,15 +74,21 @@ export async function POST() {
       const customerName = names.find((n: string) => n && !isStaffName(n)) || names[0] || sid;
       const platform = lastMsg?.platform || "line";
 
+      // สร้าง platformIds เป็น object with arrays (รองรับหลาย ID ต่อ platform)
+      const platformIds: Record<string, string[]> = { line: [], facebook: [], instagram: [] };
+      if (platform === "line") platformIds.line = [sid];
+      else if (platform === "facebook") platformIds.facebook = [sid];
+      else if (platform === "instagram") platformIds.instagram = [sid];
+
       await db.collection("customers").insertOne({
         name: customerName,
         firstName: customerName.split(" ")[0] || "",
         lastName: customerName.split(" ").slice(1).join(" ") || "",
         sourceId: sid,
-        platformIds: [{ platform, id: sid }],
+        platformIds,
         rooms: [sid],
         tags: [],
-        pipeline: "new",
+        pipelineStage: "new",
         source: platform,
         assignedTo: null,
         dealValue: 0,
@@ -144,7 +156,7 @@ export async function POST() {
     }
     results.chat_analytics = analyticsUpdated;
 
-    // === 4. Rebuild user_skills (per-user analysis) ===
+    // === 4. Rebuild user_skills (per sourceId + userId — ตรง format กับ Agent) ===
     let skillsUpdated = 0;
     const allUserNames = await db.collection("messages").distinct("userName");
     for (const userName of allUserNames) {
@@ -152,27 +164,41 @@ export async function POST() {
       const userMsgs = await db.collection("messages")
         .find({ userName }, { projection: { sourceId: 1, content: 1, createdAt: 1, role: 1 } })
         .sort({ createdAt: -1 })
-        .limit(50)
         .toArray();
 
       if (userMsgs.length === 0) continue;
-      const userSourceIds = [...new Set(userMsgs.map((m) => m.sourceId))];
 
-      await db.collection("user_skills").updateOne(
-        { userName },
-        {
-          $set: {
-            userName,
-            isStaff: isStaffName(userName),
-            messageCount: userMsgs.length,
-            sourceIds: userSourceIds,
-            lastActivity: userMsgs[0]?.createdAt || null,
-            updatedAt: new Date(),
+      // Group messages by sourceId — สร้าง 1 doc ต่อ (sourceId, userId)
+      const bySource: Record<string, any[]> = {};
+      for (const m of userMsgs) {
+        if (!m.sourceId) continue;
+        if (!bySource[m.sourceId]) bySource[m.sourceId] = [];
+        bySource[m.sourceId].push(m);
+      }
+
+      for (const [sid, msgs] of Object.entries(bySource)) {
+        await db.collection("user_skills").updateOne(
+          { sourceId: sid, userId: userName },
+          {
+            $set: {
+              sourceId: sid,
+              userId: userName,
+              userName,
+              isStaff: isStaffName(userName),
+              messageCount: msgs.length,
+              sentiment: null,
+              purchaseIntent: null,
+              tags: [],
+              pipelineStage: "new",
+              lastMessage: msgs[0]?.content?.substring(0, 100) || "",
+              lastActivity: msgs[0]?.createdAt || null,
+              updatedAt: new Date(),
+            },
           },
-        },
-        { upsert: true }
-      );
-      skillsUpdated++;
+          { upsert: true }
+        );
+        skillsUpdated++;
+      }
     }
     results.user_skills = skillsUpdated;
 
