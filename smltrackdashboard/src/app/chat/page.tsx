@@ -901,7 +901,7 @@ export default function ChatPage() {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [openPanels, setOpenPanels] = useState<string[]>([]);
-  const [platformFilter, setPlatformFilter] = useState("all");
+  // platformFilter removed — now uses chatPlatform (API-level filter)
   const [searchQuery, setSearchQuery] = useState("");
 
   // Auth guard
@@ -909,28 +909,41 @@ export default function ChatPage() {
     if (authStatus === "unauthenticated") router.replace("/dashboard/login");
   }, [authStatus, router]);
 
-  // Fetch conversations
-  const fetchConversations = useCallback(async () => {
+  // Fetch conversations — ดึงทีละ 50 + load more
+  const [chatPage, setChatPage] = useState(0);
+  const [chatHasMore, setChatHasMore] = useState(true);
+  const [chatPlatform, setChatPlatform] = useState("");
+
+  const fetchConversations = useCallback(async (pageNum = 0, append = false, platform = "") => {
     try {
-      const res = await fetch("/dashboard/api/groups");
+      const pfParam = platform ? `&platform=${platform}` : "";
+      const res = await fetch(`/dashboard/api/groups?limit=50&page=${pageNum}${pfParam}`);
       const raw = await res.json();
       const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
-      setConversations(
-        [...data].sort((a, b) => {
-          const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
-          const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
-          return tb - ta;
-        })
-      );
+      const sorted = [...data].sort((a, b) => {
+        const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+        const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+        return tb - ta;
+      });
+      if (append) {
+        setConversations(prev => {
+          const ids = new Set(prev.map(c => c.id));
+          return [...prev, ...sorted.filter(c => !ids.has(c.id))];
+        });
+      } else {
+        setConversations(sorted);
+      }
+      setChatHasMore(raw.pagination?.hasMore ?? false);
+      setChatPage(pageNum);
     } catch {}
   }, []);
 
   useEffect(() => {
-    fetchConversations();
-    const iv = setInterval(fetchConversations, 15000);
+    fetchConversations(0, false, chatPlatform);
+    const iv = setInterval(() => fetchConversations(0, false, chatPlatform), 15000);
     return () => clearInterval(iv);
-  }, [fetchConversations]);
+  }, [fetchConversations, chatPlatform]);
 
   // Open panel
   const openChat = (id: string) => {
@@ -946,9 +959,8 @@ export default function ChatPage() {
     setOpenPanels((prev) => prev.filter((p) => p !== id));
   };
 
-  // Filter
+  // Filter — platform handled by API, search client-side only
   const filtered = conversations.filter((c) => {
-    if (platformFilter !== "all" && (c.platform || "line") !== platformFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
@@ -990,23 +1002,23 @@ export default function ChatPage() {
 
         {/* Platform filter */}
         <div className="px-2 py-1.5 border-b theme-border flex gap-1 flex-wrap">
-          {(["all","line","facebook","instagram"] as const).map(p => {
-            const isActive = platformFilter === p;
-            const labels: Record<string, string> = { all: "ทั้งหมด", line: "LINE", facebook: "FB", instagram: "IG" };
+          {(["","line","facebook","instagram"] as const).map(p => {
+            const isActive = chatPlatform === p;
+            const labels: Record<string, string> = { "": "ทั้งหมด", line: "LINE", facebook: "FB", instagram: "IG" };
             const activeColors: Record<string, string> = {
-              all: "bg-white text-black", line: "bg-green-600 text-white",
+              "": "bg-white text-black", line: "bg-green-600 text-white",
               facebook: "bg-blue-600 text-white", instagram: "bg-gradient-to-r from-purple-600 to-pink-600 text-white",
             };
             return (
               <button
                 key={p}
-                onClick={() => setPlatformFilter(p)}
+                onClick={() => setChatPlatform(p)}
                 className={`px-2 py-0.5 rounded text-[10px] font-medium transition flex items-center gap-0.5 ${
                   isActive ? activeColors[p] : "theme-bg-card theme-text-secondary"
                 }`}
               >
                 {labels[p]}
-                <span className="text-[9px] px-0.5 rounded-full bg-black/20">{platformCounts[p]}</span>
+                <span className="text-[9px] px-0.5 rounded-full bg-black/20">{p === "" ? conversations.length : platformCounts[p as "line"|"facebook"|"instagram"]}</span>
               </button>
             );
           })}
@@ -1078,6 +1090,15 @@ export default function ChatPage() {
               </button>
             );
           })}
+          {/* Load more */}
+          {chatHasMore && (
+            <button
+              onClick={() => fetchConversations(chatPage + 1, true, chatPlatform)}
+              className="w-full py-2.5 text-xs font-medium text-indigo-400 hover:bg-indigo-950/30 transition"
+            >
+              โหลดเพิ่ม...
+            </button>
+          )}
         </div>
       </aside>
 
