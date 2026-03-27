@@ -19,31 +19,40 @@ interface CostData {
 }
 
 const FEATURE_LABELS: Record<string, string> = {
-  // Agent features
-  "chat-reply": "💬 ตอบแชท",
-  "chat-tools": "🔧 เรียก MCP",
-  "light-ai": "⚡ AI เบา",
-  "light-ai-json": "⚡ AI เบา (JSON)",
-  "sentiment": "😊 วิเคราะห์ sentiment",
-  "embedding": "🔍 Embedding",
-  "vision": "👁️ Vision",
-  "advisor-sentiment": "🦐 กุ้ง: Sentiment",
-  "advisor-pipeline": "🦐 กุ้ง: Pipeline",
-  "advisor-summary": "🦐 กุ้ง: สรุป",
+  // ระบบแชท
+  "chat-reply": "💬 ตอบแชทลูกค้า",
+  "chat-tools": "🔧 เรียกเครื่องมือ AI",
+  "light-ai": "⚡ AI วิเคราะห์เบา",
+  "light-ai-json": "⚡ AI วิเคราะห์ (JSON)",
+  "sentiment": "😊 วิเคราะห์อารมณ์ลูกค้า",
+  "embedding": "🔍 ค้นหาความหมาย",
+  "vision": "👁️ อ่านรูปภาพ/เอกสาร",
+  "advisor-sentiment": "🦐 วิเคราะห์ความรู้สึก",
+  "advisor-pipeline": "🦐 จัดลำดับการขาย",
+  "advisor-summary": "🦐 สรุปสนทนา",
   // น้องกุ้ง 13 บทบาท
-  "problem-solver": "🔍 กุ้ง: Problem Solver",
-  "sales-hunter": "💰 กุ้ง: Sales Hunter",
-  "team-coaching": "👨‍🏫 กุ้ง: Team Coach",
-  "weekly-strategy": "📋 กุ้ง: Weekly Strategist",
-  "health-monitor": "❤️ กุ้ง: Health Monitor",
-  "payment-guardian": "💳 กุ้ง: Payment Guardian",
-  "order-tracker": "📦 กุ้ง: Order Tracker",
-  "re-engagement": "🔄 กุ้ง: Re-engagement",
-  "upsell-crosssell": "🎯 กุ้ง: Upsell/Cross-sell",
-  "daily-report": "📊 กุ้ง: Daily Report",
-  "lead-scorer": "🏆 กุ้ง: Lead Scorer",
-  "appointment-reminder": "📅 กุ้ง: Appointment",
-  "price-watcher": "📈 กุ้ง: Price Watcher",
+  "problem-solver": "🔍 กุ้ง: แก้ปัญหาลูกค้า",
+  "sales-hunter": "💰 กุ้ง: หาโอกาสขาย",
+  "team-coaching": "👨‍🏫 กุ้ง: โค้ชทีมงาน",
+  "weekly-strategy": "📋 กุ้ง: วางกลยุทธ์สัปดาห์",
+  "health-monitor": "❤️ กุ้ง: ตรวจสุขภาพลูกค้า",
+  "payment-guardian": "💳 กุ้ง: ตรวจสลิป/เงินเข้า",
+  "order-tracker": "📦 กุ้ง: ติดตามจัดส่ง",
+  "re-engagement": "🔄 กุ้ง: ดึงลูกค้ากลับ",
+  "upsell-crosssell": "🎯 กุ้ง: แนะนำสินค้าเพิ่ม",
+  "daily-report": "📊 กุ้ง: สรุปรายวัน",
+  "lead-scorer": "🏆 กุ้ง: ให้คะแนนลูกค้า",
+  "appointment-reminder": "📅 กุ้ง: เตือนนัดหมาย",
+  "price-watcher": "📈 กุ้ง: วิเคราะห์ราคา",
+};
+
+const PROVIDER_LABELS: Record<string, string> = {
+  "openrouter": "OpenRouter (ฟรี)",
+  "sambanova": "SambaNova (ฟรี)",
+  "groq": "Groq (ฟรี)",
+  "cerebras": "Cerebras (ฟรี)",
+  "gemini": "Google Gemini (ฟรี)",
+  "google": "Google Gemini (ฟรี)",
 };
 
 function formatTokens(n: number) {
@@ -61,7 +70,7 @@ function formatCost(usd: number) {
 
 function formatThb(usd: number) {
   const thb = usd * 34;
-  if (thb === 0) return "";
+  if (thb === 0) return "฿0";
   if (thb < 1) return `≈ ฿${thb.toFixed(2)}`;
   return `≈ ฿${thb.toFixed(0)}`;
 }
@@ -88,7 +97,7 @@ export default function CostsPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { const i = setInterval(fetchData, 30000); return () => clearInterval(i); }, [fetchData]);
 
-  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">Loading...</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">กำลังโหลด...</div></div>;
 
   const today = data?.today || { totalTokens: 0, totalCost: 0, calls: 0, inputTokens: 0, outputTokens: 0 };
   const month = data?.month || { totalTokens: 0, totalCost: 0, calls: 0 };
@@ -103,8 +112,8 @@ export default function CostsPage() {
     <div className="min-h-screen theme-bg theme-text">
       <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div>
-          <h1 className="text-base font-bold">💰 AI Cost Tracker</h1>
-          <p className="text-xs theme-text-secondary">ค่าใช้จ่าย AI แบบละเอียด</p>
+          <h1 className="text-base font-bold">💰 ค่าใช้จ่าย AI</h1>
+          <p className="text-xs theme-text-secondary">ดูว่า AI ใช้ไปเท่าไหร่ — ทั้งหมดฟรี ไม่มีค่าใช้จ่าย</p>
         </div>
       </header>
 
@@ -112,12 +121,12 @@ export default function CostsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            { label: "วันนี้ (Tokens)", value: formatTokens(today.totalTokens), icon: "📊", sub: `${today.calls} calls` },
-            { label: "วันนี้ (Cost)", value: formatCost(today.totalCost), icon: "💵", sub: formatThb(today.totalCost) },
-            { label: "Input", value: formatTokens(today.inputTokens || 0), icon: "📥", sub: "tokens วันนี้" },
-            { label: "Output", value: formatTokens(today.outputTokens || 0), icon: "📤", sub: "tokens วันนี้" },
-            { label: "เดือนนี้ (Cost)", value: formatCost(month.totalCost), icon: "📅", sub: formatThb(month.totalCost) },
-            { label: "เดือนนี้ (Calls)", value: month.calls.toLocaleString(), icon: "🔢", sub: formatTokens(month.totalTokens) + " tokens" },
+            { label: "ใช้ไปวันนี้", value: formatTokens(today.totalTokens), icon: "📊", sub: `${today.calls} ครั้ง` },
+            { label: "ค่าใช้จ่ายวันนี้", value: formatCost(today.totalCost), icon: "💵", sub: formatThb(today.totalCost) },
+            { label: "ข้อมูลเข้า", value: formatTokens(today.inputTokens || 0), icon: "📥", sub: "คำที่ส่งให้ AI" },
+            { label: "ข้อมูลออก", value: formatTokens(today.outputTokens || 0), icon: "📤", sub: "คำที่ AI ตอบกลับ" },
+            { label: "ค่าใช้จ่ายเดือนนี้", value: formatCost(month.totalCost), icon: "📅", sub: formatThb(month.totalCost) },
+            { label: "เรียกใช้เดือนนี้", value: month.calls.toLocaleString(), icon: "🔢", sub: formatTokens(month.totalTokens) + " คำ" },
           ].map((c) => (
             <div key={c.label} className="rounded-xl border theme-border theme-bg-secondary p-3">
               <div className="flex items-center justify-between">
@@ -132,7 +141,7 @@ export default function CostsPage() {
 
         {/* Daily Cost Line Chart */}
         {daily.length > 0 && (
-          <ChartCard title="📈 Token รายวัน" subtitle={`${daily.length} วันล่าสุด`}>
+          <ChartCard title="📈 การใช้งานรายวัน" subtitle={`${daily.length} วันล่าสุด`}>
             <MiniLineChart
               data={daily.map(d => ({ name: d._id.substring(5), value: d.totalTokens }))}
               height={180}
@@ -144,7 +153,7 @@ export default function CostsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Daily Chart */}
           <section className="theme-bg-secondary border theme-border rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 theme-text-secondary">📈 Token ใช้ต่อวัน (7 วัน)</h2>
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">📈 ใช้ AI ไปเท่าไหร่ (7 วัน)</h2>
             {daily.length === 0 ? (
               <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
@@ -169,7 +178,7 @@ export default function CostsPage() {
 
           {/* By Feature */}
           <section className="theme-bg-secondary border theme-border rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🏷️ ค่าใช้จ่ายตามฟีเจอร์</h2>
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🏷️ แยกตามงานที่ทำ</h2>
             {byFeature.length === 0 ? (
               <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
@@ -178,7 +187,7 @@ export default function CostsPage() {
                   <div key={f._id} className="flex items-center justify-between p-2 rounded-lg theme-bg-card">
                     <div>
                       <p className="text-sm font-medium">{FEATURE_LABELS[f._id] || f._id}</p>
-                      <p className="text-[10px] theme-text-muted">{f.calls} calls &middot; avg {formatTokens(Math.round(f.avgTokens))} tokens/call</p>
+                      <p className="text-[10px] theme-text-muted">เรียก {f.calls} ครั้ง &middot; เฉลี่ย {formatTokens(Math.round(f.avgTokens))} คำ/ครั้ง</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">{formatTokens(f.totalTokens)}</p>
@@ -194,7 +203,7 @@ export default function CostsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* By Provider */}
           <section className="theme-bg-secondary border theme-border rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🤖 ค่าใช้จ่ายตาม AI Provider</h2>
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🤖 แยกตามผู้ให้บริการ AI</h2>
             {byProvider.length === 0 ? (
               <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
@@ -202,20 +211,20 @@ export default function CostsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-[11px] theme-text-muted border-b theme-border">
-                      <th className="pb-2">Provider</th>
-                      <th className="pb-2 text-right">Calls</th>
-                      <th className="pb-2 text-right">Tokens</th>
-                      <th className="pb-2 text-right">Cost</th>
+                      <th className="pb-2">ผู้ให้บริการ</th>
+                      <th className="pb-2 text-right">เรียกใช้</th>
+                      <th className="pb-2 text-right">จำนวนคำ</th>
+                      <th className="pb-2 text-right">ค่าใช้จ่าย</th>
                     </tr>
                   </thead>
                   <tbody className="theme-divide divide-y">
                     {byProvider.map((p) => (
                       <tr key={p._id} className="hover:theme-bg-hover">
-                        <td className="py-2 font-medium">{p._id}</td>
-                        <td className="py-2 text-right theme-text-secondary">{p.calls}</td>
+                        <td className="py-2 font-medium">{PROVIDER_LABELS[p._id] || p._id}</td>
+                        <td className="py-2 text-right theme-text-secondary">{p.calls} ครั้ง</td>
                         <td className="py-2 text-right">{formatTokens(p.totalTokens)}</td>
                         <td className="py-2 text-right">
-                          <span className={p.totalCost > 0 ? "text-amber-400 font-bold" : "text-emerald-400"}>
+                          <span className={p.totalCost > 0 ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
                             {formatCost(p.totalCost)}
                           </span>
                         </td>
@@ -229,7 +238,7 @@ export default function CostsPage() {
 
           {/* Recent Calls */}
           <section className="theme-bg-secondary border theme-border rounded-xl p-4">
-            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🕐 AI Calls ล่าสุด</h2>
+            <h2 className="text-sm font-bold mb-3 theme-text-secondary">🕐 การเรียกใช้ล่าสุด</h2>
             {recent.length === 0 ? (
               <p className="theme-text-muted text-sm py-8 text-center">ยังไม่มีข้อมูล</p>
             ) : (
@@ -238,10 +247,10 @@ export default function CostsPage() {
                   <div key={i} className="flex items-center justify-between text-[11px] p-1.5 rounded theme-bg-card">
                     <div className="flex items-center gap-2">
                       <span className="theme-text-muted w-12 shrink-0">{formatDate(r.createdAt)}</span>
-                      <span className="font-medium truncate max-w-[120px]">{FEATURE_LABELS[r.feature] || r.feature}</span>
+                      <span className="font-medium truncate max-w-[140px]">{FEATURE_LABELS[r.feature] || r.feature}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="theme-text-secondary">{formatTokens(r.totalTokens)}</span>
+                      <span className="theme-text-secondary">{formatTokens(r.totalTokens)} คำ</span>
                       <span className={r.costUsd > 0 ? "text-amber-400" : "text-emerald-400"}>{formatCost(r.costUsd)}</span>
                     </div>
                   </div>
@@ -250,6 +259,21 @@ export default function CostsPage() {
             )}
           </section>
         </div>
+
+        {/* คำอธิบาย */}
+        <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+          <h2 className="text-sm font-bold mb-3 theme-text-secondary">💡 อธิบายง่ายๆ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs theme-text-secondary">
+            <div className="space-y-2">
+              <p><strong className="theme-text">คำ (Tokens) คืออะไร?</strong><br/>ทุกครั้งที่ AI อ่านหรือตอบ จะนับเป็น "คำ" เช่น "สวัสดีครับ" ≈ 3-5 คำ</p>
+              <p><strong className="theme-text">ข้อมูลเข้า vs ออก?</strong><br/>เข้า = สิ่งที่เราส่งให้ AI อ่าน, ออก = สิ่งที่ AI ตอบกลับมา</p>
+            </div>
+            <div className="space-y-2">
+              <p><strong className="theme-text">ทำไมค่าใช้จ่ายเป็น "ฟรี"?</strong><br/>ระบบใช้ AI จาก 5 ผู้ให้บริการที่มีโควต้าฟรี ถ้าตัวหนึ่งเต็ม จะสลับไปตัวถัดไปอัตโนมัติ</p>
+              <p><strong className="theme-text">น้องกุ้งใช้ AI เยอะไหม?</strong><br/>น้องกุ้ง 13 ตัว ทำงานตาม schedule ใช้ AI เฉพาะตอน cron ไม่ได้รันตลอด จึงประหยัดมาก</p>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
