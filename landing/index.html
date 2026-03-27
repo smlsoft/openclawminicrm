@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>OpenClaw Mini CRM — AI Chat Intelligence</title>
-  <meta name="description" content="ระบบ CRM อัจฉริยะ เพื่อการศึกษา — LINE, Facebook, Instagram รวมจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า">
+  <title>OpenClaw Mini CRM — น้องกุ้ง AI 13 บทบาท คุมทั้งระบบ 24/7 | LINE · Facebook · Instagram</title>
+  <meta name="description" content="ระบบ CRM อัจฉริยะ ฟรี 100% — น้องกุ้ง Multi AI Agent 13 ตัว วิเคราะห์ธุรกิจ หาโอกาสขาย ดึงลูกค้ากลับ ตรวจสลิป ให้คะแนน Lead สรุปรายงานทุกวัน | LINE Facebook Instagram Open Source เพื่อการศึกษา">
   <!-- OG Meta — Facebook, LINE, Twitter share preview -->
-  <meta property="og:title" content="OpenClaw Mini CRM — AI Chat Intelligence">
-  <meta property="og:description" content="รวมทุกแชทในจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า — LINE · Facebook · Instagram · Open Source เพื่อการศึกษา">
+  <meta property="og:title" content="OpenClaw Mini CRM — น้องกุ้ง AI 13 บทบาท คุมทั้งระบบ 24/7 | LINE · Facebook · Instagram">
+  <meta property="og:description" content="Multi AI Agent ฟรี 100% — น้องกุ้ง 13 ตัวทำงานพร้อมกัน วิเคราะห์ธุรกิจ หาโอกาสขาย ดึงลูกค้ากลับ ตรวจสลิป ให้คะแนน Lead สรุปรายงานทุกวัน | Open Source เพื่อการศึกษา">
   <meta property="og:image" content="https://crm.satistang.com/og-image.jpg">
   <meta property="og:image:width" content="600">
   <meta property="og:image:height" content="900">
@@ -15,8 +15,8 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="OpenClaw Mini CRM">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="OpenClaw Mini CRM — AI Chat Intelligence">
-  <meta name="twitter:description" content="รวมทุกแชทในจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า">
+  <meta name="twitter:title" content="OpenClaw Mini CRM — น้องกุ้ง AI 13 บทบาท คุมทั้งระบบ 24/7">
+  <meta name="twitter:description" content="Multi AI Agent ฟรี 100% — น้องกุ้ง 13 ตัว วิเคราะห์ธุรกิจ หาโอกาสขาย ดึงลูกค้ากลับ ตรวจสลิป สรุปรายงานทุกวัน">
   <meta name="twitter:image" content="https://crm.satistang.com/og-image.jpg">
   <!-- SEO -->
   <link rel="canonical" href="https://crm.satistang.com/">
@@ -86,6 +86,26 @@
 
     /* Mobile touch */
     @media (hover: none) { button, a { -webkit-tap-highlight-color: rgba(99,102,241,0.15); } }
+
+    /* Light theme */
+    body.light { background: #f8fafc; color: #1e293b; }
+    body.light .glass { background: rgba(255,255,255,0.8); }
+    body.light .card { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); }
+    body.light .card:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    body.light .text-gray-400, body.light .text-gray-500 { color: #64748b !important; }
+    body.light .text-gray-300 { color: #475569 !important; }
+    body.light .text-gray-600 { color: #94a3b8 !important; }
+    body.light .text-white { color: #1e293b !important; }
+    body.light .gradient-text { -webkit-text-fill-color: transparent; }
+    body.light .border-white\/\[0\.04\], body.light .border-white\/\[0\.08\] { border-color: rgba(0,0,0,0.08) !important; }
+    body.light .bg-white\/\[0\.04\] { background: rgba(0,0,0,0.04) !important; }
+    body.light .bg-white\/\[0\.03\] { background: rgba(0,0,0,0.02) !important; }
+    body.light .bg-black\/20 { background: rgba(0,0,0,0.04) !important; }
+    body.light footer { border-color: rgba(0,0,0,0.08) !important; }
+    body.light .gradient-bg { color: white !important; }
+    body.light .gradient-bg * { color: white !important; }
+    body.light a.gradient-bg { color: white !important; }
+    #theme-toggle { cursor: pointer; transition: all 0.3s; }
   </style>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
@@ -111,6 +131,10 @@
         </div>
       </a>
       <div class="flex items-center gap-2 sm:gap-3">
+        <button id="theme-toggle" onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/5 transition text-gray-400 hover:text-white" title="เปลี่ยนธีม">
+          <i class="ph ph-moon text-lg" id="theme-icon-dark"></i>
+          <i class="ph ph-sun text-lg hidden" id="theme-icon-light"></i>
+        </button>
         <a href="https://github.com/smlsoft/openclawminicrm" target="_blank" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 hover:text-white transition rounded-lg hover:bg-white/5">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           GitHub
@@ -1006,8 +1030,22 @@
     </div>
   </footer>
 
-  <!-- Scroll reveal script -->
+  <!-- Theme toggle + Scroll reveal -->
   <script>
+    function toggleTheme() {
+      const body = document.body;
+      const isLight = body.classList.toggle('light');
+      document.getElementById('theme-icon-dark').classList.toggle('hidden', isLight);
+      document.getElementById('theme-icon-light').classList.toggle('hidden', !isLight);
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    // Restore theme
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('theme-icon-dark').classList.add('hidden');
+      document.getElementById('theme-icon-light').classList.remove('hidden');
+    }
+    // Scroll reveal
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
