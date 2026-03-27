@@ -148,6 +148,7 @@ export async function POST() {
       "messages", "customers", "groups_meta", "chat_analytics",
       "user_skills", "analysis_logs", "ai_advice", "tasks",
       "kb_articles", "knowledge_base", "payments", "documents", "appointments", "bot_config",
+      "follow_up_rules", "follow_up_queue",
     ];
     for (const col of collections) {
       await db.collection(col).dropIndexes().catch(() => {});
@@ -850,6 +851,148 @@ export async function POST() {
       await db.collection("bot_config").insertMany(botConfigs);
     }
 
+    // ─── 14. Generate Auto-closer Rules + Queue ───
+    const followUpRules = [
+      {
+        name: "ลูกค้าไม่ตอบ 3 วัน — ทักทาย",
+        trigger: "no_reply_days",
+        triggerDays: 3,
+        triggerStage: "",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีครับ {{name}} ไม่ทราบว่ายังสนใจสินค้าอยู่มั้ยครับ? มีอะไรให้ช่วยบอกได้เลยนะครับ 🙏" },
+          { dayOffset: 3, template: "{{name}} ครับ ตอนนี้มีโปรพิเศษ ซื้อครบ 50,000 ส่งฟรีครับ สนใจมั้ยครับ?" },
+        ],
+        aiGenerate: false, platform: "all",
+        status: "active",
+        stats: { triggered: 45, replied: 18, converted: 7 },
+      },
+      {
+        name: "ลูกค้าเสนอราคาค้าง 5 วัน",
+        trigger: "stage_stuck",
+        triggerDays: 5,
+        triggerStage: "quoting",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีครับ {{name}} ใบเสนอราคาที่ส่งไป สะดวกตอนไหนครับ? ถ้ามีข้อสงสัยยินดีตอบครับ" },
+          { dayOffset: 2, template: "{{name}} ครับ เดือนนี้มีส่วนลดพิเศษเพิ่มอีก 3% ถ้าตัดสินใจภายในสัปดาห์นี้ครับ" },
+          { dayOffset: 5, template: "{{name}} ครับ ไม่ทราบว่าตัดสินใจยังไงครับ? ถ้าต้องการปรับใบเสนอราคา บอกได้เลยนะครับ" },
+        ],
+        aiGenerate: false, platform: "all",
+        status: "active",
+        stats: { triggered: 28, replied: 12, converted: 5 },
+      },
+      {
+        name: "ลูกค้า Intent สูง — ปิดการขาย",
+        trigger: "high_intent",
+        triggerDays: 1,
+        triggerStage: "",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีครับ {{name}} เห็นว่าสนใจสินค้าเราอยู่ ถ้าสั่งวันนี้ส่งได้เลยพรุ่งนี้เช้าครับ 🚛" },
+        ],
+        aiGenerate: true, platform: "all",
+        status: "active",
+        stats: { triggered: 15, replied: 10, converted: 6 },
+      },
+      {
+        name: "ลูกค้า VIP หาย 7 วัน",
+        trigger: "no_reply_days",
+        triggerDays: 7,
+        triggerStage: "",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีครับ {{name}} ไม่ได้ทักมานาน สบายดีมั้ยครับ? มีสินค้าใหม่เข้ามาอยากแนะนำครับ" },
+          { dayOffset: 3, template: "{{name}} ครับ ในฐานะลูกค้า VIP มีส่วนลดพิเศษ 10% สำหรับออเดอร์ถัดไปครับ" },
+        ],
+        aiGenerate: false, platform: "line",
+        status: "active",
+        stats: { triggered: 12, replied: 8, converted: 3 },
+      },
+      {
+        name: "ต่อรองราคาค้าง 3 วัน",
+        trigger: "stage_stuck",
+        triggerDays: 3,
+        triggerStage: "negotiating",
+        messages: [
+          { dayOffset: 0, template: "{{name}} ครับ เรื่องราคาที่คุยกันไว้ ผมปรึกษาผู้จัดการแล้ว ลดเพิ่มได้อีก 2% ครับ สนใจมั้ยครับ?" },
+        ],
+        aiGenerate: true, platform: "all",
+        status: "active",
+        stats: { triggered: 20, replied: 14, converted: 8 },
+      },
+      {
+        name: "AI สร้างข้อความ Follow-up อัตโนมัติ",
+        trigger: "no_reply_days",
+        triggerDays: 5,
+        triggerStage: "",
+        messages: [
+          { dayOffset: 0, template: "{{ai_generated}}" },
+        ],
+        aiGenerate: true, platform: "all",
+        status: "active",
+        stats: { triggered: 35, replied: 15, converted: 4 },
+      },
+      {
+        name: "ลูกค้า Facebook ไม่ตอบ 2 วัน",
+        trigger: "no_reply_days",
+        triggerDays: 2,
+        triggerStage: "",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีค่ะ {{name}} 😊 สนใจสินค้าตัวไหนบอกได้เลยนะคะ ตอบทุกคำถามค่ะ" },
+        ],
+        aiGenerate: false, platform: "facebook",
+        status: "active",
+        stats: { triggered: 30, replied: 12, converted: 3 },
+      },
+      {
+        name: "ลูกค้าใหม่ไม่ก้าวไป interested",
+        trigger: "stage_stuck",
+        triggerDays: 7,
+        triggerStage: "new",
+        messages: [
+          { dayOffset: 0, template: "สวัสดีครับ {{name}} ไม่ทราบว่ากำลังมองหาวัสดุก่อสร้างอะไรอยู่ครับ? ส่งแคตตาล็อกให้ดูได้ครับ 📋" },
+          { dayOffset: 5, template: "{{name}} ครับ ขอแนะนำ Package สร้างบ้าน ราคาพิเศษเดือนนี้ครับ สนใจมั้ยครับ? 🏠" },
+        ],
+        aiGenerate: false, platform: "all",
+        status: "active",
+        stats: { triggered: 50, replied: 20, converted: 5 },
+      },
+    ];
+
+    const ruleDocs = followUpRules.map(r => ({
+      ...r,
+      createdAt: randomDate(14),
+      updatedAt: new Date(),
+    }));
+    const ruleResults = await db.collection("follow_up_rules").insertMany(ruleDocs);
+    const ruleIdList = Object.values(ruleResults.insertedIds).map(id => id.toString());
+
+    // สร้าง queue items จากลูกค้าจริง
+    const queueDocs: any[] = [];
+    const queueStatuses = ["pending", "pending", "pending", "sent", "sent", "replied", "converted", "skipped"];
+    for (let i = 0; i < 25; i++) {
+      const c = rand(customerDocs);
+      const ruleId = rand(ruleIdList);
+      const st = rand(queueStatuses);
+      queueDocs.push({
+        ruleId,
+        customerId: c.sourceId,
+        customerName: c.name,
+        sourceId: c.rooms?.[0] || c.sourceId,
+        platform: c.rooms?.[0]?.startsWith("fb_") ? "facebook" : c.rooms?.[0]?.startsWith("ig_") ? "instagram" : "line",
+        currentStep: st === "pending" ? 0 : 1,
+        totalSteps: 2,
+        status: st,
+        nextSendAt: new Date(Date.now() + randInt(-3, 7) * 86400000),
+        lastSentAt: st !== "pending" ? randomDate(7) : null,
+        lastMessage: st !== "pending" ? "สวัสดีครับ สนใจสินค้าอยู่มั้ยครับ?" : null,
+        repliedAt: st === "replied" || st === "converted" ? randomDate(3) : null,
+        convertedAt: st === "converted" ? randomDate(1) : null,
+        createdAt: randomDate(14),
+        updatedAt: new Date(),
+      });
+    }
+    if (queueDocs.length > 0) {
+      await db.collection("follow_up_queue").insertMany(queueDocs);
+    }
+
     // ─── Summary ───
     const tEnd = Date.now();
     const summary = {
@@ -866,6 +1009,8 @@ export async function POST() {
       appointments: appointmentDocs.length,
       documents: documentDocs.length,
       bot_configs: botConfigs.length,
+      follow_up_rules: ruleDocs.length,
+      follow_up_queue: queueDocs.length,
       time_ms: tEnd - t0,
     };
 

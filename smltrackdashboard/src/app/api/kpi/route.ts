@@ -3,7 +3,6 @@ import { getDB } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 
-// วิเคราะห์ response time จาก messages — ลูกค้าส่ง → พนักงานตอบ ใช้เวลาเท่าไหร่
 function isStaffName(name: string | null) {
   return (name || "").toUpperCase().startsWith("SML");
 }
@@ -13,11 +12,11 @@ function isBotName(name: string | null) {
 
 interface ResponseTimeResult {
   avgMinutes: number;
-  level: "green" | "yellow" | "red"; // green <5min, yellow <30min, red >30min
+  level: "green" | "yellow" | "red";
   totalResponses: number;
-  fastCount: number; // <5min
-  mediumCount: number; // 5-30min
-  slowCount: number; // >30min
+  fastCount: number;
+  mediumCount: number;
+  slowCount: number;
 }
 
 function calcResponseTime(messages: any[], staffName?: string): ResponseTimeResult {
@@ -28,15 +27,14 @@ function calcResponseTime(messages: any[], staffName?: string): ResponseTimeResu
     const curr = messages[i];
     if (!prev.createdAt || !curr.createdAt) continue;
 
-    // ลูกค้าส่ง → พนักงานตอบ
     const prevIsCustomer = !isStaffName(prev.userName) && !isBotName(prev.userName);
     const currIsStaff = isStaffName(curr.userName);
     if (staffName && curr.userName !== staffName) continue;
 
     if (prevIsCustomer && currIsStaff) {
       const diffMs = new Date(curr.createdAt).getTime() - new Date(prev.createdAt).getTime();
-      if (diffMs > 0 && diffMs < 86400000) { // ไม่เกิน 24 ชม.
-        responseTimes.push(diffMs / 60000); // เป็นนาที
+      if (diffMs > 0 && diffMs < 86400000) {
+        responseTimes.push(diffMs / 60000);
       }
     }
   }
@@ -63,24 +61,38 @@ export async function GET() {
   try {
     const db = await getDB();
 
-    const [allSkills, allAnalytics, allMeta, totalMessages, allCustomers] = await Promise.all([
+    // จำกัดแค่ 30 วันล่าสุด เพื่อไม่ดึง messages ทั้งหมด
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
+
+    const [allSkills, allAnalytics, allMeta, totalMessages, allCustomers, msgCountsByUser, recentMessages] = await Promise.all([
       db.collection("user_skills").find().toArray(),
       db.collection("chat_analytics").find().toArray(),
       db.collection("groups_meta").find().toArray(),
       db.collection("messages").countDocuments(),
       db.collection("customers").find({}, { projection: { pipelineStage: 1, dealValue: 1 } }).toArray(),
+      // นับข้อความต่อ userName ด้วย aggregation แทน N+1 queries
+      db.collection("messages").aggregate([
+        { $group: { _id: "$userName", count: { $sum: 1 } } },
+      ]).toArray(),
+      // ดึงเฉพาะ 30 วันล่าสุด + เฉพาะ field ที่ต้องใช้
+      db.collection("messages")
+        .find(
+          { createdAt: { $gte: thirtyDaysAgo } },
+          { projection: { sourceId: 1, userName: 1, createdAt: 1 } }
+        )
+        .sort({ createdAt: 1 })
+        .toArray(),
     ]);
 
-    // ดึงข้อความทุกห้อง (เฉพาะ field ที่ต้องใช้ + เรียงตามเวลา)
-    const allMessages = await db
-      .collection("messages")
-      .find({}, { projection: { sourceId: 1, userName: 1, createdAt: 1 } })
-      .sort({ createdAt: 1 })
-      .toArray();
+    // สร้าง lookup map สำหรับ message counts
+    const msgCountMap: Record<string, number> = {};
+    for (const m of msgCountsByUser) {
+      if (m._id) msgCountMap[m._id] = m.count;
+    }
 
     // แยกข้อความตามห้อง
     const messagesByRoom: Record<string, any[]> = {};
-    for (const m of allMessages) {
+    for (const m of recentMessages) {
       if (!m.sourceId) continue;
       if (!messagesByRoom[m.sourceId]) messagesByRoom[m.sourceId] = [];
       messagesByRoom[m.sourceId].push(m);
@@ -91,81 +103,73 @@ export async function GET() {
     const customerSkills = allSkills.filter((s) => !s.isStaff);
     const staffNames = [...new Set(staffSkills.map((s) => s.userName))];
 
-    const staffKpi = await Promise.all(
-      staffNames.map(async (name) => {
-        const msgCount = await db.collection("messages").countDocuments({ userName: name });
+    const staffKpi = staffNames.map((name) => {
+      const msgCount = msgCountMap[name] || 0;
 
-        const rooms = staffSkills
-          .filter((s) => s.userName === name && s.sourceId)
-          .map((s) => {
-            const meta = allMeta.find((m) => m.sourceId === s.sourceId);
-            return {
-              sourceId: s.sourceId,
-              roomName: meta?.groupName || (s.sourceId || "unknown").substring(0, 12),
-              sentiment: s.sentiment || null,
-              purchaseIntent: s.purchaseIntent || null,
-            };
-          });
+      const rooms = staffSkills
+        .filter((s) => s.userName === name && s.sourceId)
+        .map((s) => {
+          const meta = allMeta.find((m) => m.sourceId === s.sourceId);
+          return {
+            sourceId: s.sourceId,
+            roomName: meta?.groupName || (s.sourceId || "unknown").substring(0, 12),
+            sentiment: s.sentiment || null,
+            purchaseIntent: s.purchaseIntent || null,
+          };
+        });
 
-        // Response time ของพนักงานคนนี้ (รวมทุกห้อง)
-        const staffRoomIds = rooms.map((r) => r.sourceId);
-        const staffMessages = staffRoomIds.flatMap((id) => messagesByRoom[id] || []);
-        const responseTime = calcResponseTime(staffMessages, name);
+      const staffRoomIds = rooms.map((r) => r.sourceId);
+      const staffMessages = staffRoomIds.flatMap((id) => messagesByRoom[id] || []);
+      const responseTime = calcResponseTime(staffMessages, name);
 
-        // avg sentiment ลูกค้าในห้องที่ดูแล
-        const relatedCustomers = customerSkills.filter((s) => staffRoomIds.includes(s.sourceId));
-        const avgCustomerScore = relatedCustomers.length > 0
-          ? Math.round(relatedCustomers.reduce((sum, s) => sum + (s.sentiment?.score || 50), 0) / relatedCustomers.length)
-          : 50;
+      const relatedCustomers = customerSkills.filter((s) => staffRoomIds.includes(s.sourceId));
+      const avgCustomerScore = relatedCustomers.length > 0
+        ? Math.round(relatedCustomers.reduce((sum, s) => sum + (s.sentiment?.score || 50), 0) / relatedCustomers.length)
+        : 50;
 
-        return {
-          name,
-          messageCount: msgCount,
-          roomCount: rooms.length,
-          rooms,
-          responseTime,
-          customerSatisfaction: {
-            score: avgCustomerScore,
-            level: avgCustomerScore >= 60 ? "green" as const : avgCustomerScore >= 30 ? "yellow" as const : "red" as const,
-          },
-          sentiment: staffSkills.find((s) => s.userName === name)?.sentiment || null,
-        };
-      })
-    );
+      return {
+        name,
+        messageCount: msgCount,
+        roomCount: rooms.length,
+        rooms,
+        responseTime,
+        customerSatisfaction: {
+          score: avgCustomerScore,
+          level: avgCustomerScore >= 60 ? "green" as const : avgCustomerScore >= 30 ? "yellow" as const : "red" as const,
+        },
+        sentiment: staffSkills.find((s) => s.userName === name)?.sentiment || null,
+      };
+    });
 
-    // Customer KPI
+    // Customer KPI — ใช้ msgCountMap แทน countDocuments ทีละคน
     const customerNames = [...new Set(customerSkills.map((s) => s.userId || s.userName).filter(Boolean))];
-    const customerKpi = await Promise.all(
-      customerNames.slice(0, 50).map(async (name) => {
-        const msgCount = await db.collection("messages").countDocuments({ userName: name });
-        const skills = customerSkills.filter((s) => (s.userId || s.userName) === name);
-        const roomCount = skills.length;
+    const customerKpi = customerNames.slice(0, 50).map((name) => {
+      const msgCount = msgCountMap[name] || 0;
+      const skills = customerSkills.filter((s) => (s.userId || s.userName) === name);
+      const roomCount = skills.length;
 
-        // ความพอใจรวมของลูกค้าคนนี้
-        const avgSentiment = skills.length > 0
-          ? Math.round(skills.reduce((sum, s) => sum + (s.sentiment?.score || 50), 0) / skills.length)
-          : 50;
+      const avgSentiment = skills.length > 0
+        ? Math.round(skills.reduce((sum, s) => sum + (s.sentiment?.score || 50), 0) / skills.length)
+        : 50;
 
-        // โอกาสซื้อรวม
-        const avgPurchase = skills.length > 0
-          ? Math.round(skills.reduce((sum, s) => sum + (s.purchaseIntent?.score || 10), 0) / skills.length)
-          : 10;
+      const avgPurchase = skills.length > 0
+        ? Math.round(skills.reduce((sum, s) => sum + (s.purchaseIntent?.score || 10), 0) / skills.length)
+        : 10;
 
-        return {
-          name,
-          messageCount: msgCount,
-          roomCount,
-          sentiment: {
-            score: avgSentiment,
-            level: avgSentiment >= 60 ? "green" as const : avgSentiment >= 30 ? "yellow" as const : "red" as const,
-          },
-          purchaseIntent: {
-            score: avgPurchase,
-            level: avgPurchase >= 60 ? "red" as const : avgPurchase >= 30 ? "yellow" as const : "green" as const,
-          },
-        };
-      })
-    );
+      return {
+        name,
+        messageCount: msgCount,
+        roomCount,
+        sentiment: {
+          score: avgSentiment,
+          level: avgSentiment >= 60 ? "green" as const : avgSentiment >= 30 ? "yellow" as const : "red" as const,
+        },
+        purchaseIntent: {
+          score: avgPurchase,
+          level: avgPurchase >= 60 ? "red" as const : avgPurchase >= 30 ? "yellow" as const : "green" as const,
+        },
+      };
+    });
 
     // Room overview + response time ต่อห้อง
     const rooms = allAnalytics.map((a) => {
@@ -194,11 +198,9 @@ export async function GET() {
     const alertRooms = rooms.filter(
       (r) => r.customerSentiment?.level === "red" || r.purchaseIntent?.level === "red"
     );
+    const overallResponseTime = calcResponseTime(recentMessages);
 
-    // Overall response time
-    const overallResponseTime = calcResponseTime(allMessages);
-
-    // === อัตราปิดการขาย (Pipeline Conversion) ===
+    // === Pipeline Conversion ===
     const pipelineStages = ["new", "interested", "quoting", "negotiating", "closed_won", "closed_lost", "following_up"];
     const pipelineCounts: Record<string, number> = {};
     for (const stage of pipelineStages) pipelineCounts[stage] = 0;
@@ -217,7 +219,6 @@ export async function GET() {
     const closedTotal = closedWon + closedLost;
     const conversionRate = closedTotal > 0 ? Math.round((closedWon / closedTotal) * 100) : 0;
 
-    // อัตราปิดต่อพนักงาน
     const staffConversion = staffKpi.map((staff) => {
       const staffRoomIds = staff.rooms.map((r: any) => r.sourceId);
       const staffCustomers = customerSkills.filter((s) => staffRoomIds.includes(s.sourceId));
@@ -243,7 +244,6 @@ export async function GET() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const threeDaysAgo = new Date(now.getTime() - 3 * 86400000);
 
-    // หา lastMessageAt ของแต่ละลูกค้า
     const customerLastMsg: Record<string, { userName: string; lastAt: Date; sourceId: string; roomName: string; pipelineStage: string }> = {};
     for (const s of customerSkills) {
       if (!s.sourceId || !s.userName) continue;
@@ -283,7 +283,7 @@ export async function GET() {
       }))
       .sort((a, b) => b.daysSinceLastMsg - a.daysSinceLastMsg);
 
-    // === Revenue from customers.dealValue ===
+    // === Revenue ===
     const activePipelineStages = ["interested", "quoting", "negotiating", "following_up"];
     const totalPipelineValue = allCustomers
       .filter((c) => activePipelineStages.includes(c.pipelineStage || "new"))
