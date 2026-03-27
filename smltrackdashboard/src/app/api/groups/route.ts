@@ -10,19 +10,49 @@ export async function GET(request: NextRequest) {
 
     const limit = parseInt(request.nextUrl.searchParams.get("limit") || "20");
     const page = parseInt(request.nextUrl.searchParams.get("page") || "0");
+    const platformFilter = request.nextUrl.searchParams.get("platform") || "";
 
-    // 1. ดึง sourceIds จาก messages (groups_meta อาจว่าง)
-    const allSourceIds = await db.collection("messages").distinct("sourceId");
-    const totalCount = allSourceIds.filter(Boolean).length;
-    const sourceIds = allSourceIds.filter(Boolean).slice(page * limit, (page + 1) * limit);
+    // 1. ดึง sourceIds — ใช้ groups_meta เป็นหลัก (มี platform info)
+    let filteredMeta;
+    if (platformFilter) {
+      filteredMeta = await db.collection("groups_meta")
+        .find({ platform: platformFilter })
+        .sort({ lastMessageAt: -1 })
+        .toArray();
+    } else {
+      filteredMeta = await db.collection("groups_meta")
+        .find()
+        .sort({ lastMessageAt: -1 })
+        .toArray();
+    }
+
+    // Fallback: ถ้า groups_meta ว่าง ดึงจาก messages
+    let allSourceIds: string[];
+    if (filteredMeta.length > 0) {
+      allSourceIds = filteredMeta.map(m => m.sourceId).filter(Boolean);
+    } else {
+      allSourceIds = (await db.collection("messages").distinct("sourceId")).filter(Boolean);
+    }
+
+    const totalCount = allSourceIds.length;
+    const sourceIds = allSourceIds.slice(page * limit, (page + 1) * limit);
 
     // ดึง groups_meta สำหรับ sourceIds ที่ paginate แล้ว
-    const allMeta = sourceIds.length > 0
-      ? await db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray()
-      : [];
+    const allMeta = filteredMeta.length > 0
+      ? filteredMeta.filter(m => sourceIds.includes(m.sourceId))
+      : sourceIds.length > 0
+        ? await db.collection("groups_meta").find({ sourceId: { $in: sourceIds } }).toArray()
+        : [];
+
+    // Platform counts (สำหรับ UI badges)
+    const platformCounts = platformFilter
+      ? undefined
+      : await db.collection("groups_meta").aggregate([
+          { $group: { _id: "$platform", count: { $sum: 1 } } },
+        ]).toArray();
 
     if (sourceIds.length === 0) {
-      return NextResponse.json({ groups: [], pagination: { total: 0, limit, page, pages: 0, hasMore: false } });
+      return NextResponse.json({ groups: [], platformCounts: platformCounts || [], pagination: { total: 0, limit, page, pages: 0, hasMore: false } });
     }
 
     // 2. Batch fetch analytics + logs (simple $in queries — fast)
@@ -87,6 +117,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       groups,
+      platformCounts: platformCounts || [],
       pagination: {
         total: totalCount,
         limit,

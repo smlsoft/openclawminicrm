@@ -77,6 +77,7 @@ export default function Home() {
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [filters, setFilters] = useState<Set<FilterKey>>(new Set());
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [platformCounts, setPlatformCounts] = useState<Record<string, number>>({});
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [showAlerts, setShowAlerts] = useState(true);
   const [page, setPage] = useState(0);
@@ -100,7 +101,8 @@ export default function Home() {
   const fetchGroups = useCallback(async (pageNum: number, append = false) => {
     try {
       if (append) setLoadingMore(true);
-      const res = await fetch(`/dashboard/api/groups?page=${pageNum}&limit=20`);
+      const pfParam = platformFilter !== "all" ? `&platform=${platformFilter}` : "";
+      const res = await fetch(`/dashboard/api/groups?page=${pageNum}&limit=20${pfParam}`);
       const raw = await res.json();
       const data = Array.isArray(raw) ? raw : raw.groups;
       if (!Array.isArray(data)) return;
@@ -134,10 +136,19 @@ export default function Home() {
       }
 
       setHasMore(raw.pagination?.hasMore ?? false);
+
+      // Store platform counts from API
+      if (raw.platformCounts && Array.isArray(raw.platformCounts)) {
+        const counts: Record<string, number> = {};
+        let total = 0;
+        for (const pc of raw.platformCounts) { counts[pc._id] = pc.count; total += pc.count; }
+        counts["all"] = total;
+        setPlatformCounts(counts);
+      }
     } catch {} finally {
       setLoadingMore(false);
     }
-  }, [autoSort, order.length]);
+  }, [autoSort, order.length, platformFilter]);
 
   const fetchAll = useCallback(async () => {
     await fetchGroups(0, false);
@@ -152,6 +163,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => { fetchAll(); fetchAlerts(); }, []);
+  // Refetch when platform filter changes
+  useEffect(() => { setPage(0); fetchGroups(0, false); }, [platformFilter]);
   useEffect(() => {
     const interval = setInterval(() => { fetchGroups(0, false); fetchAlerts(); }, 10000);
     return () => clearInterval(interval);
@@ -179,12 +192,7 @@ export default function Home() {
   // Filter groups
   // Filter: AND logic — ต้องตรงทุกตัวที่เลือก
   const filteredGroups = groups.filter((g) => {
-    // Platform filter
-    if (platformFilter !== "all") {
-      const gPlatform = g.platform || "line";
-      if (gPlatform !== platformFilter) return false;
-    }
-    // Sentiment / purchase filter
+    // Platform filter now handled by API — only sentiment/purchase client-side
     if (filters.size === 0) return true;
     for (const f of filters) {
       if (f.startsWith("sentiment-") && g.sentiment?.level !== f.replace("sentiment-", "")) return false;
@@ -333,10 +341,8 @@ export default function Home() {
           { value: "instagram", label: "Instagram", badgeClass: "bg-pink-900/40 text-pink-400 hover:bg-pink-800/50 border border-pink-800/50", activeClass: "bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-pink-500" },
         ]).map(({ value, label, badgeClass, activeClass }) => {
           const isActive = platformFilter === value;
-          // Count per platform
-          const count = value === "all"
-            ? groups.length
-            : groups.filter((g) => (g.platform || "line") === value).length;
+          // Count per platform (from API, not client-side)
+          const count = platformCounts[value] || 0;
           return (
             <button
               key={value}
