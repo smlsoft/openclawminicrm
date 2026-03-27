@@ -109,3 +109,4 @@ groups_meta     { sourceId, groupName, platform, teamId }
 | Skill | File | หน้าที่ |
 |-------|------|--------|
 | theming | `skills/theming/SKILL.md` | มาตรฐานสี Dark/Light theme ทุกจอ |
+| thai-language | `skills/thai-language/SKILL.md` | ภาษาไทยที่เข้าใจง่าย — แปลศัพท์เทคนิค, labels, สถานะ, บทบาท |
