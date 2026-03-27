@@ -148,7 +148,7 @@ export async function POST() {
       "messages", "customers", "groups_meta", "chat_analytics",
       "user_skills", "analysis_logs", "ai_advice", "tasks",
       "kb_articles", "knowledge_base", "payments", "documents", "appointments", "bot_config",
-      "follow_up_rules", "follow_up_queue",
+      "follow_up_rules", "follow_up_queue", "reply_templates",
     ];
     for (const col of collections) {
       await db.collection(col).dropIndexes().catch(() => {});
@@ -568,19 +568,26 @@ export async function POST() {
       await db.collection("knowledge_base").insertMany(kbForAgent);
     }
 
-    // ─── 10. Generate AI Advice ───
+    // ─── 10. Generate AI Advice (type ต้องตรงกับ advice page tabs) ───
     const adviceDocs = [
-      { type: "problem", priority: "high", title: "ผู้รับเหมา 12 รายไม่ทักมาเกิน 7 วัน", content: "พบผู้รับเหมา 12 รายที่ไม่มี activity เกิน 7 วัน ส่วนใหญ่อยู่ stage 'quoting'\nยอดสั่งเฉลี่ย 80,000 บาท/ราย\nแนะนำ: โทรติดตามใบเสนอราคา + เสนอโปรส่งฟรี", sourceIds: [] },
-      { type: "problem", priority: "high", title: "SML-ธนากร ตอบแชทช้าเฉลี่ย 45 นาที", content: "พนักงาน SML-ธนากร ตอบแชทเฉลี่ย 45 นาที (มาตรฐาน 15 นาที)\nห้องที่ช้าที่สุด: ผู้รับเหมา VIP 3 ราย\nแนะนำ: ตรวจสอบ workload หรือเพิ่มคนช่วยขาย", sourceIds: [] },
-      { type: "problem", priority: "medium", title: "ลูกค้า 3 รายร้องเรียนเรื่องส่งช้า/ของแตก", content: "มีลูกค้า 3 รายร้องเรียน \"ปูนส่งช้า\" และ \"เหล็กไม่ครบ\"\nSentiment ลดลง green → red\nแนะนำ: ติดต่อทันที + ตรวจสอบกับทีมขนส่ง + ชดเชย", sourceIds: [] },
-      { type: "problem", priority: "medium", title: "สต็อกปูนตราเสือเหลือน้อย", content: "สต็อกปูนตราเสือเหลือ 200 ถุง (ปกติขาย 150 ถุง/สัปดาห์)\nคาดว่าหมดใน 9 วัน\nแนะนำ: สั่งเพิ่มจากโรงงานทันที อย่างน้อย 500 ถุง", sourceIds: [] },
-      { type: "opportunity", priority: "high", title: "ผู้รับเหมา 8 รายสนใจซื้อล็อตใหญ่!", content: "AI วิเคราะห์ผู้รับเหมา 8 รายที่มีโอกาสซื้อสูง (score 70+)\nส่วนใหญ่ถามราคาปูน+เหล็ก ยอดรวมประมาณ 500,000 บาท\nแนะนำ: ส่งใบเสนอราคา + โปรผู้รับเหมา ปิดการขาย", sourceIds: [] },
-      { type: "opportunity", priority: "medium", title: "กลุ่มสั่งปูนรวม ยอดเพิ่ม 40%", content: "กลุ่มผู้รับเหมาสั่งรวม มียอดเพิ่ม 40% จากเดือนก่อน\nสินค้ายอดนิยม: ปูนตราเสือ + เหล็กข้ออ้อย 12mm\nแนะนำ: เตรียมสต็อก + เสนอเครดิต 30 วัน", sourceIds: [] },
-      { type: "opportunity", priority: "medium", title: "ลูกค้า Facebook เพิ่มขึ้น 60%", content: "ลูกค้าจาก Facebook เพิ่มขึ้น 60% สัปดาห์นี้\nส่วนใหญ่มาจากโพสต์โปรปูนราคาพิเศษ\nแนะนำ: ทำโพสต์โปรเพิ่ม + Boost Post งบ 500 บาท", sourceIds: [] },
-      { type: "re_engage", priority: "high", title: "ผู้รับเหมา VIP 5 รายหายไป 14+ วัน", content: "ผู้รับเหมา VIP (ยอดสะสม 100,000+) จำนวน 5 รายไม่สั่ง 14+ วัน\nเคยสั่งประจำทุก 2 สัปดาห์\nแนะนำ: โทรหาเป็นการส่วนตัว + เสนอส่วนลด VIP 10%", sourceIds: [] },
-      { type: "re_engage", priority: "medium", title: "ลูกค้า 20 รายขอใบเสนอราคาแล้วเงียบ", content: "มีลูกค้า 20 รายอยู่ stage quoting เกิน 5 วัน ยังไม่ตอบรับ\nรวมยอดใบเสนอราคา 1.2 ล้านบาท\nแนะนำ: follow up ทุกราย + เสนอส่วนลดเพิ่ม 3%", sourceIds: [] },
-      { type: "insight", priority: "low", title: "วัสดุขายดีประจำสัปดาห์", content: "Top 5 วัสดุที่ถูกถามมากที่สุด:\n1. ปูนซีเมนต์ ตราเสือ (45 ครั้ง)\n2. เหล็กเส้น 12mm (38 ครั้ง)\n3. อิฐมวลเบา Q-CON (28 ครั้ง)\n4. กระเบื้อง SCG (22 ครั้ง)\n5. สีทาบ้าน TOA (18 ครั้ง)", sourceIds: [] },
-      { type: "insight", priority: "low", title: "ช่วงเวลาที่ลูกค้าทักมากที่สุด", content: "วิเคราะห์จาก 7 วันล่าสุด:\n- 08:00-10:00 (35% — ช่างเริ่มงานเช้า)\n- 12:00-13:00 (20% — พักเที่ยง)\n- 16:00-17:00 (15% — เลิกงาน)\nแนะนำ: จัดพนักงานขาย 3 คนช่วง 08:00-10:00", sourceIds: [] },
+      // problem-analysis
+      { type: "problem-analysis", priority: "critical", title: "ผู้รับเหมา 12 รายไม่ทักมาเกิน 7 วัน", detail: "พบผู้รับเหมา 12 รายที่ไม่มี activity เกิน 7 วัน ส่วนใหญ่อยู่ stage 'quoting'\nยอดสั่งเฉลี่ย 80,000 บาท/ราย", action: "โทรติดตามใบเสนอราคา + เสนอโปรส่งฟรี", sourceIds: [] },
+      { type: "problem-analysis", priority: "warning", title: "SML-ธนากร ตอบแชทช้าเฉลี่ย 45 นาที", detail: "พนักงาน SML-ธนากร ตอบแชทเฉลี่ย 45 นาที (มาตรฐาน 15 นาที)\nห้องที่ช้าที่สุด: ผู้รับเหมา VIP 3 ราย", action: "ตรวจสอบ workload หรือเพิ่มคนช่วยขาย", sourceIds: [] },
+      { type: "problem-analysis", priority: "warning", title: "ลูกค้า 3 รายร้องเรียนเรื่องส่งช้า/ของแตก", detail: "มีลูกค้า 3 รายร้องเรียน ปูนส่งช้า และ เหล็กไม่ครบ\nSentiment ลดลง green → red", action: "ติดต่อทันที + ตรวจสอบกับทีมขนส่ง + ชดเชย", sourceIds: [] },
+      { type: "problem-analysis", priority: "warning", title: "สต็อกปูนตราเสือเหลือน้อย", detail: "สต็อกปูนตราเสือเหลือ 200 ถุง (ปกติขาย 150 ถุง/สัปดาห์) คาดว่าหมดใน 9 วัน", action: "สั่งเพิ่มจากโรงงานทันที อย่างน้อย 500 ถุง", sourceIds: [] },
+      // sales-opportunity
+      { type: "sales-opportunity", priority: "opportunity", title: "ผู้รับเหมา 8 รายสนใจซื้อล็อตใหญ่!", detail: "AI วิเคราะห์ผู้รับเหมา 8 รายที่มีโอกาสซื้อสูง (score 70+)\nส่วนใหญ่ถามราคาปูน+เหล็ก ยอดรวมประมาณ 500,000 บาท", action: "ส่งใบเสนอราคา + โปรผู้รับเหมา ปิดการขาย", sourceIds: [] },
+      { type: "sales-opportunity", priority: "opportunity", title: "กลุ่มสั่งปูนรวม ยอดเพิ่ม 40%", detail: "กลุ่มผู้รับเหมาสั่งรวม มียอดเพิ่ม 40% จากเดือนก่อน\nสินค้ายอดนิยม: ปูนตราเสือ + เหล็กข้ออ้อย 12mm", action: "เตรียมสต็อก + เสนอเครดิต 30 วัน", sourceIds: [] },
+      { type: "sales-opportunity", priority: "info", title: "ลูกค้า Facebook เพิ่มขึ้น 60%", detail: "ลูกค้าจาก Facebook เพิ่มขึ้น 60% สัปดาห์นี้ ส่วนใหญ่มาจากโพสต์โปรปูนราคาพิเศษ", action: "ทำโพสต์โปรเพิ่ม + Boost Post งบ 500 บาท", sourceIds: [] },
+      // team-coaching
+      { type: "team-coaching", priority: "info", title: "SML-วิภา ตอบเร็วที่สุดในทีม", detail: "SML-วิภา ตอบเฉลี่ย 3 นาที ลูกค้าให้ sentiment 90+\nเป็นตัวอย่างที่ดีสำหรับทีม", action: "ชมเชย + ให้เป็น mentor พนักงานใหม่", sourceIds: [] },
+      { type: "team-coaching", priority: "warning", title: "SML-พิมพ์ ปิดการขายน้อยกว่าเพื่อน 50%", detail: "SML-พิมพ์ conversion rate 12% (ทีมเฉลี่ย 25%)\nส่วนใหญ่ลูกค้าค้างที่ stage quoting", action: "อบรมเทคนิคปิดการขาย + ให้ SML-วิภา สอน", sourceIds: [] },
+      // weekly-strategy
+      { type: "weekly-strategy", priority: "info", title: "สรุปสัปดาห์ที่ผ่านมา", detail: "ข้อความ 1,200+ / ลูกค้าใหม่ 15 / ปิดขาย 8 / ยอดรวม 450,000 บาท\nเทียบสัปดาห์ก่อน: ข้อความ +10% ลูกค้า +20% ยอด +15%", action: "สัปดาห์หน้า: เน้น follow up ลูกค้า quoting 20 ราย", sourceIds: [] },
+      { type: "weekly-strategy", priority: "opportunity", title: "โอกาส: เดือนหน้าเป็นฤดูก่อสร้าง", detail: "สถิติปีก่อน เดือนหน้ายอดขายเพิ่ม 30% เป็นฤดูก่อสร้าง\nลูกค้าจะต้องการปูน+เหล็กมากขึ้น", action: "สต็อกปูน/เหล็กเพิ่ม 50% + เตรียมรถส่งเพิ่ม + โปรฤดูก่อสร้าง", sourceIds: [] },
+      // health-monitor
+      { type: "health-monitor", priority: "info", title: "สุขภาพธุรกิจ: ปกติ", detail: "อัตราปิดขาย 25% (เป้า 20%) ✅\nเวลาตอบเฉลี่ย 8 นาที (เป้า 15) ✅\nSentiment เฉลี่ย 72% (เป้า 60%) ✅\nลูกค้าหลุด 5% (เป้า <10%) ✅", action: "รักษาคุณภาพ ทีมทำได้ดีมาก", sourceIds: [] },
+      { type: "health-monitor", priority: "critical", title: "⚠️ ลูกค้า VIP 5 รายหายไป 14+ วัน", detail: "ผู้รับเหมา VIP (ยอดสะสม 100,000+) จำนวน 5 รายไม่สั่ง 14+ วัน\nเคยสั่งประจำทุก 2 สัปดาห์ หายไปพร้อมกัน", action: "โทรหาเป็นการส่วนตัว ทันที + เสนอส่วนลด VIP 10%", sourceIds: [] },
     ];
 
     const adviceInsert = adviceDocs.map(a => ({
@@ -851,7 +858,44 @@ export async function POST() {
       await db.collection("bot_config").insertMany(botConfigs);
     }
 
-    // ─── 14. Generate Auto-closer Rules + Queue ───
+    // ─── 14. Generate Reply Templates (25 แม่แบบข้อความ) ───
+    const replyTemplates = [
+      // ทักทาย (greeting)
+      { title: "ทักทายลูกค้าใหม่", content: "สวัสดีครับ ยินดีให้บริการครับ 🙏 สนใจวัสดุก่อสร้างตัวไหนบอกได้เลยนะครับ", category: "greeting", usageCount: randInt(10, 50) },
+      { title: "ทักทายลูกค้าเก่า", content: "สวัสดีครับ กลับมาอีกแล้ว 😊 มีอะไรให้ช่วยครับ? สินค้าใหม่เข้าเยอะเลยครับ", category: "greeting", usageCount: randInt(5, 30) },
+      { title: "ทักทาย VIP", content: "สวัสดีครับ ยินดีต้อนรับลูกค้า VIP ครับ 🌟 มีสิทธิพิเศษส่วนลด 10% ทุกรายการ วันนี้สนใจอะไรครับ?", category: "greeting", usageCount: randInt(3, 20) },
+      { title: "ทักทาย IG/FB", content: "สวัสดีค่ะ ขอบคุณที่ทักมานะคะ 💕 สนใจสินค้าตัวไหนส่งรายละเอียดให้เลยค่ะ", category: "greeting", usageCount: randInt(5, 25) },
+      { title: "ตอบนอกเวลา", content: "สวัสดีครับ ขณะนี้อยู่นอกเวลาทำการ (จ-ส 7:00-17:00) จะตอบกลับโดยเร็วที่สุดครับ 🙏", category: "greeting", usageCount: randInt(10, 40) },
+      // ราคา (pricing)
+      { title: "ราคาปูนตราเสือ", content: "ปูนซีเมนต์ตราเสือ ประเภท 1\n• 1-99 ถุง: 135 บาท/ถุง\n• 100+ ถุง: 128 บาท/ถุง\n• 500+ ถุง: 122 บาท/ถุง\nสนใจจำนวนเท่าไหร่ครับ?", category: "pricing", usageCount: randInt(20, 80) },
+      { title: "ราคาเหล็ก", content: "เหล็กข้ออ้อย SD40:\n• 10mm: 120 บาท/เส้น\n• 12mm: 185 บาท/เส้น\n• 16mm: 320 บาท/เส้น\n• 20mm: 500 บาท/เส้น\nซื้อ 100 เส้น ลด 5% ครับ", category: "pricing", usageCount: randInt(15, 60) },
+      { title: "ราคาอิฐ Q-CON", content: "อิฐมวลเบา Q-CON:\n• หนา 7.5cm: 28 บาท/ก้อน\n• หนา 10cm: 35 บาท/ก้อน\n• หนา 12.5cm: 42 บาท/ก้อน\nสั่งเป็นพาเลทลดเพิ่ม 10% ครับ", category: "pricing", usageCount: randInt(10, 40) },
+      { title: "ค่าขนส่ง", content: "ค่าขนส่ง:\n• รัศมี 30 กม.: 500-1,000 บาท (รถ 6 ล้อ)\n• รัศมี 50 กม.: 1,000-2,000 บาท\n• ซื้อครบ 50,000 บาท ส่งฟรี! 🚛\nจัดส่งหน้างานได้เลยครับ", category: "pricing", usageCount: randInt(20, 70) },
+      { title: "ส่งใบเสนอราคา", content: "ส่งใบเสนอราคาให้ทาง LINE เลยนะครับ 📄\nราคารวม VAT 7% แล้ว\nใบเสนอราคามีอายุ 15 วัน\nสนใจกดยืนยันได้เลยครับ", category: "pricing", usageCount: randInt(15, 45) },
+      // ติดตาม (followup)
+      { title: "ติดตามใบเสนอราคา", content: "สวัสดีครับ ไม่ทราบว่าใบเสนอราคาที่ส่งไป พอจะตัดสินใจได้หรือยังครับ? ถ้ามีข้อสงสัยยินดีตอบทุกคำถามครับ 🙏", category: "followup", usageCount: randInt(10, 50) },
+      { title: "ติดตามหลังส่งของ", content: "สวัสดีครับ ของที่จัดส่งไป ได้รับเรียบร้อยมั้ยครับ? ตรวจสอบแล้วครบถ้วนมั้ยครับ? มีปัญหาบอกได้เลยนะครับ 😊", category: "followup", usageCount: randInt(10, 40) },
+      { title: "ติดตามลูกค้าเงียบ", content: "สวัสดีครับ ไม่ได้ทักมาเลย สบายดีมั้ยครับ? 😊 มีวัสดุก่อสร้างอะไรต้องการ บอกได้ตลอดนะครับ ตอนนี้มีโปรดีๆ ด้วยครับ", category: "followup", usageCount: randInt(5, 30) },
+      { title: "ติดตามสลิป", content: "สวัสดีครับ ขอรบกวนส่งสลิปโอนเงินมาด้วยนะครับ เพื่อจะได้จัดส่งสินค้าให้ครับ 🙏", category: "followup", usageCount: randInt(15, 55) },
+      { title: "แจ้ง tracking", content: "สินค้าจัดส่งแล้วครับ 🚛\nเลขที่ใบส่งของ: ______\nคาดว่าถึงหน้างาน: วันพรุ่งนี้ช่วงเช้า\nรบกวนตรวจสอบก่อนรับด้วยนะครับ", category: "followup", usageCount: randInt(20, 60) },
+      // ปิดการขาย (closing)
+      { title: "ปิดการขาย — ยืนยัน", content: "ขอบคุณมากครับ ยืนยันออเดอร์เรียบร้อย 🎉\nจะจัดส่งภายในวันพรุ่งนี้เช้าครับ\nมีอะไรเพิ่มเติมบอกได้เลยนะครับ 🙏", category: "closing", usageCount: randInt(10, 40) },
+      { title: "ปิดการขาย — ขอบคุณ", content: "ขอบคุณที่ไว้วางใจครับ 🙏❤️\nหวังว่าจะได้ให้บริการอีกนะครับ\nมีปัญหาหรือต้องการเพิ่ม ทักมาได้ตลอดครับ", category: "closing", usageCount: randInt(10, 35) },
+      { title: "ปิด — เสนอส่วนลดสุดท้าย", content: "ตอนนี้เป็นราคาดีที่สุดแล้วครับ แต่ถ้าตัดสินใจวันนี้ ผมแถมค่าส่งฟรีให้เลยครับ! 🎁 สนใจมั้ยครับ?", category: "closing", usageCount: randInt(5, 25) },
+      { title: "ปิด — ใกล้หมดสต็อก", content: "แจ้งให้ทราบครับ สินค้าตัวนี้เหลือไม่มากแล้ว ถ้าสนใจรีบตัดสินใจนะครับ ล็อตหน้าราคาอาจปรับขึ้นครับ 📈", category: "closing", usageCount: randInt(3, 20) },
+      // กำหนดเอง (custom)
+      { title: "ขออภัย — ส่งช้า", content: "ต้องขออภัยจริงๆ ครับ ที่ส่งช้ากว่ากำหนด 😞 จะเร่งจัดส่งให้ทันทีครับ ชดเชยค่าส่งครั้งหน้าให้ครับ", category: "custom", usageCount: randInt(5, 20) },
+      { title: "ขออภัย — ของแตก/เสีย", content: "ขออภัยจริงๆ ครับ 😔 จะจัดส่งทดแทนให้ภายในวันนี้โดยไม่คิดค่าใช้จ่ายเพิ่มครับ รบกวนส่งรูปสินค้าที่เสียหายมาด้วยนะครับ", category: "custom", usageCount: randInt(3, 15) },
+      { title: "แนะนำวัสดุ", content: "สำหรับงานนี้ แนะนำใช้:\n• ปูนตราเสือ ประเภท 1 (งานโครงสร้าง)\n• เหล็กข้ออ้อย SD40\n• อิฐมวลเบา Q-CON (ผนัง)\nต้องการคำนวณปริมาณ ส่งแบบมาได้เลยครับ", category: "custom", usageCount: randInt(5, 25) },
+      { title: "เชิญเป็นตัวแทน", content: "สนใจเป็นตัวแทนจำหน่ายมั้ยครับ? 🤝\nเงื่อนไข: ซื้อเริ่มต้น 50,000 บาท\nได้ราคา dealer + เครดิต 30 วัน\nสนใจนัดคุยรายละเอียดได้ครับ", category: "custom", usageCount: randInt(2, 10) },
+      { title: "ปิดร้านวันหยุด", content: "แจ้งวันหยุด: ร้านปิดวันที่ ___\nเปิดให้บริการปกติวันที่ ___\nสั่งสินค้าล่วงหน้าได้ทาง LINE ครับ 🙏\nขออภัยในความไม่สะดวกครับ", category: "custom", usageCount: randInt(1, 8) },
+    ].map(t => ({ ...t, createdAt: randomDate(30) }));
+
+    if (replyTemplates.length > 0) {
+      await db.collection("reply_templates").insertMany(replyTemplates);
+    }
+
+    // ─── 15. Generate Auto-closer Rules + Queue ───
     const followUpRules = [
       {
         name: "ลูกค้าไม่ตอบ 3 วัน — ทักทาย",
