@@ -26,8 +26,8 @@ const DEMO_USER = {
   image: "",
 };
 
-// Skip auth ถ้าไม่มี GOOGLE_CLIENT_ID (dev mode)
-const DEV_MODE = !process.env.GOOGLE_CLIENT_ID;
+// Skip auth ถ้าไม่มี NEXTAUTH_SECRET (local dev only)
+const DEV_MODE = !process.env.NEXTAUTH_SECRET;
 
 // สร้าง providers list
 const providers: any[] = [

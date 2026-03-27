@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 // Dev mode: ไม่มี GOOGLE_CLIENT_ID → ข้าม auth ทั้งหมด
 
 export async function proxy(req: NextRequest) {
-  // Dev mode — ผ่านได้เลย (check at runtime, not build time)
-  if (!process.env.GOOGLE_CLIENT_ID) return NextResponse.next();
+  // Dev mode — ผ่านได้เลยถ้าไม่มี NEXTAUTH_SECRET (local dev)
+  if (!process.env.NEXTAUTH_SECRET) return NextResponse.next();
 
   const { pathname } = req.nextUrl;
 
