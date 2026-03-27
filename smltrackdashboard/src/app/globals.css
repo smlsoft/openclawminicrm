@@ -282,9 +282,31 @@ html.theme-transition *::after {
   border-top: 1px solid var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.3s ease;
+}
+.bottom-nav.nav-hidden {
+  transform: translateY(100%);
 }
 @media (min-width: 768px) {
   .bottom-nav { display: none; }
+}
+
+/* Page header + sticky headers auto-hide on mobile scroll */
+@media (max-width: 767px) {
+  .page-header,
+  header[class*="sticky"] {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  html[data-scroll-hide="true"] .page-header,
+  html[data-scroll-hide="true"] header[class*="sticky"] {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* เมื่อซ่อน → content ขยับขึ้นเต็มจอ */
+  html[data-scroll-hide="true"] .page-content {
+    padding-bottom: 0.75rem;
+  }
 }
 
 /* ============================================

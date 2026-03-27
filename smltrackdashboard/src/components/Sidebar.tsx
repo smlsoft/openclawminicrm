@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/ThemeProvider";
 import { useNotificationContext } from "@/components/NotificationProvider";
+import { useScrollHidden } from "@/components/ScrollHideProvider";
 
 interface NavItem {
   href: string;
@@ -284,9 +285,10 @@ function NavWithBadges() {
 function BottomTabBar({ onMorePress }: { onMorePress: () => void }) {
   const pathname = usePathname();
   const { totalUnread } = useNotificationContext();
+  const scrollHidden = useScrollHidden();
 
   return (
-    <nav className="bottom-nav md:hidden">
+    <nav className={`bottom-nav md:hidden ${scrollHidden ? "nav-hidden" : ""}`}>
       <div className="h-16 flex items-center justify-around px-2">
         {BOTTOM_TABS.map((tab) => {
           const active = isActivePath(pathname, tab.href);
