@@ -147,7 +147,7 @@ export async function POST() {
     const collections = [
       "messages", "customers", "groups_meta", "chat_analytics",
       "user_skills", "analysis_logs", "ai_advice", "tasks",
-      "kb_articles", "payments", "documents", "appointments",
+      "kb_articles", "payments", "documents", "appointments", "bot_config",
     ];
     for (const col of collections) {
       await db.collection(col).dropIndexes().catch(() => {});
@@ -713,6 +713,110 @@ export async function POST() {
       await db.collection("documents").insertMany(documentDocs);
     }
 
+    // ─── 13. Generate Bot Configs (10 ห้อง ตั้งค่า Bot ต่างกัน) ───
+    const botConfigs = [
+      {
+        sourceId: rooms[0]?.sourceId || "U0001",
+        sourceType: "user",
+        groupName: "ลูกค้า VIP — คุณสมชาย",
+        botName: "น้องกุ้ง VIP",
+        systemPrompt: "คุณคือผู้ช่วยร้านวัสดุก่อสร้าง ตอบสุภาพมาก ใช้ครับ/ค่ะทุกประโยค ลูกค้าคนนี้เป็น VIP ให้บริการพิเศษ เสนอส่วนลด 10% ได้ทันที",
+        aiReplyMode: "auto",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms[1]?.sourceId || "U0002",
+        sourceType: "user",
+        groupName: "คุณประเสริฐ — ผู้รับเหมา",
+        botName: "น้องกุ้ง",
+        systemPrompt: "คุณคือผู้ช่วยร้านวัสดุก่อสร้าง ตอบเรื่องราคาปูน เหล็ก อิฐ กระเบื้อง สี ท่อ สายไฟ มีข้อมูลสต็อกและราคาทั้งหมด ตอบเร็ว กระชับ เป็นมืออาชีพ",
+        aiReplyMode: "auto",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms[5]?.sourceId || "fb_0003",
+        sourceType: "user",
+        groupName: "คุณวิภา — Facebook",
+        botName: "น้องกุ้ง FB",
+        systemPrompt: "ตอบเฉพาะเรื่องสินค้าและราคา ถ้าถามเรื่องอื่นให้บอกว่า รอพนักงานตอบนะครับ ห้ามตอบเรื่องการเมือง ศาสนา",
+        aiReplyMode: "keyword",
+        aiReplyKeywords: ["ราคา", "เท่าไหร่", "สต็อก", "มีของ", "สั่ง"],
+      },
+      {
+        sourceId: rooms[10]?.sourceId || "ig_0004",
+        sourceType: "user",
+        groupName: "คุณณัฐ — Instagram",
+        botName: "น้องกุ้ง IG",
+        systemPrompt: "ตอบสั้น กระชับ ใช้ emoji เยอะ เหมาะกับ Instagram ถ้าลูกค้าสนใจให้ส่งลิงก์ catalog",
+        aiReplyMode: "mention",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms.find(r => r.isGroup)?.sourceId || "C0005",
+        sourceType: "group",
+        groupName: "กลุ่มผู้รับเหมา VIP",
+        botName: "น้องกุ้ง กลุ่ม",
+        systemPrompt: "ตอบเมื่อถูกเรียกชื่อเท่านั้น กลุ่มนี้เป็นผู้รับเหมารายใหญ่ ให้ราคาพิเศษ มีเครดิต 30 วัน",
+        aiReplyMode: "mention",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms[15]?.sourceId || "U0006",
+        sourceType: "user",
+        groupName: "คุณกาญจนา — ลูกค้าใหม่",
+        botName: "น้องกุ้ง",
+        systemPrompt: "ลูกค้าใหม่ ต้องแนะนำร้าน บริการ โปรโมชั่น ให้ข้อมูลเต็มที่ ชวนสมัครสมาชิก",
+        aiReplyMode: "auto",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms[20]?.sourceId || "fb_0007",
+        sourceType: "user",
+        groupName: "คุณเฉลิม — ต่อเติมบ้าน",
+        botName: "ที่ปรึกษาก่อสร้าง",
+        systemPrompt: "คุณคือที่ปรึกษาการก่อสร้าง ช่วยคำนวณวัสดุ แนะนำยี่ห้อ เปรียบเทียบคุณภาพ ให้คำปรึกษาเรื่องการต่อเติมบ้าน",
+        aiReplyMode: "auto",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms[25]?.sourceId || "U0008",
+        sourceType: "user",
+        groupName: "คุณสุดา — ร้องเรียน",
+        botName: "น้องกุ้ง",
+        systemPrompt: "ลูกค้าเคยร้องเรียน ตอบด้วยความระวัง ขออภัยก่อนเสมอ ห้ามเถียง ถ้าเรื่องซับซ้อนให้ส่งต่อพนักงาน",
+        aiReplyMode: "off",
+        aiReplyKeywords: [],
+      },
+      {
+        sourceId: rooms.filter(r => r.isGroup)[1]?.sourceId || "C0009",
+        sourceType: "group",
+        groupName: "กลุ่มสั่งปูนรวม",
+        botName: "บอทราคาปูน",
+        systemPrompt: "ตอบเฉพาะเรื่องราคาปูน จำนวนสต็อก โปรโมชั่นปูน ค่าขนส่ง กลุ่มนี้สั่งรวมเป็นประจำ",
+        aiReplyMode: "keyword",
+        aiReplyKeywords: ["ราคา", "ปูน", "สต็อก", "เท่าไหร่", "กี่ถุง", "โปร", "ส่ง"],
+      },
+      {
+        sourceId: rooms[30]?.sourceId || "ig_0010",
+        sourceType: "user",
+        groupName: "คุณมาลี — Instagram DM",
+        botName: "น้องกุ้ง",
+        systemPrompt: "ตอบทุกข้อความ แต่ถ้าลูกค้าถามเรื่องราคาส่งหรือเครดิต ให้บอกว่าต้องคุยกับฝ่ายขายโดยตรง พร้อมส่งเบอร์โทร 081-234-5678",
+        aiReplyMode: "auto",
+        aiReplyKeywords: [],
+      },
+    ].map(c => ({
+      ...c,
+      aiAutoReply: c.aiReplyMode === "auto",
+      model: "",
+      createdAt: new Date(Date.now() - randInt(1, 14) * 86400000),
+      updatedAt: new Date(),
+    }));
+
+    if (botConfigs.length > 0) {
+      await db.collection("bot_config").insertMany(botConfigs);
+    }
+
     // ─── Summary ───
     const tEnd = Date.now();
     const summary = {
@@ -728,6 +832,7 @@ export async function POST() {
       payments: paymentDocs.length,
       appointments: appointmentDocs.length,
       documents: documentDocs.length,
+      bot_configs: botConfigs.length,
       time_ms: tEnd - t0,
     };
 
