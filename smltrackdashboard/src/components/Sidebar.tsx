@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -155,6 +155,51 @@ function UserSection() {
   );
 }
 
+function RebuildButton() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const handleRebuild = useCallback(async () => {
+    if (loading) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/dashboard/api/rebuild", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        setResult(`✅ ${data.results.groups_meta} กลุ่ม, ${data.results.customers} ลูกค้า (${data.results.time_ms}ms)`);
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setResult(`❌ ${data.error}`);
+      }
+    } catch {
+      setResult("❌ Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [loading]);
+
+  return (
+    <div>
+      <button
+        onClick={handleRebuild}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition bg-amber-900/30 text-amber-400 border border-amber-800/30 hover:bg-amber-800/40 disabled:opacity-50"
+      >
+        {loading ? (
+          <>
+            <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+            กำลัง Rebuild...
+          </>
+        ) : (
+          <>🔄 Rebuild Data</>
+        )}
+      </button>
+      {result && <p className="text-[10px] text-center mt-1 theme-text-muted">{result}</p>}
+    </div>
+  );
+}
+
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -193,8 +238,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom: Theme + User */}
+      {/* Bottom: Rebuild + Theme + User */}
       <div className="px-3 pb-3 pt-2 border-t theme-border space-y-2">
+        <RebuildButton />
         <div className="flex items-center justify-between px-1">
           <span className="text-[11px] theme-text-muted">Theme</span>
           <ThemeToggle />
