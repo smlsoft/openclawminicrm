@@ -30,6 +30,12 @@ const BOTTOM_TABS: NavItem[] = [
 // Full navigation groups — จัดเป็นหมวดงาน
 const NAV_GROUPS: NavGroup[] = [
   {
+    groupLabel: "น้องกุ้ง",
+    items: [
+      { href: "/kung-room", icon: "🦐", label: "ห้องทำงานน้องกุ้ง" },
+    ],
+  },
+  {
     groupLabel: "ภาพรวม",
     items: [
       { href: "/", icon: "📊", label: "แดชบอร์ด" },
