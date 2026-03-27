@@ -102,8 +102,8 @@ export async function POST() {
     }
 
     // ─── 2. Generate customers + rooms ───
-    const NUM_CUSTOMERS = 80;
-    const platforms = ["line", "line", "line", "facebook", "facebook", "instagram"]; // weighted
+    const NUM_CUSTOMERS = 200;
+    const platforms = ["line", "line", "facebook", "facebook", "instagram", "instagram"]; // balanced
     const pipelineStages = ["new", "new", "interested", "interested", "quoting", "negotiating", "closed_won", "closed_lost", "following_up"];
 
     interface RoomDef { sourceId: string; platform: string; customerName: string; staffName: string; }
@@ -118,14 +118,18 @@ export async function POST() {
       const sourceId = generateSourceId(platform);
       const staff = rand(STAFF_NAMES);
 
-      // Some customers have multiple platforms
+      // Many customers have multiple platforms (40% 2 platforms, 15% 3 platforms)
       const extraPlatforms: { platform: string; sourceId: string }[] = [];
-      if (Math.random() > 0.7) {
-        const p2 = platform === "line" ? "facebook" : "line";
+      if (Math.random() > 0.5) {
+        const p2 = platform === "line" ? (Math.random() > 0.5 ? "facebook" : "instagram")
+          : platform === "facebook" ? (Math.random() > 0.5 ? "line" : "instagram")
+          : (Math.random() > 0.5 ? "line" : "facebook");
         extraPlatforms.push({ platform: p2, sourceId: generateSourceId(p2) });
       }
-      if (Math.random() > 0.9) {
-        extraPlatforms.push({ platform: "instagram", sourceId: generateSourceId("instagram") });
+      if (Math.random() > 0.75) {
+        const existing = [platform, ...extraPlatforms.map(e => e.platform)];
+        const p3 = ["line", "facebook", "instagram"].find(p => !existing.includes(p));
+        if (p3) extraPlatforms.push({ platform: p3, sourceId: generateSourceId(p3) });
       }
 
       const allRooms = [sourceId, ...extraPlatforms.map(e => e.sourceId)];
@@ -179,7 +183,7 @@ export async function POST() {
     const allMessages: any[] = [];
 
     for (const room of rooms) {
-      const msgCount = randInt(5, 40);
+      const msgCount = randInt(8, 60);
       const startDate = randomDate(30);
       const msgs: any[] = [];
 
@@ -337,7 +341,7 @@ export async function POST() {
 
     // ─── 8. Generate tasks ───
     const taskDocs: any[] = [];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 40; i++) {
       const c = rand(customerDocs);
       taskDocs.push({
         customerId: c.sourceId,
