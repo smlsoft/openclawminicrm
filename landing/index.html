@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>OpenClaw Mini CRM — AI Chat Intelligence</title>
-  <meta name="description" content="ระบบ CRM อัจฉริยะ ฟรี 100% สำหรับ SMEs ไทย — LINE, Facebook, Instagram รวมจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า">
+  <meta name="description" content="ระบบ CRM อัจฉริยะ เพื่อการศึกษา — LINE, Facebook, Instagram รวมจอเดียว AI ช่วยวิเคราะห์สนทนา">
   <meta name="theme-color" content="#070a12">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="/dashboard/favicon.ico" type="image/x-icon">
@@ -79,7 +79,7 @@
           GitHub
         </a>
         <a href="/dashboard/login" class="px-4 sm:px-5 py-2 sm:py-2.5 gradient-bg text-white text-sm font-medium rounded-xl transition hover:opacity-90 shadow-lg glow-sm">
-          เข้าใช้งาน
+          ทดลอง Demo
         </a>
       </div>
     </div>
@@ -90,7 +90,7 @@
     <!-- Badge -->
     <div class="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-300 mb-6 md:mb-8">
       <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-      Open Source &middot; ฟรี 100% &middot; Self-hosted
+      Open Source &middot; เพื่อการศึกษา &middot; Self-hosted
     </div>
 
     <!-- Headline -->
@@ -100,17 +100,18 @@
     </h2>
 
     <p class="anim-fade-up-d2 text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
-      LINE &middot; Facebook &middot; Instagram รวมที่เดียว<br class="sm:hidden">
-      AI วิเคราะห์ทุกข้อความ แนะนำคำตอบ จำลูกค้าทุกคน
+      โปรเจกต์เพื่อการศึกษา — LINE &middot; Facebook &middot; Instagram รวมที่เดียว<br class="sm:hidden">
+      AI วิเคราะห์ทุกข้อความ แนะนำคำตอบ จำลูกค้าทุกคน<br>
+      <span class="text-indigo-400">Fork ไปพัฒนาต่อยอดได้เลย</span>
     </p>
 
     <!-- CTA -->
     <div class="anim-fade-up-d3 flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-10 md:mb-14">
       <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
-        เริ่มต้นใช้งาน — ฟรี
-      </a>
-      <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium rounded-xl transition text-sm sm:text-base">
         🦐 ทดลอง Demo
+      </a>
+      <a href="https://github.com/smlsoft/openclawminicrm" target="_blank" class="px-6 sm:px-8 py-3 sm:py-3.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium rounded-xl transition text-sm sm:text-base">
+        ดูซอร์สโค้ด GitHub
       </a>
     </div>
 
@@ -224,47 +225,118 @@
     </div>
   </section>
 
-  <!-- ── Pricing ── -->
+  <!-- ── Tech Stack ── -->
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+    <div class="text-center mb-10 md:mb-14">
+      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">สร้างด้วยอะไร?</h3>
+      <p class="reveal text-sm md:text-base text-gray-400">เทคโนโลยีที่ใช้ในโปรเจกต์นี้ — เรียนรู้และพัฒนาต่อได้</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">⚡</div>
+        <h4 class="text-sm font-bold mb-1">Next.js 16</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">React Framework<br>App Router + Server Actions</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🍃</div>
+        <h4 class="text-sm font-bold mb-1">MongoDB</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">NoSQL Database<br>Atlas / Docker</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🤖</div>
+        <h4 class="text-sm font-bold mb-1">AI Multi-Provider</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">OpenRouter, Groq,<br>SambaNova, Cerebras, Gemini</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🐳</div>
+        <h4 class="text-sm font-bold mb-1">Docker Compose</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">Container Orchestration<br>Deploy ง่ายคำสั่งเดียว</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">💬</div>
+        <h4 class="text-sm font-bold mb-1">LINE / Meta API</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">Webhook + Messaging<br>LINE OA, Facebook, Instagram</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🔐</div>
+        <h4 class="text-sm font-bold mb-1">NextAuth.js</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">Authentication<br>Google OAuth + JWT</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🎨</div>
+        <h4 class="text-sm font-bold mb-1">Tailwind CSS v4</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">Utility-First CSS<br>Dark/Light Theme</p>
+      </div>
+      <div class="reveal card p-4 md:p-5 text-center group">
+        <div class="text-3xl mb-2">🌐</div>
+        <h4 class="text-sm font-bold mb-1">Caddy Server</h4>
+        <p class="text-[10px] sm:text-xs text-gray-500">Reverse Proxy<br>Auto HTTPS (Let's Encrypt)</p>
+      </div>
+    </div>
+
+    <!-- Architecture diagram -->
+    <div class="reveal mt-8 md:mt-10 card p-5 md:p-8">
+      <h4 class="text-sm font-bold text-center mb-5 text-gray-300">Architecture Overview</h4>
+      <div class="font-mono text-[10px] sm:text-xs text-gray-400 leading-relaxed text-center space-y-1 overflow-x-auto">
+        <p class="text-green-400">LINE / Facebook / Instagram</p>
+        <p>↓ webhook</p>
+        <p class="text-cyan-400">Caddy (Auto HTTPS + Reverse Proxy)</p>
+        <p>↓</p>
+        <p class="text-indigo-400">Agent (Node.js) → AI + RAG + MCP → reply</p>
+        <p>↓</p>
+        <p class="text-amber-400">MongoDB (messages + users + teams)</p>
+        <p>↓</p>
+        <p class="text-purple-400">OpenClaw (แกนหลัก) ← cron ทุก 1 ชม. → วิเคราะห์ → advice</p>
+        <p>↓</p>
+        <p class="text-pink-400">Dashboard (Next.js) → Auth → แสดงสนทนา + CRM + KPI</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Educational Purpose ── -->
   <section class="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
     <div class="reveal rounded-3xl p-6 sm:p-8 md:p-12 text-center glow overflow-hidden relative"
       style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(6,182,212,0.05)); border: 1px solid rgba(99,102,241,0.15);">
-      <!-- Decorative -->
       <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full blur-[60px]" aria-hidden="true"></div>
       <div class="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[50px]" aria-hidden="true"></div>
 
       <div class="relative">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400 mb-4">
-          <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Open Source
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs text-amber-400 mb-4">
+          <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span> เพื่อการศึกษา
         </span>
-        <h3 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">ฟรี 100%</h3>
-        <p class="text-sm sm:text-base text-gray-400 mb-8 max-w-lg mx-auto">ไม่มีค่าใช้จ่ายรายเดือน ไม่มีค่าแรกเข้า<br>ข้อมูลเป็นของคุณ 100% — Self-hosted</p>
+        <h3 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">Open Source เพื่อการศึกษา</h3>
+        <p class="text-sm sm:text-base text-gray-400 mb-6 max-w-lg mx-auto leading-relaxed">
+          โปรเจกต์นี้สร้างขึ้นเพื่อการศึกษาและเรียนรู้<br>
+          สามารถ Fork ไปพัฒนาต่อยอดได้ตามต้องการ
+        </p>
 
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-8 max-w-xl mx-auto">
-          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
-            <p class="text-[10px] sm:text-xs text-gray-500">CRM</p>
-            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-lg mx-auto">
+          <div class="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+            <span class="text-2xl block mb-1">📖</span>
+            <p class="text-xs text-gray-400">เรียนรู้</p>
+            <p class="text-sm font-bold">Next.js + AI</p>
           </div>
-          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
-            <p class="text-[10px] sm:text-xs text-gray-500">Database</p>
-            <p class="text-base sm:text-lg font-bold">ฟรี</p>
+          <div class="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+            <span class="text-2xl block mb-1">🔧</span>
+            <p class="text-xs text-gray-400">พัฒนาต่อ</p>
+            <p class="text-sm font-bold">Fork & Build</p>
           </div>
-          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
-            <p class="text-[10px] sm:text-xs text-gray-500">AI</p>
-            <p class="text-base sm:text-lg font-bold">ฟรี</p>
-          </div>
-          <div class="bg-black/20 rounded-xl p-3 border border-white/[0.04]">
-            <p class="text-[10px] sm:text-xs text-gray-500">Vector DB</p>
-            <p class="text-base sm:text-lg font-bold">ฟรี</p>
-          </div>
-          <div class="col-span-2 sm:col-span-1 bg-indigo-500/10 rounded-xl p-3 border border-indigo-500/20">
-            <p class="text-[10px] sm:text-xs text-indigo-300">รวมต่อเดือน</p>
-            <p class="text-base sm:text-lg font-bold gradient-text">฿0</p>
+          <div class="bg-black/20 rounded-xl p-4 border border-white/[0.04]">
+            <span class="text-2xl block mb-1">🤝</span>
+            <p class="text-xs text-gray-400">ร่วมพัฒนา</p>
+            <p class="text-sm font-bold">Contribute</p>
           </div>
         </div>
 
-        <a href="/dashboard/login" class="inline-flex px-8 sm:px-10 py-3.5 sm:py-4 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
-          เริ่มต้นใช้งาน — ฟรี
-        </a>
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
+            🦐 ทดลอง Demo
+          </a>
+          <a href="https://github.com/smlsoft/openclawminicrm" target="_blank" class="px-6 sm:px-8 py-3 sm:py-3.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-medium rounded-xl transition text-sm sm:text-base">
+            ดูซอร์สโค้ด GitHub
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -282,7 +354,7 @@
           <a href="/dashboard/guide" class="text-xs text-gray-500 hover:text-white transition">คู่มือ</a>
           <a href="/dashboard/login" class="text-xs text-gray-500 hover:text-white transition">เข้าสู่ระบบ</a>
         </div>
-        <p class="text-[11px] text-gray-600">Made with ❤️ for Thai SMEs</p>
+        <p class="text-[11px] text-gray-600">Open Source เพื่อการศึกษา — Fork &amp; Build</p>
       </div>
     </div>
   </footer>
