@@ -101,6 +101,7 @@ const FEATURES = [
   { icon: "🔀", title: "Merge ลูกค้าซ้ำ", desc: "หาลูกค้าซ้ำอัตโนมัติ รวมข้าม LINE/FB/IG" },
   { icon: "💸", title: "เงินเข้า", desc: "ตรวจสลิป ยืนยัน/ปฏิเสธ ติดตามยอด" },
   { icon: "📑", title: "AI จำแนกเอกสาร", desc: "สลิป PO ใบเสนอราคา — AI แยก Admin ย้ายได้" },
+  { icon: "📊", title: "Analytics", desc: "กราฟ 6 หมวด: ขาย ทีม เงิน ลูกค้า เอกสาร" },
   { icon: "📱", title: "Responsive", desc: "มือถือ Tablet Desktop ใช้ได้ทุกจอ" },
 ];
 

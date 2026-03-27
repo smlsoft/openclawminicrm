@@ -391,7 +391,20 @@
 - Toast popup + เสียงแจ้งเตือน + Badge ตัวเลขสีแดง
 - Mark as seen เมื่อเปิดอ่าน
 
-### 13. 📱 Responsive Design
+### 14. 📊 Analytics Dashboard (Recharts)
+
+- หน้า `/analytics` รวมกราฟทั้งหมด **6 tabs**:
+  - **ภาพรวม:** ข้อความรายวัน (Line), Platform mix (Pie), Sentiment (Donut)
+  - **การขาย:** Pipeline funnel (Bar), Deal value, Win/Loss (Pie)
+  - **ทีมงาน:** Message volume, Response time, Rooms per staff
+  - **การเงิน:** Payment status (Donut), AI Cost (Pie), Daily tokens (Line)
+  - **ลูกค้า:** Health donut, Sentiment bar, Purchase intent, Platform mix
+  - **เอกสาร:** Category distribution, Payment status
+- **Mini-charts** ฝังในหน้า KPI, CRM, Costs, Payments, Documents
+- ใช้ **Recharts** (React-native, responsive, dark/light theme)
+- Shared components: `MiniPieChart`, `MiniBarChart`, `MiniLineChart`, `ChartCard`
+
+### 15. 📱 Responsive Design
 
 - **Mobile:** Bottom Tab Bar 5 ปุ่ม + More drawer
 - **Tablet:** Responsive grid 2 คอลัมน์
@@ -418,6 +431,7 @@
 | **AI Cost** | เจ้าของ | ค่าใช้จ่าย AI แบบละเอียด |
 | **เงินเข้า** | เจ้าของ/พนักงาน | ตรวจสลิป ยืนยัน/ปฏิเสธ สถิติยอดเงิน |
 | **เอกสาร** | Admin | AI จำแนกเอกสาร/ภาพ ย้ายหมวดได้ |
+| **Analytics** | เจ้าของ | กราฟ 6 หมวด: ภาพรวม ขาย ทีม เงิน ลูกค้า เอกสาร |
 | **งานติดตาม** | พนักงาน | task + priority + deadline |
 | **Templates** | พนักงาน | ข้อความสำเร็จรูป |
 | **เชื่อมต่อ** | Admin | LINE/FB/IG/Telegram สถานะ |
