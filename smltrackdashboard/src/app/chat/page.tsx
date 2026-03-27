@@ -909,33 +909,31 @@ export default function ChatPage() {
     if (authStatus === "unauthenticated") router.replace("/dashboard/login");
   }, [authStatus, router]);
 
-  // Fetch conversations — ดึงทีละ 50 + load more
-  const [chatPage, setChatPage] = useState(0);
-  const [chatHasMore, setChatHasMore] = useState(true);
+  // Fetch ALL conversations — auto load ทุกหน้า
   const [chatPlatform, setChatPlatform] = useState("");
 
-  const fetchConversations = useCallback(async (pageNum = 0, append = false, platform = "") => {
+  const fetchConversations = useCallback(async (_p = 0, _a = false, platform = "") => {
     try {
       const pfParam = platform ? `&platform=${platform}` : "";
-      const res = await fetch(`/dashboard/api/groups?limit=50&page=${pageNum}${pfParam}`);
-      const raw = await res.json();
-      const data = Array.isArray(raw) ? raw : raw.groups;
-      if (!Array.isArray(data)) return;
-      const sorted = [...data].sort((a, b) => {
+      let all: any[] = [];
+      let page = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const res = await fetch(`/dashboard/api/groups?limit=100&page=${page}${pfParam}`);
+        const raw = await res.json();
+        const data = Array.isArray(raw) ? raw : raw.groups;
+        if (!Array.isArray(data) || data.length === 0) break;
+        all = all.concat(data);
+        hasMore = raw.pagination?.hasMore ?? false;
+        page++;
+        if (page > 20) break; // safety limit
+      }
+      all.sort((a, b) => {
         const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
         const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
         return tb - ta;
       });
-      if (append) {
-        setConversations(prev => {
-          const ids = new Set(prev.map(c => c.id));
-          return [...prev, ...sorted.filter(c => !ids.has(c.id))];
-        });
-      } else {
-        setConversations(sorted);
-      }
-      setChatHasMore(raw.pagination?.hasMore ?? false);
-      setChatPage(pageNum);
+      setConversations(all);
     } catch {}
   }, []);
 
@@ -1090,15 +1088,7 @@ export default function ChatPage() {
               </button>
             );
           })}
-          {/* Load more */}
-          {chatHasMore && (
-            <button
-              onClick={() => fetchConversations(chatPage + 1, true, chatPlatform)}
-              className="w-full py-2.5 text-xs font-medium text-indigo-400 hover:bg-indigo-950/30 transition"
-            >
-              โหลดเพิ่ม...
-            </button>
-          )}
+          {/* All loaded automatically */}
         </div>
       </aside>
 
