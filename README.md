@@ -22,7 +22,7 @@
 
 ---
 
-> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard, provides AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, and a 24/7 AI advisor ("น้องกุ้ง 🦐"). Fully self-hosted on Docker Compose + Hetzner VPS. Zero monthly cost.
+> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard, provides AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, and a 24/7 Multi AI Agent system ("น้องกุ้ง 🦐" with 13 roles). Fully self-hosted on Docker Compose + Hetzner VPS. Zero monthly cost.
 
 ---
 
@@ -176,17 +176,27 @@
 
 ---
 
-### 3. น้องกุ้ง — AI Advisor 5 บทบาท
+### 3. น้องกุ้ง — Multi AI Agent 13 บทบาท
 
-น้องกุ้งทำงาน **24/7 อัตโนมัติ** ไม่ต้องสั่ง:
+> **น้องกุ้งเป็นสมองกลางคุมทั้งระบบ** — Admin เป็นแค่คนตอบลูกค้า น้องกุ้งจัดการที่เหลือทั้งหมด
 
-| บทบาท | ทำงาน | หน้าที่ |
-|-------|-------|---------|
-| **Problem Solver** | ทุก 1 ชม. | วิเคราะห์ปัญหาลูกค้า → หาต้นเหตุ → 5 ทางออก → เลือกดีสุด |
-| **Sales Hunter** | ทุก 1 ชม. | หาลูกค้าที่อยากซื้อ → กลยุทธ์ปิดการขาย |
-| **Team Coach** | ทุก 6 ชม. | วิเคราะห์ทีม → แผนพัฒนารายบุคคล |
-| **Weekly Strategist** | จันทร์ 08:00 | สรุปสัปดาห์ → กลยุทธ์สัปดาห์หน้า |
-| **Health Monitor** | ทุก 3 ชม. | Health Score 0-100 → ตรวจจับลูกค้าเสี่ยงก่อนหาย |
+น้องกุ้งทำงาน **24/7 อัตโนมัติ** ไม่ต้องสั่ง — 13 ตัวทำงานพร้อมกัน:
+
+| # | บทบาท | ทำงาน | หน้าที่ |
+|---|-------|-------|---------|
+| 1 | **Problem Solver** | ทุก 1 ชม. | วิเคราะห์ปัญหาลูกค้า → หาต้นเหตุ → 5 ทางออก → เลือกดีสุด |
+| 2 | **Sales Hunter** | ทุก 1 ชม. | หาลูกค้าที่อยากซื้อ → กลยุทธ์ปิดการขาย |
+| 3 | **Team Coach** | ทุก 6 ชม. | วิเคราะห์ทีม → แผนพัฒนารายบุคคล |
+| 4 | **Weekly Strategist** | จันทร์ 08:00 | สรุปสัปดาห์ → กลยุทธ์สัปดาห์หน้า |
+| 5 | **Health Monitor** | ทุก 3 ชม. | Health Score 0-100 → ตรวจจับลูกค้าเสี่ยงก่อนหาย |
+| 6 | **Payment Guardian** 💳 | ทุก 1 ชม. | ตรวจสลิปค้าง pending → แจ้ง Admin → ยอดรวมที่รอยืนยัน |
+| 7 | **Order Tracker** 📦 | ทุก 2 ชม. | ติดตามจัดส่ง → ลูกค้ารอนาน → ร้องเรียนจัดส่งช้า |
+| 8 | **Re-engagement Bot** 🔄 | ทุก 4 ชม. | ดึงลูกค้าที่หายกลับ → แบ่ง 3/7/30 วัน → ข้อความ re-engage |
+| 9 | **Upsell & Cross-sell** 🎯 | ทุก 2 ชม. | แนะนำสินค้าเพิ่มจาก purchase history + ความสนใจ |
+| 10 | **Daily Report** 📊 | ทุกวัน 20:00 | สรุปวัน ข้อความ ลูกค้าใหม่ ยอดขาย คะแนน 1-10 ส่ง Telegram |
+| 11 | **Lead Scorer** 🏆 | ทุก 3 ชม. | คะแนน 0-100 จัดอันดับ Hot/Warm/Cold บอกว่าติดต่อใครก่อน |
+| 12 | **Appointment Reminder** 📅 | ทุก 1 ชม. | เตือนนัดหมาย เยี่ยมหน้างาน ส่งสินค้า ติดตั้ง แจ้งล่วงหน้า |
+| 13 | **Price Watcher** 📈 | ทุกวัน 06:00 | วิเคราะห์คำถามราคา สินค้ายอดนิยม ลูกค้าบอกแพง กลยุทธ์ราคา |
 
 ถ้าพบ CRITICAL → **ส่ง Telegram แจ้งเตือนทันที!**
 
@@ -456,7 +466,7 @@
 | **สนทนารวม** | เจ้าของ/พนักงาน | ดูสนทนาทุก platform ของลูกค้า 1 คน ในจอเดียว |
 | **รวมลูกค้า** | Admin | หาลูกค้าซ้ำข้าม platform + รวมเอง (Manual) |
 | **KPI** | เจ้าของ | พนักงาน + ปิดการขาย + รายได้ |
-| **น้องกุ้ง** | เจ้าของ | AI Advice 5 บทบาท |
+| **น้องกุ้ง** | เจ้าของ | AI Advice 13 บทบาท |
 | **Knowledge Base** | เจ้าของ | ฐานความรู้ — เพิ่ม/แก้/ลบ/เปิด-ปิด |
 | **ตั้งค่า Bot** | Admin | แก้ชื่อ/prompt/mode/keywords แต่ละห้อง |
 | **AI Cost** | เจ้าของ | ค่าใช้จ่าย AI แบบละเอียด |
@@ -605,7 +615,7 @@ Qdrant Cloud (Knowledge Base vector search)
 | Database | MongoDB 7 (Docker, local — ไม่ใช่ Atlas) |
 | Vector Search | Qdrant Cloud + Gemini Embedding (768 dims) |
 | AI Advisor | OpenClaw + OpenRouter (Qwen3-235B) |
-| AI Bot | น้องกุ้ง 🦐 (5 บทบาท + Deep Loop Analysis) |
+| AI Bot | น้องกุ้ง 🦐 (13 บทบาท + Deep Loop Analysis) |
 | AI Learning | Memory + Skill Lessons (Auto Compact ทุก 10 ข้อความ) |
 | AI Suggest | แนะนำคำตอบ + เหตุผล + tone + priority |
 | AI Safety | PII Masking + Prompt Injection Protection + A/B Testing |
@@ -710,7 +720,7 @@ NEXTAUTH_SECRET=...
 | `ai_skill_lessons` | บทเรียน AI (สำเร็จ/ล้มเหลว → กฎ) |
 | `user_skills` | AI analysis per user (sentiment, tags) |
 | `chat_analytics` | Sentiment + Purchase Intent per source |
-| `ai_advice` | คำแนะนำจาก OpenClaw (5 บทบาท) |
+| `ai_advice` | คำแนะนำจาก OpenClaw (13 บทบาท) |
 | `ai_costs` | ค่าใช้จ่าย AI ทุก call |
 | `tasks` | งานติดตาม |
 | `reply_templates` | ข้อความสำเร็จรูป |
@@ -726,7 +736,7 @@ NEXTAUTH_SECRET=...
 openclawminicrm/
 ├── nginx/                  # Reverse proxy + SSL config
 ├── openclaw/               # AI Advisor (แกนหลัก)
-│   ├── cron/               # Scheduled jobs (5 บทบาท)
+│   ├── cron/               # Scheduled jobs (13 บทบาท)
 │   └── ...
 ├── proxy/                  # Agent — webhook + AI + RAG + MCP
 │   ├── routes/             # API routes
