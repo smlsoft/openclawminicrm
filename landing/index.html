@@ -46,19 +46,19 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { thai: ['IBM Plex Sans Thai', 'system-ui', 'sans-serif'] },
+          fontFamily: { thai: ['Prompt', 'system-ui', 'sans-serif'] },
         }
       }
     }
   </script>
   <style>
-    body { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; }
+    body { font-family: 'Prompt', system-ui, sans-serif; }
     .gradient-text { background: linear-gradient(135deg, #818cf8, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .gradient-bg { background: linear-gradient(135deg, #6366f1, #06b6d4); }
     .gradient-border { border-image: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(6,182,212,0.4)) 1; }
@@ -87,6 +87,7 @@
     /* Mobile touch */
     @media (hover: none) { button, a { -webkit-tap-highlight-color: rgba(99,102,241,0.15); } }
   </style>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="bg-[#070a12] text-white min-h-screen overflow-x-hidden">
 
@@ -102,7 +103,7 @@
     <div class="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5 group">
         <div class="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-lg shadow-lg glow-sm transition-transform group-hover:scale-105">
-          💬
+          <i class="ph-fill ph-chat-teardrop-dots text-white"></i>
         </div>
         <div class="hidden sm:block">
           <h1 class="text-sm font-bold leading-tight">OpenClaw</h1>
@@ -122,27 +123,37 @@
   </nav>
 
   <!-- ── Hero ── -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-12 md:pb-20 text-center">
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-6 md:pb-10 text-center">
     <!-- Badge -->
     <div class="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-300 mb-6 md:mb-8">
       <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
       Open Source &middot; เพื่อการศึกษา &middot; Self-hosted
     </div>
 
+    <!-- OG Image — ด้านบนสุด -->
+    <div class="anim-fade-up-d1 mb-6 md:mb-8 flex justify-center">
+      <div class="relative w-full max-w-[260px] sm:max-w-xs md:max-w-sm mx-auto">
+        <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-3xl blur opacity-30"></div>
+        <img src="/og-image.jpg" alt="OpenClaw Mini CRM — น้องกุ้ง AI คุมทั้งระบบ 13 บทบาท"
+          class="relative w-full rounded-3xl shadow-2xl border border-white/10"
+          loading="eager" />
+      </div>
+    </div>
+
     <!-- Headline -->
-    <h2 class="anim-fade-up-d1 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.2] mb-5 md:mb-6">
+    <h2 class="anim-fade-up-d2 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.2] mb-5 md:mb-6">
       <span class="block">น้องกุ้ง AI คุมทั้งระบบ</span>
       <span class="gradient-text">13 บทบาท ทำงาน 24/7</span>
     </h2>
 
-    <p class="anim-fade-up-d2 text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
+    <p class="anim-fade-up-d2 text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
       Multi AI Agent — น้องกุ้งเป็นสมองกลางคุมระบบทั้งหมด Admin แค่ตอบลูกค้า<br>
       วิเคราะห์ธุรกิจ ติดตามยอด หาโอกาสขาย ดึงลูกค้ากลับ ให้คะแนน Lead<br>
       <span class="text-indigo-400">LINE &middot; Facebook &middot; Instagram &middot; Open Source เพื่อการศึกษา</span>
     </p>
 
     <!-- CTA -->
-    <div class="anim-fade-up-d3 flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-10 md:mb-14">
+    <div class="anim-fade-up-d3 flex items-center justify-center gap-3 sm:gap-4 flex-wrap mb-6 md:mb-8">
       <a href="/dashboard/login" class="px-6 sm:px-8 py-3 sm:py-3.5 gradient-bg text-white font-semibold rounded-xl transition hover:opacity-90 shadow-xl glow-sm text-sm sm:text-base">
         🦐 ทดลอง Demo
       </a>
@@ -167,194 +178,195 @@
       </span>
     </div>
 
-    <!-- Hero Image -->
-    <div class="anim-fade-up-d4 mt-10 md:mt-14 flex justify-center">
-      <img src="/og-image.jpg" alt="OpenClaw Mini CRM — รวมทุกแชทในจอเดียว AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า"
-        class="w-full max-w-md md:max-w-lg rounded-3xl shadow-2xl glow border border-white/5"
-        style="box-shadow: 0 20px 60px rgba(99,102,241,0.15), 0 0 120px rgba(6,182,212,0.08);"
-        loading="lazy" />
-    </div>
   </section>
 
   <!-- ── How it works ── -->
-  <section class="relative z-10 max-w-5xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+  <section class="relative z-10 max-w-5xl mx-auto px-4 md:px-6 pb-8 md:pb-12">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-      <div class="reveal text-center p-6 md:p-8 card">
+      <div class="reveal text-center p-4 md:p-6 card">
         <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:0s">
-          📱
+          <i class="ph ph-device-mobile"></i>
         </div>
         <h4 class="font-bold mb-2">1. เชื่อมช่องทาง</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ใส่ Token ของ LINE OA, Facebook, Instagram — เสร็จใน 5 นาที</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ใส่ Token ของ LINE OA, Facebook, Instagram — เสร็จใน 5 นาที</p>
       </div>
-      <div class="reveal text-center p-6 md:p-8 card">
+      <div class="reveal text-center p-4 md:p-6 card">
         <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:0.5s">
-          🤖
+          <i class="ph ph-robot"></i>
         </div>
         <h4 class="font-bold mb-2">2. AI เริ่มทำงาน</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">วิเคราะห์ sentiment, purchase intent, สร้าง CRM อัตโนมัติ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">วิเคราะห์ sentiment, purchase intent, สร้าง CRM อัตโนมัติ</p>
       </div>
-      <div class="reveal text-center p-6 md:p-8 card">
+      <div class="reveal text-center p-4 md:p-6 card">
         <div class="w-14 h-14 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-2xl shadow-lg glow-sm anim-float" style="animation-delay:1s">
-          📊
+          <i class="ph ph-chart-line-up"></i>
         </div>
         <h4 class="font-bold mb-2">3. ดู Dashboard</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">KPI, ยอดขาย, ลูกค้าหลุด, AI advice — ทุกอย่างในจอเดียว</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">KPI, ยอดขาย, ลูกค้าหลุด, AI advice — ทุกอย่างในจอเดียว</p>
       </div>
     </div>
   </section>
 
   <!-- ── Features Grid ── -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
-    <div class="text-center mb-10 md:mb-14">
-      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">ทุกอย่างที่ SMEs ต้องการ</h3>
-      <p class="reveal text-sm md:text-base text-gray-400">ครบจบในระบบเดียว ไม่ต้องใช้หลายแอป</p>
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div class="text-center mb-6 md:mb-8 max-w-6xl mx-auto px-4 md:px-6">
+      <h3 class="reveal text-3xl md:text-4xl lg:text-5xl font-bold mb-3">ทุกอย่างที่ SMEs ต้องการ</h3>
+      <p class="reveal text-base md:text-lg text-gray-400">ครบจบในระบบเดียว ไม่ต้องใช้หลายแอป</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🗨️</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-chats text-indigo-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">Multi-Panel Chat</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">เปิดได้ 4 จอพร้อมกัน LINE, Facebook, Instagram เรียงข้างกัน</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">เปิดได้ 4 จอพร้อมกัน LINE, Facebook, Instagram เรียงข้างกัน</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-cyan-500/10 border border-cyan-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🤖</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-cyan-500/10 border border-cyan-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-robot text-cyan-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">AI ตอบแทนอัตโนมัติ</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ไม่มีคนตอบ 5 นาที AI ตอบให้ ดึงจาก Knowledge Base</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ไม่มีคนตอบ 5 นาที AI ตอบให้ ดึงจาก Knowledge Base</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-purple-500/10 border border-purple-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">💡</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-purple-500/10 border border-purple-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-lightbulb text-purple-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">AI แนะนำคำตอบ</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">กดปุ่มเดียว AI แนะนำ 2-3 คำตอบ พร้อมเหตุผล เลือก tone ได้</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">กดปุ่มเดียว AI แนะนำ 2-3 คำตอบ พร้อมเหตุผล เลือก tone ได้</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group border-amber-500/20 bg-amber-500/[0.03]">
-        <div class="w-11 h-11 bg-amber-500/10 border border-amber-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🦐</div>
+      <div class="reveal card p-4 md:p-5 group border-amber-500/20 bg-amber-500/[0.03]">
+        <div class="w-11 h-11 bg-amber-500/10 border border-amber-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-magic-wand text-amber-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">น้องกุ้ง 13 บทบาท</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Multi AI Agent คุมทั้งระบบ 24/7 — Admin แค่ตอบลูกค้า น้องกุ้งจัดการที่เหลือ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">Multi AI Agent คุมทั้งระบบ 24/7 — Admin แค่ตอบลูกค้า น้องกุ้งจัดการที่เหลือ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-emerald-500/10 border border-emerald-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🧠</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-emerald-500/10 border border-emerald-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-brain text-emerald-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">AI จำลูกค้าทุกคน</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">จำว่าชอบอะไร เคยซื้ออะไร ยิ่งใช้ AI ยิ่งแนะนำดีขึ้น</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">จำว่าชอบอะไร เคยซื้ออะไร ยิ่งใช้ AI ยิ่งแนะนำดีขึ้น</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-red-500/10 border border-red-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📉</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-red-500/10 border border-red-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-trend-down text-red-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">ทำนายลูกค้าหาย</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Churn Prediction เตือนก่อนลูกค้าหาย 3/7/30 วัน</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">Churn Prediction เตือนก่อนลูกค้าหาย 3/7/30 วัน</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-blue-500/10 border border-blue-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📚</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-blue-500/10 border border-blue-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-books text-blue-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">Knowledge Base</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ใส่ราคา โปรโมชั่น นโยบาย AI ดึงไปตอบลูกค้าถูกต้อง</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ใส่ราคา โปรโมชั่น นโยบาย AI ดึงไปตอบลูกค้าถูกต้อง</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-teal-500/10 border border-teal-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📈</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-teal-500/10 border border-teal-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-trend-up text-teal-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">KPI + CRM อัตโนมัติ</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ลูกค้าทักมา สร้าง CRM Pipeline ให้อัตโนมัติ KPI ครบ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ลูกค้าทักมา สร้าง CRM Pipeline ให้อัตโนมัติ KPI ครบ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-rose-500/10 border border-rose-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🔔</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-rose-500/10 border border-rose-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-bell text-rose-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">แจ้งเตือน Real-time</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">SSE stream เตือนเฉพาะคนที่ดูแล Toast + เสียง + badge ข้อความยังไม่อ่าน</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">SSE stream เตือนเฉพาะคนที่ดูแล Toast + เสียง + badge ข้อความยังไม่อ่าน</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-violet-500/10 border border-violet-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🔀</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-violet-500/10 border border-violet-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-arrows-merge text-violet-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">รวมลูกค้าข้าม Platform</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ลูกค้าคนเดียว ทักมาทั้ง LINE FB IG รวมเป็นคนเดียว ดูประวัติครบ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ลูกค้าคนเดียว ทักมาทั้ง LINE FB IG รวมเป็นคนเดียว ดูประวัติครบ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-sky-500/10 border border-sky-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📱</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-sky-500/10 border border-sky-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-devices text-sky-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">Responsive ทุกอุปกรณ์</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">มือถือ Tablet Desktop — Bottom Tab Bar + Modern UI ใช้ง่ายทุกจอ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">มือถือ Tablet Desktop — Bottom Tab Bar + Modern UI ใช้ง่ายทุกจอ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-amber-500/10 border border-amber-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">💸</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-amber-500/10 border border-amber-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-money text-amber-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">ตรวจสลิป & เงินเข้า</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ลูกค้าส่งสลิป AI ตรวจจับทันที แจ้งเตือน ยืนยัน/ปฏิเสธ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ลูกค้าส่งสลิป AI ตรวจจับทันที แจ้งเตือน ยืนยัน/ปฏิเสธ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-lime-500/10 border border-lime-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📑</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-lime-500/10 border border-lime-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-file-text text-lime-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">AI จำแนกเอกสาร</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">สลิป ใบ PO ใบเสนอราคา ใบกำกับภาษี — AI แยกให้ Admin ย้ายได้</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">สลิป ใบ PO ใบเสนอราคา ใบกำกับภาษี — AI แยกให้ Admin ย้ายได้</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📊</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-chart-bar text-indigo-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">Analytics Dashboard</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">กราฟ 6 หมวด: ภาพรวม การขาย ทีมงาน การเงิน ลูกค้า เอกสาร</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">กราฟ 6 หมวด: ภาพรวม การขาย ทีมงาน การเงิน ลูกค้า เอกสาร</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-orange-500/10 border border-orange-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📅</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-orange-500/10 border border-orange-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-calendar text-orange-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">ระบบนัดหมาย</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ปฏิทินนัดหมาย เยี่ยมหน้างาน ส่งสินค้า ติดตั้ง ประชุม แจ้งเตือน</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ปฏิทินนัดหมาย เยี่ยมหน้างาน ส่งสินค้า ติดตั้ง ประชุม แจ้งเตือน</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-yellow-500/10 border border-yellow-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">💰</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-yellow-500/10 border border-yellow-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-coin text-yellow-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">รายงานรายได้</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Revenue Dashboard ยอดขายรายวัน/เดือน กราฟเทรนด์ เปรียบเทียบ</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">Revenue Dashboard ยอดขายรายวัน/เดือน กราฟเทรนด์ เปรียบเทียบ</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-fuchsia-500/10 border border-fuchsia-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🏪</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-fuchsia-500/10 border border-fuchsia-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-storefront text-pink-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">แค็ตตาล็อกสินค้า</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">จัดการสินค้า/บริการ ราคา สต็อก รูปภาพ หมวดหมู่ ค้นหา</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">จัดการสินค้า/บริการ ราคา สต็อก รูปภาพ หมวดหมู่ ค้นหา</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-pink-500/10 border border-pink-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">📢</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-pink-500/10 border border-pink-500/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-megaphone text-pink-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">Broadcast ส่งข้อความ</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">ส่งข้อความหาลูกค้าหลายคนพร้อมกัน แยก segment กลุ่มเป้าหมาย</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">ส่งข้อความหาลูกค้าหลายคนพร้อมกัน แยก segment กลุ่มเป้าหมาย</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-yellow-600/10 border border-yellow-600/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🏆</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-yellow-600/10 border border-yellow-600/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-trophy text-yellow-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">คะแนนลูกค้า</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Lead Scoring จัดอันดับลูกค้าตามโอกาสซื้อ ความสนใจ ความถี่</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">Lead Scoring จัดอันดับลูกค้าตามโอกาสซื้อ ความสนใจ ความถี่</p>
       </div>
 
-      <div class="reveal card p-5 md:p-6 group">
-        <div class="w-11 h-11 bg-emerald-600/10 border border-emerald-600/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110">🤝</div>
+      <div class="reveal card p-4 md:p-5 group">
+        <div class="w-11 h-11 bg-emerald-600/10 border border-emerald-600/15 rounded-xl flex items-center justify-center text-xl mb-3 transition group-hover:scale-110"><i class="ph ph-handshake text-emerald-400"></i></div>
         <h4 class="text-base font-bold mb-1.5">ติดตามปิดการขาย</h4>
-        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">Auto-closer ติดตามลูกค้าอัตโนมัติ แนะนำเวลาและวิธีปิดการขาย</p>
+        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">Auto-closer ติดตามลูกค้าอัตโนมัติ แนะนำเวลาและวิธีปิดการขาย</p>
       </div>
 
     </div>
   </section>
 
   <!-- ── น้องกุ้ง Multi AI Agent — 13 บทบาท ── -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
-    <div class="text-center mb-10 md:mb-14">
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div class="text-center mb-6 md:mb-8 max-w-6xl mx-auto px-4 md:px-6">
       <span class="reveal inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs text-amber-400 mb-4">
         <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></span> Multi AI Agent System
       </span>
-      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">น้องกุ้ง 🦐 — สมองกลาง 13 บทบาท</h3>
-      <p class="reveal text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
+      <h3 class="reveal text-3xl md:text-4xl lg:text-5xl font-bold mb-3">น้องกุ้ง 🦐 — สมองกลาง 13 บทบาท</h3>
+      <p class="reveal text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
         น้องกุ้งเป็นคนคุมระบบทั้งหมด ทำงานอัตโนมัติ 24/7 ไม่ต้องสั่ง<br>
         Admin เป็นแค่คนตอบลูกค้า — น้องกุ้งจัดการที่เหลือให้ทั้งหมด
       </p>
     </div>
 
-    <!-- 13 Roles Grid -->
+    
+    <!-- New AI Concept Illustration -->
+    <div class="anim-fade-up-d4 mt-8 md:mt-10 mb-12 flex justify-center max-w-6xl mx-auto px-4 md:px-6">
+      <div class="relative w-full max-w-2xl">
+        <div class="absolute -inset-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-3xl blur opacity-20"></div>
+        <img src="/images/ai-chat-concept.png" alt="AI Chat Concept" class="relative w-full rounded-3xl border border-white/5 shadow-2xl" loading="lazy" />
+      </div>
+    </div>
+\n    <!-- 13 Roles Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
 
       <!-- Original 5 roles -->
       <div class="reveal card p-4 md:p-5 group border-amber-500/15 bg-amber-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">🔍</span>
+          <span class="text-xl text-amber-400"><i class="ph ph-magnifying-glass"></i></span>
           <h4 class="text-sm font-bold">Problem Solver</h4>
           <span class="ml-auto text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">ทุก 1 ชม.</span>
         </div>
@@ -363,7 +375,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-amber-500/15 bg-amber-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">💰</span>
+          <span class="text-xl text-amber-400"><i class="ph ph-coins"></i></span>
           <h4 class="text-sm font-bold">Sales Hunter</h4>
           <span class="ml-auto text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">ทุก 1 ชม.</span>
         </div>
@@ -372,7 +384,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-amber-500/15 bg-amber-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">👨‍🏫</span>
+          <span class="text-xl text-amber-400"><i class="ph ph-chalkboard-teacher"></i></span>
           <h4 class="text-sm font-bold">Team Coach</h4>
           <span class="ml-auto text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">ทุก 6 ชม.</span>
         </div>
@@ -381,7 +393,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-amber-500/15 bg-amber-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">📋</span>
+          <span class="text-xl text-amber-400"><i class="ph ph-clipboard-text"></i></span>
           <h4 class="text-sm font-bold">Weekly Strategist</h4>
           <span class="ml-auto text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">จันทร์ 08:00</span>
         </div>
@@ -390,7 +402,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-amber-500/15 bg-amber-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">❤️</span>
+          <span class="text-xl text-red-400"><i class="ph ph-heartbeat"></i></span>
           <h4 class="text-sm font-bold">Health Monitor</h4>
           <span class="ml-auto text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">ทุก 3 ชม.</span>
         </div>
@@ -400,7 +412,7 @@
       <!-- NEW 8 roles -->
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">💳</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-credit-card"></i></span>
           <h4 class="text-sm font-bold">Payment Guardian</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -409,7 +421,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">📦</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-package"></i></span>
           <h4 class="text-sm font-bold">Order Tracker</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -418,7 +430,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">🔄</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-arrows-clockwise"></i></span>
           <h4 class="text-sm font-bold">Re-engagement Bot</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -427,7 +439,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">🎯</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-target"></i></span>
           <h4 class="text-sm font-bold">Upsell & Cross-sell</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -436,7 +448,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">📊</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-chart-pie-slice"></i></span>
           <h4 class="text-sm font-bold">Daily Report</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -445,7 +457,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">🏆</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-trophy"></i></span>
           <h4 class="text-sm font-bold">Lead Scorer</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -454,7 +466,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">📅</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-calendar-plus"></i></span>
           <h4 class="text-sm font-bold">Appointment Reminder</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -463,7 +475,7 @@
 
       <div class="reveal card p-4 md:p-5 group border-cyan-500/15 bg-cyan-500/[0.02]">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-xl">📈</span>
+          <span class="text-xl text-cyan-400"><i class="ph ph-chart-line-up"></i></span>
           <h4 class="text-sm font-bold">Price Watcher</h4>
           <span class="ml-auto text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">NEW</span>
         </div>
@@ -493,26 +505,27 @@
   </section>
 
   <!-- ── ประโยชน์สำหรับ SMEs ไทย ── -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
-    <div class="text-center mb-10 md:mb-14">
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div class="text-center mb-6 md:mb-8 max-w-6xl mx-auto px-4 md:px-6">
       <span class="reveal inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs text-amber-400 mb-4">
         <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span> สำหรับ SMEs ไทย
       </span>
-      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">ประโยชน์ที่ธุรกิจ SMEs จะได้รับ</h3>
-      <p class="reveal text-sm md:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
+      <h3 class="reveal text-3xl md:text-4xl lg:text-5xl font-bold mb-4">ประโยชน์ที่ธุรกิจ SMEs จะได้รับ</h3>
+      <p class="reveal text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
         ออกแบบมาเพื่อธุรกิจขนาดเล็ก-กลางในไทยโดยเฉพาะ<br>
         ใช้ LINE OA + Facebook + Instagram ที่คนไทยใช้กันทุกวัน
       </p>
+      
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
       <!-- 1. ลดเวลาตอบแชท -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-emerald-500/10 border border-emerald-500/15 rounded-2xl flex items-center justify-center text-2xl">⏱️</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-emerald-500/10 border border-emerald-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-clock text-emerald-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">ลดเวลาตอบแชทลง 80%</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             ลูกค้าทักมา LINE, Facebook, Instagram พร้อมกัน — ไม่ต้องสลับแอป
             AI แนะนำคำตอบทันที กดส่งได้เลย ลูกค้าไม่ต้องรอนาน
           </p>
@@ -520,11 +533,11 @@
       </div>
 
       <!-- 2. ไม่ลืมลูกค้า -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-blue-500/10 border border-blue-500/15 rounded-2xl flex items-center justify-center text-2xl">🧠</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-blue-500/10 border border-blue-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-brain text-emerald-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">ไม่ลืมลูกค้าอีกต่อไป</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             AI จำทุกอย่าง — ชื่อ, สิ่งที่สนใจ, ประวัติสั่งซื้อ, ข้อร้องเรียน
             สร้าง CRM อัตโนมัติ ไม่ต้องพิมพ์เอง ข้อมูลครบทุกคน
           </p>
@@ -532,11 +545,11 @@
       </div>
 
       <!-- 3. เตือนลูกค้าหลุด -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-red-500/10 border border-red-500/15 rounded-2xl flex items-center justify-center text-2xl">🔔</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-red-500/10 border border-red-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-bell text-rose-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">เตือนก่อนลูกค้าหาย</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             ระบบทำนายลูกค้าที่กำลังจะหาย — ไม่ทักมา 3 วัน, 7 วัน, 30 วัน
             แจ้งเตือนทีมขายให้ติดตามทัน ก่อนลูกค้าไปหาคู่แข่ง
           </p>
@@ -544,11 +557,11 @@
       </div>
 
       <!-- 4. ปิดการขายได้มากขึ้น -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-purple-500/10 border border-purple-500/15 rounded-2xl flex items-center justify-center text-2xl">💰</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-purple-500/10 border border-purple-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-coin text-yellow-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">ปิดการขายได้มากขึ้น</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             AI วิเคราะห์ "โอกาสซื้อ" ของลูกค้าแต่ละคน — ใครพร้อมซื้อ ใครแค่ถาม
             Pipeline จัดลำดับให้ ทีมขายโฟกัสลูกค้าที่มีโอกาสสูงก่อน
           </p>
@@ -556,11 +569,11 @@
       </div>
 
       <!-- 5. พนักงานใหม่เริ่มงานได้ทันที -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-cyan-500/10 border border-cyan-500/15 rounded-2xl flex items-center justify-center text-2xl">👩‍💼</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-cyan-500/10 border border-cyan-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-user-focus text-cyan-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">พนักงานใหม่เริ่มงานได้ทันที</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             ใส่ Knowledge Base (ราคา, โปรโมชั่น, นโยบาย) — AI แนะนำคำตอบให้ถูกต้อง
             พนักงานใหม่ไม่ต้องจำทุกอย่าง AI ช่วยตอบลูกค้าได้เลย
           </p>
@@ -568,11 +581,11 @@
       </div>
 
       <!-- 6. เจ้าของดูธุรกิจจากมือถือ -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-indigo-500/10 border border-indigo-500/15 rounded-2xl flex items-center justify-center text-2xl">📱</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-indigo-500/10 border border-indigo-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-devices text-sky-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">เจ้าของดูธุรกิจจากมือถือ</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             Dashboard responsive ดูได้ทุกอุปกรณ์ — KPI ยอดขาย, ลูกค้าใหม่, ทีมตอบช้า
             น้องกุ้งส่ง advice วิเคราะห์ธุรกิจผ่าน Telegram ทุกวัน
           </p>
@@ -580,11 +593,11 @@
       </div>
 
       <!-- 7. รวมข้อมูลลูกค้าข้าม platform -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-pink-500/10 border border-pink-500/15 rounded-2xl flex items-center justify-center text-2xl">🔀</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-pink-500/10 border border-pink-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-arrows-merge text-violet-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">รวมลูกค้าข้าม Platform</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             ลูกค้าคนเดียว ทักมาทั้ง LINE, Facebook, Instagram — ระบบรวมให้เป็นคนเดียว
             ดูประวัติทุก platform ในที่เดียว ไม่ข้อมูลกระจาย
           </p>
@@ -592,11 +605,11 @@
       </div>
 
       <!-- 8. ไม่ต้องเสียเงินรายเดือน -->
-      <div class="reveal card p-5 md:p-6 flex gap-4">
-        <div class="w-12 h-12 shrink-0 bg-amber-500/10 border border-amber-500/15 rounded-2xl flex items-center justify-center text-2xl">🏠</div>
+      <div class="reveal card p-4 md:p-5 flex gap-4">
+        <div class="w-12 h-12 shrink-0 bg-amber-500/10 border border-amber-500/15 rounded-2xl flex items-center justify-center text-2xl"><i class="ph ph-house-line text-amber-400"></i></div>
         <div>
           <h4 class="text-base font-bold mb-1.5">Self-hosted ข้อมูลเป็นของคุณ</h4>
-          <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+          <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
             ติดตั้งบน server ของคุณเอง — ข้อมูลลูกค้าไม่อยู่ในมือคนอื่น
             Open Source ดูโค้ดได้ทุกบรรทัด แก้ไขปรับแต่งได้ตามต้องการ
           </p>
@@ -607,10 +620,10 @@
   </section>
 
   <!-- ── Tech Stack ── -->
-  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
-    <div class="text-center mb-10 md:mb-14">
-      <h3 class="reveal text-2xl md:text-3xl font-bold mb-3">สร้างด้วยอะไร?</h3>
-      <p class="reveal text-sm md:text-base text-gray-400">เทคโนโลยีที่ใช้ในโปรเจกต์นี้ — เรียนรู้และพัฒนาต่อได้</p>
+  <section class="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div class="text-center mb-6 md:mb-8 max-w-6xl mx-auto px-4 md:px-6">
+      <h3 class="reveal text-3xl md:text-4xl lg:text-5xl font-bold mb-3">สร้างด้วยอะไร?</h3>
+      <p class="reveal text-base md:text-lg text-gray-400">เทคโนโลยีที่ใช้ในโปรเจกต์นี้ — เรียนรู้และพัฒนาต่อได้</p>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -625,7 +638,7 @@
         <p class="text-[10px] sm:text-xs text-gray-500">NoSQL Database<br>Atlas / Docker</p>
       </div>
       <div class="reveal card p-4 md:p-5 text-center group">
-        <div class="text-3xl mb-2">🤖</div>
+        <div class="text-3xl mb-2"><i class="ph ph-robot text-cyan-400"></i></div>
         <h4 class="text-sm font-bold mb-1">AI Multi-Provider</h4>
         <p class="text-[10px] sm:text-xs text-gray-500">OpenRouter, Groq,<br>SambaNova, Cerebras, Gemini</p>
       </div>
@@ -676,7 +689,7 @@
   </section>
 
   <!-- ── Educational Purpose ── -->
-  <section class="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+  <section class="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-8 md:pb-12">
     <div class="reveal rounded-3xl p-6 sm:p-8 md:p-12 text-center glow overflow-hidden relative"
       style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(6,182,212,0.05)); border: 1px solid rgba(99,102,241,0.15);">
       <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full blur-[60px]" aria-hidden="true"></div>
