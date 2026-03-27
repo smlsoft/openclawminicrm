@@ -2,10 +2,11 @@
 
 # OpenClaw Mini CRM 🦐
 
-### AI Chat Intelligence — LINE · Facebook · Instagram
+### น้องกุ้ง Multi AI Agent — 13 บทบาท คุมทั้งระบบ 24/7
 
-**ระบบ CRM อัจฉริยะ Open Source เพื่อการศึกษา**
-**รวมทุกแชทในจอเดียว — AI ช่วยตอบ ช่วยขาย ช่วยจำลูกค้า**
+**ระบบ CRM อัจฉริยะ Open Source เพื่อการศึกษา — ฟรี 100%**
+**น้องกุ้งเป็นสมองกลางคุมระบบ Admin แค่ตอบลูกค้า**
+**LINE · Facebook · Instagram รวมจอเดียว | 30+ หน้าจอ | 65+ API | 13 AI Agents**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](docker-compose.prod.yml)
@@ -16,11 +17,13 @@
 [![Facebook](https://img.shields.io/badge/Facebook-Graph_API-1877F2?logo=facebook&logoColor=white)](#multi-platform)
 [![Instagram](https://img.shields.io/badge/Instagram-Graph_API-E4405F?logo=instagram&logoColor=white)](#multi-platform)
 
-[Demo](https://crm.satistang.com/dashboard) · [Documentation](docs/INSTALL.md) · [Deploy Guide](docs/DEPLOY-HETZNER.md) · [Report Bug](https://github.com/smlsoft/openclawminicrm/issues)
+[🦐 ทดลอง Demo](https://crm.satistang.com/dashboard) · [หน้าแรก](https://crm.satistang.com/) · [คู่มือ](https://crm.satistang.com/dashboard/guide) · [Report Bug](https://github.com/smlsoft/openclawminicrm/issues)
 
 </div>
 
 ---
+
+<img src="landing/images/og-image.jpg" alt="OpenClaw Mini CRM — น้องกุ้ง AI 13 บทบาท" width="400">
 
 > **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard, provides AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, and a 24/7 Multi AI Agent system ("น้องกุ้ง 🦐" with 13 roles). Fully self-hosted on Docker Compose + Hetzner VPS. Zero monthly cost.
 
@@ -177,6 +180,10 @@
 ---
 
 ### 3. น้องกุ้ง — Multi AI Agent 13 บทบาท
+
+<div align="center">
+<img src="landing/images/ai-chat-concept.png" alt="AI Chat Concept — น้องกุ้ง Multi AI Agent" width="500">
+</div>
 
 > **น้องกุ้งเป็นสมองกลางคุมทั้งระบบ** — Admin เป็นแค่คนตอบลูกค้า น้องกุ้งจัดการที่เหลือทั้งหมด
 
