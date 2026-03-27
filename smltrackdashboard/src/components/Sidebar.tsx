@@ -157,23 +157,37 @@ function UserSection() {
 
 function RebuildButton() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
 
   const handleRebuild = useCallback(async () => {
     if (loading) return;
     setLoading(true);
-    setResult(null);
+    setLogs(["🔄 เริ่ม Rebuild..."]);
     try {
       const res = await fetch("/dashboard/api/rebuild", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
-        setResult(`✅ ${data.results.groups_meta} กลุ่ม, ${data.results.customers} ลูกค้า (${data.results.time_ms}ms)`);
-        setTimeout(() => window.location.reload(), 2000);
+        const r = data.results;
+        setLogs([
+          `🗑️ Clean: ลบข้อมูลเก่า`,
+          `📁 Groups: ${r.groups_meta} กลุ่ม`,
+          `👥 Customers: ${r.customers} ลูกค้า`,
+          `📊 Analytics: ${r.chat_analytics} รายการ`,
+          `🧠 Skills: ${r.user_skills} คน`,
+          `───────────`,
+          `💬 Messages: ${r.total_messages}`,
+          `📁 Groups: ${r.total_groups}`,
+          `👥 Customers: ${r.total_customers}`,
+          `📊 Analytics: ${r.total_analytics}`,
+          `⏱️ ${r.time_ms}ms`,
+          `✅ เสร็จ! กำลัง reload...`,
+        ]);
+        setTimeout(() => window.location.reload(), 3000);
       } else {
-        setResult(`❌ ${data.error}`);
+        setLogs((prev) => [...prev, `❌ ${data.error}`]);
       }
     } catch {
-      setResult("❌ Error");
+      setLogs((prev) => [...prev, "❌ Error"]);
     } finally {
       setLoading(false);
     }
@@ -195,7 +209,11 @@ function RebuildButton() {
           <>🔄 Rebuild Data</>
         )}
       </button>
-      {result && <p className="text-[10px] text-center mt-1 theme-text-muted">{result}</p>}
+      {logs.length > 0 && (
+        <div className="mt-1.5 px-2 py-1.5 bg-black/30 rounded-lg text-[9px] font-mono theme-text-muted space-y-0.5 max-h-40 overflow-y-auto">
+          {logs.map((l, i) => <p key={i}>{l}</p>)}
+        </div>
+      )}
     </div>
   );
 }
