@@ -59,6 +59,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/settings", icon: "⚙️", label: "ตั้งค่า" },
       { href: "/team", icon: "👔", label: "ทีมงาน" },
       { href: "/tasks", icon: "📋", label: "งาน" },
+      { href: "/appointments", icon: "📅", label: "นัดหมาย" },
     ],
   },
   {

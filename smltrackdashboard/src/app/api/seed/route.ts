@@ -147,7 +147,7 @@ export async function POST() {
     const collections = [
       "messages", "customers", "groups_meta", "chat_analytics",
       "user_skills", "analysis_logs", "ai_advice", "tasks",
-      "kb_articles", "payments", "documents",
+      "kb_articles", "payments", "documents", "appointments",
     ];
     for (const col of collections) {
       await db.collection(col).dropIndexes().catch(() => {});
@@ -588,7 +588,70 @@ export async function POST() {
       await db.collection("payments").insertMany(paymentDocs);
     }
 
-    // ─── 12. Generate Documents (AI-classified images) ───
+    // ─── 12. Generate Appointments ───
+    const APT_TYPES = ["site_visit", "consultation", "delivery", "installation", "meeting", "follow_up"];
+    const APT_TITLES = [
+      "นัดดูหน้างาน ต่อเติมบ้าน", "ส่งปูน 200 ถุง หน้างาน", "นัดวัดพื้นที่ปูกระเบื้อง",
+      "ติดตั้งประตู-หน้าต่าง", "ประชุมผู้รับเหมา", "ติดตามงานก่อสร้าง",
+      "ส่งเหล็ก 100 เส้น", "นัดดูหน้างานท่อประปา", "ให้คำปรึกษาเรื่องวัสดุ",
+      "ส่งกระเบื้องหลังคา", "นัดเก็บเงิน", "ส่งสีทาบ้าน + ทินเนอร์",
+      "นัดตรวจงาน QC", "ติดตั้งระบบไฟฟ้า", "ส่งทราย + หินคลุก 10 คิว",
+      "นัดวัดพื้นที่สร้างรั้ว", "เยี่ยมไซต์ก่อสร้าง Phase 2", "ส่งอิฐมวลเบา Q-CON",
+      "นัดช่างซ่อมท่อรั่ว", "ประชุมวางแผนโปรเจกต์ใหม่",
+    ];
+    const APT_LOCATIONS = [
+      "หมู่บ้านพฤกษา ปทุมธานี", "ซอยลาดพร้าว 71", "อ.เมือง นครปฐม",
+      "ตลาดไท รังสิต", "หมู่บ้านเดอะแกรนด์ บางนา", "ถ.พหลโยธิน กม.42",
+      "นิคมอุตสาหกรรม บางปู", "ถ.เพชรเกษม 69", "อ.บางพลี สมุทรปราการ",
+      "หน้าร้าน สาขาใหญ่",
+    ];
+    const appointmentDocs: any[] = [];
+    const now = new Date();
+    for (let i = 0; i < 50; i++) {
+      const daysOffset = randInt(-7, 14);
+      const date = new Date(now.getTime() + daysOffset * 86400000);
+      const startHour = randInt(8, 16);
+      const duration = rand([30, 60, 60, 90, 120]);
+      const endHour = startHour + Math.floor(duration / 60);
+      const endMin = duration % 60;
+      const staff = rand(STAFF_NAMES);
+
+      appointmentDocs.push({
+        title: rand(APT_TITLES),
+        description: "",
+        customerId: null,
+        customerName: `${rand(FIRST_NAMES)} ${rand(LAST_NAMES)}`,
+        phone: `08${randInt(0, 9)}${randInt(1000000, 9999999)}`,
+        email: "",
+        staffName: staff.replace("SML-", ""),
+        staffNames: [staff.replace("SML-", "")],
+        date,
+        startTime: `${String(startHour).padStart(2, "0")}:00`,
+        endTime: `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`,
+        duration,
+        type: rand(APT_TYPES),
+        location: rand(APT_LOCATIONS),
+        status: daysOffset < -2 ? rand(["completed", "completed", "cancelled", "no_show"])
+          : daysOffset < 0 ? rand(["completed", "in_progress", "no_show"])
+          : daysOffset === 0 ? rand(["confirmed", "in_progress", "scheduled"])
+          : rand(["scheduled", "scheduled", "confirmed"]),
+        priority: rand(["high", "medium", "medium", "low"]),
+        notes: rand(["", "", "", "ลูกค้าขอเลื่อนเวลา", "เตรียมใบเสนอราคาด้วย", "ต้องใช้รถ 6 ล้อ", "ช่าง 2 คน"]),
+        reminder: Math.random() > 0.3,
+        reminderMinutes: rand([30, 60, 60, 120, 1440]),
+        sourceId: null,
+        platform: null,
+        recurring: { type: "none" },
+        createdBy: staff.replace("SML-", ""),
+        createdAt: randomDate(14),
+        updatedAt: new Date(),
+      });
+    }
+    if (appointmentDocs.length > 0) {
+      await db.collection("appointments").insertMany(appointmentDocs);
+    }
+
+    // ─── 13. Generate Documents (AI-classified images) ───
     const DOC_CATEGORIES = [
       // accounting
       { cat: "payment_slip", group: "accounting", hasAmount: true },
@@ -663,6 +726,7 @@ export async function POST() {
       kb_articles: kbDocs.length,
       ai_advice: adviceInsert.length,
       payments: paymentDocs.length,
+      appointments: appointmentDocs.length,
       documents: documentDocs.length,
       time_ms: tEnd - t0,
     };
