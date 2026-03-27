@@ -37,6 +37,8 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
       { href: "/kpi", icon: "📈", label: "KPI" },
       { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
+      { href: "/payments", icon: "💸", label: "เงินเข้า" },
+      { href: "/documents", icon: "📑", label: "เอกสาร" },
       { href: "/costs", icon: "💰", label: "AI Cost" },
       { href: "/km", icon: "📚", label: "Knowledge" },
     ],
@@ -250,7 +252,7 @@ function RebuildButton() {
    ────────────────────────────────────────── */
 /* ── Nav with unread badges ── */
 function NavWithBadges() {
-  const { totalUnread } = useNotificationContext();
+  const { totalUnread, pendingPayments } = useNotificationContext();
   const chatBadge = totalUnread;
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 no-scrollbar">
@@ -266,7 +268,11 @@ function NavWithBadges() {
             <SidebarNavLink
               key={item.href}
               {...item}
-              badge={item.href === "/chat" || item.href === "/inbox" ? chatBadge : undefined}
+              badge={
+                item.href === "/chat" || item.href === "/inbox" ? chatBadge
+                : item.href === "/payments" || item.href === "/documents" ? pendingPayments
+                : undefined
+              }
             />
           ))}
         </div>

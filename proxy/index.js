@@ -660,9 +660,61 @@ async function saveMsg(sourceId, msg, platform = "line") {
         }
       }).catch(() => {});
     }
+    // ตรวจจับการชำระเงิน (non-blocking)
+    detectPayment(sourceId, msg, platform, result.insertedId).catch(() => {});
   } catch (e) {
     console.error("[DB] Save error:", e.message);
   }
+}
+
+// === Payment Detection — ตรวจจับสลิป/การโอนเงิน ===
+const PAYMENT_KEYWORDS = [
+  /โอนแล้ว/, /ส่งสลิป/, /จ่ายแล้ว/, /ชำระแล้ว/, /โอนเงิน/,
+  /ยอดโอน/, /โอนให้แล้ว/, /จ่ายเงินแล้ว/, /แนบสลิป/, /โอนเรียบร้อย/,
+];
+
+async function detectPayment(sourceId, msg, platform, messageId) {
+  // ข้ามข้อความ staff/bot
+  if ((msg.userName || "").toUpperCase().startsWith("SML")) return;
+  if (msg.role === "assistant") return;
+
+  const text = (msg.content || "").toLowerCase();
+  const matchedKeywords = PAYMENT_KEYWORDS.filter(re => re.test(text)).map(re => re.source);
+  const hasImage = msg.messageType === "image" || !!msg.imageUrl;
+  const imgDesc = (msg.imageDescription || "").toLowerCase();
+  const imgIsSlip = /สลิป|slip|โอน|transfer|bank|ธนาคาร|receipt|ใบเสร็จ/.test(imgDesc);
+
+  // ต้องมี keyword หรือ image ที่เป็นสลิป
+  if (matchedKeywords.length === 0 && !imgIsSlip) return;
+
+  const detectionMethod = (matchedKeywords.length > 0 && (hasImage || imgIsSlip))
+    ? "keyword+image" : matchedKeywords.length > 0 ? "keyword" : "image";
+
+  // Parse amount
+  const amountMatch = text.match(/(\d[\d,]*\.?\d*)\s*บาท/);
+  const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, "")) : null;
+
+  const database = await getDB();
+  if (!database) return;
+
+  await database.collection("payments").insertOne({
+    messageId,
+    sourceId,
+    platform,
+    customerName: msg.userName || "",
+    amount,
+    detectionMethod,
+    keywords: matchedKeywords,
+    slipImageUrl: msg.imageUrl || null,
+    status: "pending",
+    confirmedBy: null, confirmedAt: null,
+    rejectedBy: null, rejectedAt: null, rejectedReason: null,
+    notes: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  console.log(`[Payment] Detected from ${msg.userName} in ${sourceId} (${detectionMethod}) amount=${amount}`);
 }
 
 // === สร้าง compound index (เรียกครั้งเดียวตอน startup) ===
@@ -725,6 +777,10 @@ async function ensureIndexes() {
     // ── Reply Templates ──
     await database.collection("reply_templates").createIndex({ usageCount: -1 });
     await database.collection("reply_templates").createIndex({ category: 1 });
+
+    // ── Payments ──
+    await database.collection("payments").createIndex({ status: 1, createdAt: -1 });
+    await database.collection("payments").createIndex({ sourceId: 1, createdAt: -1 });
 
     // ── เดิม (user_skills, analysis_logs, alerts, advisor, costs) ──
     await database.collection("user_skills").createIndex({ sourceId: 1, userId: 1 }, { unique: true });

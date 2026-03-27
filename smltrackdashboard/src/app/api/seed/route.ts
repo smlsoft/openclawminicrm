@@ -147,7 +147,7 @@ export async function POST() {
     const collections = [
       "messages", "customers", "groups_meta", "chat_analytics",
       "user_skills", "analysis_logs", "ai_advice", "tasks",
-      "kb_articles",
+      "kb_articles", "payments", "documents",
     ];
     for (const col of collections) {
       await db.collection(col).dropIndexes().catch(() => {});
@@ -559,6 +559,97 @@ export async function POST() {
       await db.collection("ai_advice").insertMany(adviceInsert);
     }
 
+    // ─── 11. Generate Payments (จากข้อความที่มี keyword การชำระเงิน) ───
+    const paymentKeywords = /โอนแล้ว|ส่งสลิป|จ่ายแล้ว|ชำระแล้ว|โอนเงิน/;
+    const paymentMsgs = allMessages.filter(m =>
+      m.role === "user" && !(m.userName || "").startsWith("SML") && paymentKeywords.test(m.content || "")
+    );
+    const paymentAmounts = [1350, 2700, 3500, 5000, 6750, 8500, 12000, 15000, 25000, 35000, 45000, 67500, 95000, 135000];
+    const paymentDocs = paymentMsgs.slice(0, 60).map(m => ({
+      messageId: null,
+      sourceId: m.sourceId,
+      platform: m.platform,
+      customerName: m.userName,
+      amount: rand(paymentAmounts),
+      detectionMethod: Math.random() > 0.4 ? "keyword+image" : "keyword",
+      keywords: [paymentKeywords.exec(m.content)?.[0] || "โอนแล้ว"],
+      slipImageUrl: Math.random() > 0.3 ? `https://picsum.photos/seed/${randInt(1, 9999)}/400/600` : null,
+      status: rand(["pending", "pending", "pending", "confirmed", "confirmed", "confirmed", "confirmed", "rejected"]) as string,
+      confirmedBy: Math.random() > 0.4 ? rand(STAFF_NAMES).replace("SML-", "") : null,
+      confirmedAt: Math.random() > 0.4 ? randomDate(7) : null,
+      rejectedBy: null,
+      rejectedAt: null,
+      rejectedReason: null,
+      notes: rand(["", "", "", "ตรวจสลิปแล้ว", "ยอดตรง", "รอเช็คยอด"]),
+      createdAt: m.createdAt,
+      updatedAt: new Date(),
+    }));
+    if (paymentDocs.length > 0) {
+      await db.collection("payments").insertMany(paymentDocs);
+    }
+
+    // ─── 12. Generate Documents (AI-classified images) ───
+    const DOC_CATEGORIES = [
+      // accounting
+      { cat: "payment_slip", group: "accounting", hasAmount: true },
+      { cat: "purchase_order", group: "accounting", hasAmount: true },
+      { cat: "quotation", group: "accounting", hasAmount: true },
+      { cat: "invoice", group: "accounting", hasAmount: true },
+      { cat: "receipt", group: "accounting", hasAmount: true },
+      { cat: "delivery_note", group: "accounting", hasAmount: false },
+      // other_doc
+      { cat: "id_card", group: "other_doc", hasAmount: false },
+      { cat: "business_doc", group: "other_doc", hasAmount: false },
+      { cat: "contract", group: "other_doc", hasAmount: true },
+      { cat: "product_spec", group: "other_doc", hasAmount: false },
+      // photo
+      { cat: "product_photo", group: "photo", hasAmount: false },
+      { cat: "site_photo", group: "photo", hasAmount: false },
+      { cat: "damage_photo", group: "photo", hasAmount: false },
+      { cat: "general", group: "photo", hasAmount: false },
+    ];
+    const docAmounts = [1350, 2700, 5000, 8500, 12000, 25000, 45000, 67500, 95000, 135000, 250000];
+    const documentDocs: any[] = [];
+
+    // สร้างเอกสารจากข้อความที่มีรูป + สุ่มเพิ่ม
+    const imageMsgs = allMessages.filter(m => m.messageType === "image" && m.role === "user");
+    for (let i = 0; i < 80; i++) {
+      const msg = imageMsgs[i % imageMsgs.length] || rand(allMessages.filter(m => m.role === "user"));
+      const catDef = rand(DOC_CATEGORIES);
+      const aiConfidence = Math.random() * 0.4 + 0.6; // 0.6-1.0
+      const isCorrect = Math.random() > 0.15; // 85% AI ถูก
+      const actualCat = isCorrect ? catDef.cat : rand(DOC_CATEGORIES).cat;
+
+      documentDocs.push({
+        sourceId: msg.sourceId,
+        platform: msg.platform,
+        customerName: msg.userName || "",
+        category: actualCat,
+        categoryGroup: DOC_CATEGORIES.find(d => d.cat === actualCat)?.group || "photo",
+        aiCategory: catDef.cat,
+        aiCategoryGroup: catDef.group,
+        aiConfidence,
+        manualOverride: !isCorrect && Math.random() > 0.5,
+        overrideBy: !isCorrect && Math.random() > 0.5 ? rand(STAFF_NAMES).replace("SML-", "") : null,
+        overrideAt: !isCorrect ? randomDate(7) : null,
+        amount: catDef.hasAmount ? rand(docAmounts) : null,
+        imageUrl: `https://picsum.photos/seed/${randInt(1, 99999)}/400/${randInt(300, 600)}`,
+        messageContent: msg.content?.substring(0, 100) || "",
+        status: rand(["pending", "pending", "confirmed", "confirmed", "confirmed", "rejected"]) as string,
+        confirmedBy: Math.random() > 0.4 ? rand(STAFF_NAMES).replace("SML-", "") : null,
+        confirmedAt: Math.random() > 0.4 ? randomDate(7) : null,
+        rejectedBy: null,
+        rejectedAt: null,
+        rejectedReason: null,
+        notes: rand(["", "", "", "ตรวจแล้ว", "ยอดตรง", "สลิปชัดเจน", "รอเช็คกับบัญชี"]),
+        createdAt: msg.createdAt || randomDate(14),
+        updatedAt: new Date(),
+      });
+    }
+    if (documentDocs.length > 0) {
+      await db.collection("documents").insertMany(documentDocs);
+    }
+
     // ─── Summary ───
     const tEnd = Date.now();
     const summary = {
@@ -571,6 +662,8 @@ export async function POST() {
       tasks: taskDocs.length,
       kb_articles: kbDocs.length,
       ai_advice: adviceInsert.length,
+      payments: paymentDocs.length,
+      documents: documentDocs.length,
       time_ms: tEnd - t0,
     };
 

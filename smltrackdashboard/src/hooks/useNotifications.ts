@@ -25,6 +25,7 @@ interface Toast {
 
 export interface NotificationState {
   totalUnread: number;
+  pendingPayments: number;
   conversations: UnreadConversation[];
   toasts: Toast[];
   connected: boolean;
@@ -36,6 +37,7 @@ export interface NotificationState {
 export function useNotifications(): NotificationState {
   const { status } = useSession();
   const [totalUnread, setTotalUnread] = useState(0);
+  const [pendingPayments, setPendingPayments] = useState(0);
   const [conversations, setConversations] = useState<UnreadConversation[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [connected, setConnected] = useState(false);
@@ -113,6 +115,7 @@ export function useNotifications(): NotificationState {
 
           prevTotalRef.current = newTotal;
           setTotalUnread(newTotal);
+          setPendingPayments(data.pendingPayments || 0);
           setConversations(newConvs);
         } catch {}
       });
@@ -173,5 +176,5 @@ export function useNotifications(): NotificationState {
     } catch {}
   }, []);
 
-  return { totalUnread, conversations, toasts, connected, dismissToast, markSeen, markAllSeen };
+  return { totalUnread, pendingPayments, conversations, toasts, connected, dismissToast, markSeen, markAllSeen };
 }

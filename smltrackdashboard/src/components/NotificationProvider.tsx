@@ -6,6 +6,7 @@ import Link from "next/link";
 
 const NotificationContext = createContext<NotificationState>({
   totalUnread: 0,
+  pendingPayments: 0,
   conversations: [],
   toasts: [],
   connected: false,

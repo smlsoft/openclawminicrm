@@ -95,10 +95,13 @@ export async function GET(req: NextRequest) {
           // เรียงตาม unread มากสุดก่อน
           unreadConvs.sort((a, b) => (b.lastAt?.getTime?.() || 0) - (a.lastAt?.getTime?.() || 0));
 
+          // ดึง pending payments count
+          const pendingPayments = await db.collection("payments").countDocuments({ status: "pending" });
+
           // ส่งเฉพาะเมื่อข้อมูลเปลี่ยน
-          const hash = `${total}:${unreadConvs.map(c => `${c.sourceId}:${c.count}`).join(",")}`;
+          const hash = `${total}:${pendingPayments}:${unreadConvs.map(c => `${c.sourceId}:${c.count}`).join(",")}`;
           if (hash !== prevHash) {
-            send("unread", { total, conversations: unreadConvs.slice(0, 20) });
+            send("unread", { total, pendingPayments, conversations: unreadConvs.slice(0, 20) });
             prevHash = hash;
           }
         } catch (err) {
