@@ -291,6 +291,72 @@ export async function POST() {
     await db.collection("alerts").insertMany(alerts);
     results["alerts"] = alerts.length;
 
+    // ═══ 7. AI Costs (น้องกุ้ง 13 บทบาท + Agent features) ═══
+    await db.collection("ai_costs").deleteMany({});
+    const costFeatures = [
+      // Agent features
+      { feature: "chat-reply", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 800, maxIn: 3000, minOut: 200, maxOut: 1500, dailyCalls: 25 },
+      { feature: "light-ai-json", provider: "groq", model: "llama-3.3-70b-versatile", minIn: 500, maxIn: 2000, minOut: 100, maxOut: 800, dailyCalls: 30 },
+      { feature: "light-ai", provider: "groq", model: "llama-3.3-70b-versatile", minIn: 300, maxIn: 1500, minOut: 50, maxOut: 500, dailyCalls: 15 },
+      { feature: "sentiment", provider: "sambanova", model: "Meta-Llama-3.1-8B-Instruct", minIn: 200, maxIn: 1000, minOut: 50, maxOut: 300, dailyCalls: 12 },
+      { feature: "crm-analysis", provider: "sambanova", model: "Meta-Llama-3.1-8B-Instruct", minIn: 500, maxIn: 2000, minOut: 200, maxOut: 800, dailyCalls: 10 },
+      { feature: "advisor-sentiment", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 300, maxIn: 1200, minOut: 100, maxOut: 500, dailyCalls: 12 },
+      { feature: "advisor-pipeline", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 400, maxIn: 1500, minOut: 100, maxOut: 600, dailyCalls: 12 },
+      { feature: "advisor-summary", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 500, maxIn: 2000, minOut: 200, maxOut: 1000, dailyCalls: 12 },
+      { feature: "embedding", provider: "gemini", model: "gemini-embedding-001", minIn: 50, maxIn: 200, minOut: 0, maxOut: 0, dailyCalls: 8 },
+      { feature: "vision", provider: "gemini", model: "gemini-2.0-flash", minIn: 1000, maxIn: 5000, minOut: 200, maxOut: 800, dailyCalls: 3 },
+      // น้องกุ้ง 13 บทบาท
+      { feature: "problem-solver", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 2000, maxIn: 8000, minOut: 500, maxOut: 3000, dailyCalls: 4 },
+      { feature: "sales-hunter", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 2000, maxIn: 8000, minOut: 500, maxOut: 3000, dailyCalls: 4 },
+      { feature: "team-coaching", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 3000, maxIn: 10000, minOut: 800, maxOut: 4000, dailyCalls: 2 },
+      { feature: "weekly-strategy", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 5000, maxIn: 15000, minOut: 1000, maxOut: 5000, dailyCalls: 1 },
+      { feature: "health-monitor", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 2000, maxIn: 8000, minOut: 500, maxOut: 2000, dailyCalls: 3 },
+      { feature: "payment-guardian", provider: "groq", model: "llama-3.3-70b-versatile", minIn: 1000, maxIn: 4000, minOut: 300, maxOut: 1500, dailyCalls: 4 },
+      { feature: "order-tracker", provider: "groq", model: "llama-3.3-70b-versatile", minIn: 1000, maxIn: 4000, minOut: 300, maxOut: 1500, dailyCalls: 3 },
+      { feature: "re-engagement", provider: "sambanova", model: "Meta-Llama-3.1-8B-Instruct", minIn: 1500, maxIn: 6000, minOut: 400, maxOut: 2000, dailyCalls: 2 },
+      { feature: "upsell-crosssell", provider: "sambanova", model: "Meta-Llama-3.1-8B-Instruct", minIn: 1500, maxIn: 6000, minOut: 400, maxOut: 2000, dailyCalls: 3 },
+      { feature: "daily-report", provider: "openrouter", model: "qwen/qwen3-235b-a22b", minIn: 5000, maxIn: 15000, minOut: 1000, maxOut: 5000, dailyCalls: 1 },
+      { feature: "lead-scorer", provider: "groq", model: "llama-3.3-70b-versatile", minIn: 1500, maxIn: 5000, minOut: 300, maxOut: 1500, dailyCalls: 3 },
+      { feature: "appointment-reminder", provider: "cerebras", model: "llama-3.3-70b", minIn: 500, maxIn: 2000, minOut: 100, maxOut: 500, dailyCalls: 4 },
+      { feature: "price-watcher", provider: "sambanova", model: "Meta-Llama-3.1-8B-Instruct", minIn: 2000, maxIn: 8000, minOut: 500, maxOut: 2000, dailyCalls: 1 },
+    ];
+    const aiPricing: Record<string, { input: number; output: number }> = {
+      openrouter: { input: 0.01, output: 0.03 },
+      groq: { input: 0, output: 0 },
+      sambanova: { input: 0, output: 0 },
+      cerebras: { input: 0, output: 0 },
+      gemini: { input: 0, output: 0 },
+    };
+    const costRecords = [];
+    for (let day = 0; day < 14; day++) {
+      const dayDate = new Date(now - day * 86400000);
+      for (const cf of costFeatures) {
+        const calls = Math.max(1, Math.floor(cf.dailyCalls * (0.5 + r())));
+        for (let c = 0; c < calls; c++) {
+          const inputTokens = Math.floor(cf.minIn + r() * (cf.maxIn - cf.minIn));
+          const outputTokens = Math.floor(cf.minOut + r() * (cf.maxOut - cf.minOut));
+          const totalTokens = inputTokens + outputTokens;
+          const pricing = aiPricing[cf.provider] || { input: 0, output: 0 };
+          const costUsd = Math.round(((inputTokens * pricing.input + outputTokens * pricing.output) / 1000000) * 1000000) / 1000000;
+          costRecords.push({
+            provider: cf.provider,
+            model: cf.model,
+            feature: cf.feature,
+            inputTokens,
+            outputTokens,
+            totalTokens,
+            costUsd,
+            sourceId: null,
+            success: true,
+            service: cf.feature.startsWith("problem") || cf.feature.startsWith("sales") || cf.feature.startsWith("team") || cf.feature.startsWith("weekly") || cf.feature.startsWith("health") || cf.feature.startsWith("payment") || cf.feature.startsWith("order") || cf.feature.startsWith("re-") || cf.feature.startsWith("upsell") || cf.feature.startsWith("daily") || cf.feature.startsWith("lead") || cf.feature.startsWith("appointment") || cf.feature.startsWith("price") ? "openclaw" : "agent",
+            createdAt: new Date(dayDate.getTime() - Math.floor(r() * 86400000)),
+          });
+        }
+      }
+    }
+    await db.collection("ai_costs").insertMany(costRecords);
+    results["ai_costs"] = costRecords.length;
+
     return NextResponse.json({
       ok: true,
       message: "สร้างข้อมูลตัวอย่างเพิ่มเติมสำเร็จ",
