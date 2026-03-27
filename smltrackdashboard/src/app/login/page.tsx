@@ -58,7 +58,7 @@ export default function LoginPage() {
               OpenClaw Mini CRM
             </h1>
             <p className="text-sm theme-text-secondary mt-1 text-center">
-              AI Chat Intelligence
+              น้องกุ้ง AI คุมทั้งระบบ
               <br />
               <span className="theme-text-muted">LINE · Facebook · Instagram</span>
             </p>

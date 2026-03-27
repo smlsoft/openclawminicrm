@@ -109,7 +109,7 @@ export default function CrmPage() {
     .filter((c) => c.pipelineStage === "closed_lost")
     .reduce((sum, c) => sum + (c.dealValue || 0), 0);
 
-  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">Loading CRM...</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">กำลังโหลดข้อมูลลูกค้า...</div></div>;
 
   return (
     <div className="min-h-screen theme-bg theme-text">
@@ -213,7 +213,7 @@ export default function CrmPage() {
               <thead>
                 <tr className="text-left text-[11px] theme-text-muted border-b theme-border">
                   <th className="pb-3 pr-4">ลูกค้า</th>
-                  <th className="pb-3 px-2 text-center">Stage</th>
+                  <th className="pb-3 px-2 text-center">สถานะ</th>
                   <th className="pb-3 px-2 text-center">💰 มูลค่า</th>
                   <th className="pb-3 px-2 text-center">😊 ความรู้สึก</th>
                   <th className="pb-3 px-2 text-center">🛒 โอกาสซื้อ</th>

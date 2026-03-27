@@ -20,7 +20,7 @@ const REPLY_MODES = [
   { value: "off", label: "ปิด", desc: "ฟังอย่างเดียว", icon: "⚫" },
   { value: "auto", label: "อัตโนมัติ", desc: "ตอบทุกข้อความ", icon: "🟢" },
   { value: "mention", label: "เรียกชื่อ", desc: "ตอบเมื่อเรียกชื่อ Bot", icon: "🔵" },
-  { value: "keyword", label: "Keyword", desc: "ตอบเมื่อมีคำที่กำหนด", icon: "🟡" },
+  { value: "keyword", label: "คำสำคัญ", desc: "ตอบเมื่อมีคำที่กำหนด", icon: "🟡" },
 ] as const;
 
 function getPlatform(sourceId: string) {
@@ -262,7 +262,7 @@ export default function BotConfigPage() {
             {/* Keywords (show only when mode = keyword) */}
             {formMode === "keyword" && (
               <div className="space-y-1.5">
-                <label className="text-sm font-medium theme-text">Keywords</label>
+                <label className="text-sm font-medium theme-text">คำสำคัญ</label>
                 <input
                   type="text"
                   value={formKeywords}
@@ -277,7 +277,7 @@ export default function BotConfigPage() {
 
             {/* System Prompt */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium theme-text">System Prompt</label>
+              <label className="text-sm font-medium theme-text">คำสั่งบอท (บุคลิกและบทบาท)</label>
               <textarea
                 value={formPrompt}
                 onChange={(e) => setFormPrompt(e.target.value)}

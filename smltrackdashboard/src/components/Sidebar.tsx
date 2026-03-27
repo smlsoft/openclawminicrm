@@ -216,25 +216,25 @@ function RebuildButton() {
   const handleRebuild = useCallback(async () => {
     if (loading) return;
     setLoading(true);
-    setLogs(["เริ่ม Rebuild..."]);
+    setLogs(["เริ่มโหลดข้อมูลใหม่..."]);
     try {
       const res = await fetch("/dashboard/api/rebuild", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
         const r = data.results;
         setLogs([
-          `Groups: ${r.groups_meta}`,
-          `Customers: ${r.customers}`,
-          `Analytics: ${r.chat_analytics}`,
-          `Skills: ${r.user_skills}`,
-          `${r.time_ms}ms — reload...`,
+          `ห้องแชท: ${r.groups_meta}`,
+          `ลูกค้า: ${r.customers}`,
+          `วิเคราะห์: ${r.chat_analytics}`,
+          `ทักษะ: ${r.user_skills}`,
+          `${r.time_ms}มิลลิวิ — โหลดหน้าใหม่...`,
         ]);
         setTimeout(() => window.location.reload(), 2000);
       } else {
-        setLogs([`Error: ${data.error}`]);
+        setLogs([`ผิดพลาด: ${data.error}`]);
       }
     } catch {
-      setLogs(["Error"]);
+      setLogs(["ผิดพลาด"]);
     } finally {
       setLoading(false);
     }
@@ -255,10 +255,10 @@ function RebuildButton() {
         {loading ? (
           <>
             <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-            Rebuild...
+            กำลังโหลด...
           </>
         ) : (
-          "🔄 Rebuild Data"
+          "🔄 โหลดข้อมูลใหม่"
         )}
       </button>
       {logs.length > 0 && (
@@ -390,7 +390,7 @@ function MoreDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
             <div className="mt-4 pt-4 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
               <RebuildButton />
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Theme</span>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>ธีม</span>
                 <ThemeToggle />
               </div>
               <UserSection />
@@ -460,7 +460,7 @@ export default function Sidebar() {
           <div className="px-3 pb-3 pt-2 border-t space-y-2.5" style={{ borderColor: "var(--border)" }}>
             <RebuildButton />
             <div className="flex items-center justify-between px-2">
-              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>Theme</span>
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>ธีม</span>
               <ThemeToggle />
             </div>
             <UserSection />

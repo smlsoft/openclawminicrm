@@ -241,7 +241,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     await saveAssignedTo((customer.assignedTo || []).filter((_, i) => i !== index));
   };
 
-  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">Loading...</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-muted animate-pulse">กำลังโหลด...</div></div>;
   if (!customer) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="text-red-400">ไม่พบลูกค้า</div></div>;
 
   const stage = STAGES[customer.pipelineStage] || STAGES.new;

@@ -144,7 +144,7 @@ export default function KMPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <div>
             <h1 className="text-base font-bold flex items-center gap-2">
-              📚 Knowledge Base
+              📚 ฐานความรู้
               <span className="text-xs font-normal theme-text-muted">ฐานความรู้สำหรับ AI</span>
             </h1>
             <p className="text-xs theme-text-muted mt-0.5">

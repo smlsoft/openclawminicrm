@@ -132,7 +132,7 @@ export default function TasksPage() {
 
   if (loading) return (
     <div className="min-h-screen theme-bg flex items-center justify-center">
-      <div className="theme-text-muted animate-pulse">Loading งาน...</div>
+      <div className="theme-text-muted animate-pulse">กำลังโหลดงาน...</div>
     </div>
   );
 
@@ -209,7 +209,7 @@ export default function TasksPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold">📋 งานและติดตาม</h1>
-            <p className="text-xs theme-text-muted">Task Management &middot; {tasks.length} งาน</p>
+            <p className="text-xs theme-text-muted">จัดการงาน &middot; {tasks.length} งาน</p>
           </div>
           <div className="flex items-center gap-2">
             <button

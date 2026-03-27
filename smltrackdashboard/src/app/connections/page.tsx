@@ -74,7 +74,7 @@ export default function ConnectionsPage() {
           <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; Dashboard</Link>
           <div className="w-px h-5 theme-border" />
           <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-sm">🔗</div>
-          <h1 className="text-lg font-bold">Connections</h1>
+          <h1 className="text-lg font-bold">เชื่อมต่อช่องทาง</h1>
         </div>
       </header>
 

@@ -177,7 +177,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
     return (
       <div className="mt-3 rounded-lg overflow-hidden border theme-border text-xs">
         <div className="px-3 py-1.5 font-semibold theme-text-muted" style={{ background: "var(--bg-secondary)" }}>
-          Deep Analysis Loop
+          วิเคราะห์เชิงลึก
         </div>
         <div className="divide-y theme-border">
           {analysis.problem && (
@@ -204,7 +204,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
     return (
       <div className="mt-3 rounded-lg overflow-hidden border theme-border text-xs">
         <div className="px-3 py-1.5 font-semibold theme-text-muted" style={{ background: "var(--bg-secondary)" }}>
-          Sales Analysis Loop
+          วิเคราะห์การขาย
         </div>
         <div className="divide-y theme-border">
           {analysis.opportunity && (
@@ -237,7 +237,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
             className="px-3 py-2 flex items-center justify-between font-semibold"
             style={{ background: "var(--bg-secondary)" }}
           >
-            <span className="theme-text-muted">Health Score</span>
+            <span className="theme-text-muted">คะแนนสุขภาพ</span>
             <span className="font-bold text-sm" style={{ color: statusInfo.color }}>
               {score}/100 — {statusInfo.label}
             </span>
@@ -265,7 +265,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
     return (
       <div className="mt-3 rounded-lg overflow-hidden border theme-border text-xs">
         <div className="px-3 py-1.5 font-semibold theme-text-muted" style={{ background: "var(--bg-secondary)" }}>
-          Weekly Strategy Analysis
+          วิเคราะห์กลยุทธ์ประจำสัปดาห์
         </div>
         <div className="divide-y theme-border">
           {analysis.weekSummary && (
@@ -292,7 +292,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
     return (
       <div className="mt-3 rounded-lg overflow-hidden border theme-border text-xs">
         <div className="px-3 py-1.5 font-semibold theme-text-muted" style={{ background: "var(--bg-secondary)" }}>
-          Team Coaching Analysis
+          วิเคราะห์การโค้ชทีม
         </div>
         <div className="divide-y theme-border">
           {analysis.situation && (
@@ -305,7 +305,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
             <LoopStep step="C" label="วิธีพัฒนา" list={analysis.improvements} />
           )}
           {analysis.priority && (
-            <LoopStep step="D" label="Priority" value={analysis.priority} highlight />
+            <LoopStep step="D" label="ลำดับความสำคัญ" value={analysis.priority} highlight />
           )}
           {analysis.actionPlan && analysis.actionPlan.length > 0 && (
             <LoopStep step="E" label="แผนพัฒนา" list={analysis.actionPlan} numbered />
@@ -658,7 +658,7 @@ function AdviceCard({
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            {expanded ? "ซ่อน" : "ดู"} Deep Analysis Loop
+            {expanded ? "ซ่อนการวิเคราะห์เชิงลึก" : "ดูการวิเคราะห์เชิงลึก"}
           </button>
           {expanded && item.analysis && (
             <AnalysisLoop type={effectiveType} analysis={item.analysis} />
