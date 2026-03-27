@@ -912,6 +912,7 @@ export default function ChatPage() {
 
   // Fetch ALL conversations — fast API (1 query, ไม่ดึง messages array)
   const [chatPlatform, setChatPlatform] = useState("");
+  const [totalPlatformCounts, setTotalPlatformCounts] = useState<Record<string, number>>({});
 
   const fetchConversations = useCallback(async (_p = 0, _a = false, platform = "") => {
     try {
@@ -920,6 +921,16 @@ export default function ChatPage() {
       const raw = await res.json();
       const data = raw.conversations || raw.groups || (Array.isArray(raw) ? raw : []);
       setConversations(data);
+
+      // ดึง counts รวมครั้งเดียว (ตอนไม่มี filter)
+      if (!platform) {
+        const counts: Record<string, number> = { all: data.length };
+        for (const c of data) {
+          const p = c.platform || "line";
+          counts[p] = (counts[p] || 0) + 1;
+        }
+        setTotalPlatformCounts(counts);
+      }
     } catch {}
   }, []);
 
@@ -955,11 +966,12 @@ export default function ChatPage() {
     return true;
   });
 
+  // ใช้ counts จากตอนโหลดครั้งแรก (ไม่เปลี่ยนตาม filter)
   const platformCounts = {
-    all: conversations.length,
-    line: conversations.filter(c => (c.platform || "line") === "line").length,
-    facebook: conversations.filter(c => c.platform === "facebook").length,
-    instagram: conversations.filter(c => c.platform === "instagram").length,
+    all: totalPlatformCounts.all || conversations.length,
+    line: totalPlatformCounts.line || 0,
+    facebook: totalPlatformCounts.facebook || 0,
+    instagram: totalPlatformCounts.instagram || 0,
   };
 
   return (
