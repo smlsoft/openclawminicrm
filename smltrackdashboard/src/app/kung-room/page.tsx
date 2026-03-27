@@ -1,359 +1,125 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
-// ─── Copy Button ───
-function CopyBtn({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <button onClick={copy}
-      className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[10px] font-medium transition opacity-70 hover:opacity-100"
-      style={{ background: "var(--bg-hover)", color: "var(--text-secondary)" }}>
-      {copied ? "✅ คัดลอกแล้ว" : "📋 คัดลอก"}
-    </button>
-  );
-}
+const OfficeScene = dynamic(() => import("@/components/3d/OfficeScene"), { ssr: false });
 
-// ─── Prompt Code Block ───
-function PromptBlock({ prompt, label }: { prompt: string; label?: string }) {
-  return (
-    <div className="relative mt-2">
-      {label && <p className="text-[10px] font-medium mb-1" style={{ color: "var(--text-muted)" }}>{label}</p>}
-      <div className="relative rounded-xl overflow-hidden" style={{ background: "var(--bg-hover)" }}>
-        <CopyBtn text={prompt} />
-        <pre className="p-4 pr-20 text-xs leading-relaxed whitespace-pre-wrap font-mono"
-          style={{ color: "var(--text-secondary)" }}>
-          {prompt}
-        </pre>
-      </div>
-    </div>
-  );
-}
-
-// ─── Accordion Section ───
-function Accordion({ title, icon, defaultOpen, children }: {
-  title: string; icon: string; defaultOpen?: boolean; children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen ?? false);
-  return (
-    <div className="card overflow-hidden">
-      <button onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-[var(--bg-hover)] transition-colors">
-        <span className="text-lg">{icon}</span>
-        <span className="flex-1 text-sm font-bold" style={{ color: "var(--text-primary)" }}>{title}</span>
-        <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"
-          className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-          style={{ color: "var(--text-muted)" }}>
-          <path d="M2 4l4 4 4-4" strokeLinecap="round" />
-        </svg>
-      </button>
-      <div className="transition-all duration-300 ease-in-out overflow-hidden"
-        style={{ maxHeight: open ? "5000px" : "0", opacity: open ? 1 : 0 }}>
-        <div className="px-5 pb-5">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Character Card ───
-function CharCard({ name, nameTh, desc, prompt, borderColor }: {
-  name: string; nameTh: string; desc: string; prompt: string; borderColor: string;
-}) {
-  return (
-    <div className="card p-4 transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg"
-      style={{ borderLeft: `4px solid ${borderColor}` }}>
-      <h4 className="text-sm font-bold mb-0.5" style={{ color: borderColor }}>{name}</h4>
-      <p className="text-xs font-medium mb-1" style={{ color: "var(--text-primary)" }}>{nameTh}</p>
-      <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{desc}</p>
-      <PromptBlock prompt={prompt} />
-    </div>
-  );
-}
-
-// ─── Data ───
-const CHARACTERS = [
-  {
-    name: "Gateway Kung",
-    nameTh: "กุ้งเกตเวย์ — ผู้จัดการหลัก",
-    desc: "ศูนย์กลางควบคุม วิเคราะห์ สั่งการ Agent ทุกตัว",
-    borderColor: "#0d9488",
-    prompt: `A cute chibi shrimp character wearing a navy captain hat with a teal LED visor, standing at a holographic command center. The shrimp has big expressive eyes, small claws typing on a floating keyboard. Navy and teal color scheme. Pixar-style 3D render, soft studio lighting, white background.`,
-  },
-  {
-    name: "LINE Agent Kung",
-    nameTh: "กุ้ง LINE — ผู้ช่วยแชท",
-    desc: "รับ-ส่งข้อความ LINE, ตอบลูกค้า, วิเคราะห์ sentiment",
-    borderColor: "#22c55e",
-    prompt: `A cute chibi shrimp character wearing a green LINE-themed headset with microphone, holding a chat bubble. The shrimp has friendly eyes and a warm smile. Green and white color scheme matching LINE branding. Pixar-style 3D render, soft studio lighting, white background.`,
-  },
-  {
-    name: "ERP Agent Kung",
-    nameTh: "กุ้ง ERP — ผู้เชี่ยวชาญข้อมูล",
-    desc: "ดึงข้อมูลสินค้า ราคา สต็อก ใบเสนอราคา จาก ERP",
-    borderColor: "#f59e0b",
-    prompt: `A cute chibi shrimp character wearing golden safety goggles and an amber utility vest with many pockets. Holding a clipboard with product data. The shrimp looks smart and organized. Amber and gold color scheme. Pixar-style 3D render, soft studio lighting, white background.`,
-  },
-  {
-    name: "Analytics Kung",
-    nameTh: "กุ้งวิเคราะห์ — นักสถิติ",
-    desc: "วิเคราะห์ KPI, sentiment, purchase intent, สร้างรายงาน",
-    borderColor: "#a855f7",
-    prompt: `A cute chibi shrimp character wearing pink-purple glasses with holographic data floating around. Holding a glowing crystal ball showing charts and graphs. The shrimp looks curious and analytical. Pink and purple color scheme. Pixar-style 3D render, soft studio lighting, white background.`,
-  },
+// ─── น้องกุ้ง 13 ตัว ───
+const AGENTS = [
+  { id: 1, name: "กุ้งแก้ว", role: "แก้ปัญหาลูกค้า", emoji: "🔍", color: "#f87171", status: "working", quote: "เจอปัญหาแล้ว! รอแป๊บนะ กำลังหาทางออก..." },
+  { id: 2, name: "กุ้งทอง", role: "หาโอกาสขาย", emoji: "💰", color: "#fbbf24", status: "excited", quote: "ลูกค้าคนนี้พร้อมซื้อแน่นอน! ปิดการขายเลย!" },
+  { id: 3, name: "กุ้งโค้ช", role: "โค้ชทีมงาน", emoji: "👨‍🏫", color: "#a78bfa", status: "working", quote: "ทีมเราเก่งขึ้นทุกวัน แต่ยังตอบช้าอยู่นะ~" },
+  { id: 4, name: "กุ้งวางแผน", role: "วางกลยุทธ์สัปดาห์", emoji: "📋", color: "#60a5fa", status: "thinking", quote: "อืม... สัปดาห์หน้าควรเน้นโปรปูนซีเมนต์..." },
+  { id: 5, name: "กุ้งใจดี", role: "ตรวจสุขภาพลูกค้า", emoji: "❤️", color: "#f472b6", status: "worried", quote: "ลูกค้า 3 รายยังไม่กลับมาเลย ห่วงจัง 😟" },
+  { id: 6, name: "กุ้งเงิน", role: "ตรวจสลิป/เงินเข้า", emoji: "💳", color: "#34d399", status: "working", quote: "สลิปมาแล้ว 5 ใบ! ยังไม่ได้ยืนยัน 2 ใบนะ" },
+  { id: 7, name: "กุ้งส่ง", role: "ติดตามจัดส่ง", emoji: "📦", color: "#fb923c", status: "running", quote: "พัสดุ 3 ชิ้นยังไม่ถึง! ต้องรีบตามแล้ว 🏃" },
+  { id: 8, name: "กุ้งคิดถึง", role: "ดึงลูกค้ากลับ", emoji: "🔄", color: "#38bdf8", status: "sad", quote: "ลูกค้าหายไป 12 คน... คิดถึงจัง ส่งข้อความไปดีไหม?" },
+  { id: 9, name: "กุ้งแนะนำ", role: "แนะนำสินค้าเพิ่ม", emoji: "🎯", color: "#c084fc", status: "excited", quote: "ลูกค้าซื้อปูนไปแล้ว! แนะนำทรายเพิ่มสิ~" },
+  { id: 10, name: "กุ้งสรุป", role: "สรุปรายวัน", emoji: "📊", color: "#2dd4bf", status: "working", quote: "วันนี้ข้อความ 523 ลูกค้าใหม่ 12 คะแนน 8/10 !" },
+  { id: 11, name: "กุ้งให้แต้ม", role: "ให้คะแนนลูกค้า", emoji: "🏆", color: "#facc15", status: "thinking", quote: "คุณสมชาย 85 แต้ม Hot Lead! ติดต่อด่วน!" },
+  { id: 12, name: "กุ้งเตือน", role: "เตือนนัดหมาย", emoji: "📅", color: "#fb7185", status: "alert", quote: "อีก 1 ชม. มีนัดส่งของ! อย่าลืมนะ ⏰" },
+  { id: 13, name: "กุ้งเทียบราคา", role: "วิเคราะห์ราคา", emoji: "📈", color: "#4ade80", status: "working", quote: "ลูกค้า 8 คนถามราคาเหล็ก วันนี้ ควรทำโปร!" },
 ];
 
-const POSE_PROMPTS = [
-  {
-    label: "Turnaround Sheet (5 มุมมอง)",
-    prompt: `Character turnaround sheet of [CHARACTER NAME]. Front view, 3/4 view, side view, back view, top-down view. T-pose reference. Consistent proportions and colors across all angles. Clean white background, reference sheet layout. Studio lighting.`,
-  },
-  {
-    label: "Expression Sheet (8 อารมณ์)",
-    prompt: `Expression sheet of [CHARACTER NAME] showing 8 emotions: happy, sad, angry, surprised, thinking, confused, excited, sleeping. Chibi style, consistent design. Grid layout, clean white background. Each expression labeled.`,
-  },
-];
+const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: string }> = {
+  working: { label: "กำลังทำงาน 💪", animation: "animate-pulse", bgClass: "bg-green-500/20 text-green-400" },
+  sleeping: { label: "นอนหลับ 😴", animation: "", bgClass: "bg-gray-500/20 text-gray-400" },
+  thinking: { label: "กำลังคิด 🤔", animation: "animate-bounce", bgClass: "bg-blue-500/20 text-blue-400" },
+  excited: { label: "ตื่นเต้น! 🎉", animation: "animate-bounce", bgClass: "bg-yellow-500/20 text-yellow-400" },
+  worried: { label: "ห่วงใย 😟", animation: "animate-pulse", bgClass: "bg-pink-500/20 text-pink-400" },
+  sad: { label: "คิดถึง 🥺", animation: "animate-pulse", bgClass: "bg-cyan-500/20 text-cyan-400" },
+  running: { label: "วิ่งตาม! 🏃", animation: "animate-bounce", bgClass: "bg-orange-500/20 text-orange-400" },
+  alert: { label: "แจ้งเตือน! ⏰", animation: "animate-ping-slow", bgClass: "bg-red-500/20 text-red-400" },
+};
 
-const SCENE_PROMPTS = [
-  {
-    label: "ฉากห้องทำงาน (Office Scene)",
-    prompt: `A cozy tech office scene with 4 cute chibi shrimp characters working together. Navy shrimp at the main command desk with holographic screens, green shrimp answering chat messages, amber shrimp checking inventory on tablet, purple shrimp analyzing charts on a big monitor. Warm ambient lighting, plants, coffee cups. Isometric view, Pixar-style 3D render.`,
-  },
-  {
-    label: "ฉากประชุม (Meeting Scene)",
-    prompt: `4 cute chibi shrimp characters sitting around a round table in a modern meeting room. One shrimp presenting on a whiteboard with flowcharts. Others listening with different expressions - one taking notes, one nodding, one raising a claw to ask a question. Soft overhead lighting, glass walls. Pixar-style 3D render.`,
-  },
-];
-
-const ANIMATION_SCENES = [
-  {
-    ep: "ตอนที่ 1: Intro",
-    desc: "น้องกุ้งทั้ง 4 ตัวปรากฏตัวทีละตัว พร้อมชื่อและบทบาท",
-    prompt: `Animation scene: A dark screen lights up. A cute navy chibi shrimp drops in from above, lands with a bounce, and salutes. Text appears: "Gateway Kung". Camera pans right to reveal 3 more shrimp characters dropping in one by one. Cinematic intro sequence, dramatic lighting, particle effects. 4 seconds, smooth motion.`,
-  },
-  {
-    ep: "ตอนที่ 2: Message Received",
-    desc: "ข้อความจาก LINE เข้ามา กุ้ง LINE รับและส่งต่อให้ Gateway",
-    prompt: `Animation scene: A green chat bubble floats down from the top. The green LINE shrimp catches it excitedly, reads it, then tosses it to the navy Gateway shrimp who nods and starts typing commands. Speech bubbles with Thai text appear. Smooth character animation, 3 seconds.`,
-  },
-  {
-    ep: "ตอนที่ 3: Processing",
-    desc: "Gateway มอบหมายงาน — ERP ดึงข้อมูล, Analytics วิเคราะห์",
-    prompt: `Animation scene: The navy Gateway shrimp stands in the center, pointing left and right. The amber ERP shrimp rushes to a filing cabinet pulling out documents. The purple Analytics shrimp types rapidly on a keyboard with holographic charts appearing. Split-screen effect, fast-paced, 3 seconds.`,
-  },
-  {
-    ep: "ตอนที่ 4: Result Delivery",
-    desc: "รวมข้อมูลทั้งหมด ส่งคำตอบกลับลูกค้า",
-    prompt: `Animation scene: All 4 shrimp characters gather around a glowing orb of data. They combine their findings - the orb transforms into a perfect chat reply bubble. The green LINE shrimp grabs it and sends it flying upward with a sparkle trail. All shrimp celebrate with a high-five. Happy ending, 4 seconds.`,
-  },
-];
-
-const STYLE_MODIFIERS = [
-  { style: "Pixar / Disney", mod: "Pixar-style 3D render, subsurface scattering, soft shadows" },
-  { style: "Anime / Ghibli", mod: "Studio Ghibli anime style, cel-shaded, watercolor background" },
-  { style: "Pixel Art", mod: "16-bit pixel art style, retro game aesthetic, limited palette" },
-  { style: "Watercolor", mod: "Delicate watercolor painting, soft edges, paper texture" },
-  { style: "Flat Design", mod: "Modern flat design, bold colors, no shadows, vector style" },
-  { style: "Clay / Claymation", mod: "Claymation style, stop-motion look, soft clay texture" },
-  { style: "Neon Cyberpunk", mod: "Neon cyberpunk style, glowing edges, dark background, synthwave colors" },
-  { style: "Sticker", mod: "Die-cut sticker design, thick white outline, glossy finish, no background" },
-];
-
-const TOOLS_TABLE = [
-  { tool: "Midjourney", type: "ภาพนิ่ง", note: "คุณภาพสูงสุด, /imagine prompt" },
-  { tool: "DALL-E 3", type: "ภาพนิ่ง", note: "เข้าใจ prompt ยาวดี, ChatGPT Plus" },
-  { tool: "Stable Diffusion", type: "ภาพนิ่ง", note: "ฟรี, ControlNet + LoRA" },
-  { tool: "Kling AI", type: "วิดีโอ", note: "Image-to-video, 5-10 วินาที" },
-  { tool: "Runway Gen-3", type: "วิดีโอ", note: "Text/image-to-video, motion brush" },
-  { tool: "Veo 2 (Google)", type: "วิดีโอ", note: "สมจริง, ยาวถึง 2 นาที" },
-  { tool: "Sora (OpenAI)", type: "วิดีโอ", note: "Text-to-video, cinematic" },
-  { tool: "Luma Dream Machine", type: "วิดีโอ", note: "ฟรี, image-to-video ง่าย" },
-];
-
-const NEGATIVE_PROMPT = `ugly, deformed, noisy, blurry, distorted, out of focus, bad anatomy, extra limbs, poorly drawn face, poorly drawn hands, missing fingers, extra fingers, mutated, mutation, text, watermark, signature, cropped, worst quality, low quality, jpeg artifacts, duplicate, morbid, mutilated, disfigured, gross proportions, malformed limbs, fused fingers, long neck, beginner, amateur`;
-
-const CONSISTENCY_PROMPT = `[CHARACTER NAME] reference sheet. IMPORTANT: Use this exact design for all scenes.
-
-Key features to maintain:
-- Body: Cute chibi shrimp, round head, 2 small claws, curved tail
-- Eyes: Big round eyes with white highlights, [CHARACTER EYE COLOR]
-- Outfit: [DESCRIBE EXACT OUTFIT AND COLORS]
-- Proportions: Head is 40% of body height, arms short, legs stubby
-- Color palette: [LIST EXACT HEX COLORS]
-
-Consistency tags: same character, character sheet reference, model sheet, on-model`;
-
-// ─── Page ───
 export default function KungRoomPage() {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [view, setView] = useState<"3d" | "list">("3d");
+  const selectedAgent = AGENTS.find((a) => a.id === selected);
+
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-lg md:text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-            🦐 ห้องทำงานน้องกุ้ง
-          </h1>
-          <p className="text-xs md:text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
-            AI Character & Animation Prompts — Midjourney · DALL-E · Stable Diffusion · Kling · Veo · Sora
-          </p>
+    <div className="min-h-screen theme-bg theme-text">
+      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-20">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-bold">🦐 ห้องทำงานน้องกุ้ง</h1>
+            <p className="text-xs theme-text-secondary">น้องกุ้ง 13 ตัว ทำงาน 24/7 — กดที่ตัวกุ้งเพื่อดูสถานะ</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setView("3d")} className={`px-3 py-1.5 text-xs rounded-lg transition ${view === "3d" ? "bg-indigo-500 text-white" : "theme-bg-secondary theme-text-secondary"}`}>
+              🎮 3D
+            </button>
+            <button onClick={() => setView("list")} className={`px-3 py-1.5 text-xs rounded-lg transition ${view === "list" ? "bg-indigo-500 text-white" : "theme-bg-secondary theme-text-secondary"}`}>
+              📋 รายชื่อ
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="page-content">
-        <div className="max-w-4xl mx-auto space-y-4">
+      {view === "3d" ? (
+        <div className="relative" style={{ height: "calc(100vh - 120px)" }}>
+          {/* 3D Scene */}
+          <OfficeScene agents={AGENTS} selected={selected} onSelect={setSelected} />
 
-          {/* 1. ตัวละครหลัก */}
-          <Accordion title="ตัวละครหลัก 4 ตัว" icon="🎨" defaultOpen>
-            <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
-              น้องกุ้ง 4 บทบาท — ใช้ prompt ด้านล่างสร้างตัวละครด้วย Midjourney / DALL-E / Stable Diffusion
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {CHARACTERS.map(c => <CharCard key={c.name} {...c} />)}
-            </div>
-          </Accordion>
-
-          {/* 2. แบบร่างท่าทาง */}
-          <Accordion title="แบบร่างท่าทาง" icon="🖼️">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              สร้าง reference sheet เพื่อให้ตัวละครเหมือนกันทุกฉาก
-            </p>
-            {POSE_PROMPTS.map(p => (
-              <div key={p.label} className="mb-4">
-                <h4 className="text-xs font-bold mb-1" style={{ color: "var(--text-primary)" }}>{p.label}</h4>
-                <PromptBlock prompt={p.prompt} />
-              </div>
-            ))}
-          </Accordion>
-
-          {/* 3. ฉากห้องทำงาน */}
-          <Accordion title="ฉากห้องทำงาน" icon="🏢">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              ฉากรวมตัวละคร — ใช้สำหรับ hero image, banner, หรือ social media
-            </p>
-            {SCENE_PROMPTS.map(p => (
-              <div key={p.label} className="mb-4">
-                <h4 className="text-xs font-bold mb-1" style={{ color: "var(--text-primary)" }}>{p.label}</h4>
-                <PromptBlock prompt={p.prompt} />
-              </div>
-            ))}
-          </Accordion>
-
-          {/* 4. ฉาก Animation */}
-          <Accordion title="ฉาก Animation 4 ตอน" icon="🎬">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              สร้างวิดีโอสั้น 4 ตอน ด้วย Kling / Veo / Sora — ใช้ภาพจาก Midjourney เป็น keyframe
-            </p>
-            <div className="space-y-4">
-              {ANIMATION_SCENES.map((s, i) => (
-                <div key={i} className="card p-4" style={{ borderLeft: "3px solid var(--primary)" }}>
-                  <h4 className="text-xs font-bold mb-0.5" style={{ color: "var(--text-primary)" }}>{s.ep}</h4>
-                  <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{s.desc}</p>
-                  <PromptBlock prompt={s.prompt} />
+          {/* Agent Info Overlay */}
+          {selectedAgent && (
+            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-10">
+              <div className="theme-bg-secondary border theme-border rounded-2xl p-4 shadow-2xl backdrop-blur">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ backgroundColor: selectedAgent.color + "22", border: `2px solid ${selectedAgent.color}` }}>
+                    {selectedAgent.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-bold">{selectedAgent.name}</h3>
+                    <p className="text-xs theme-text-secondary">{selectedAgent.role}</p>
+                  </div>
+                  <button onClick={() => setSelected(null)} className="ml-auto text-xs theme-text-muted hover:theme-text">✕</button>
                 </div>
-              ))}
+                <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium mb-2 ${STATUS_INFO[selectedAgent.status]?.bgClass}`}>
+                  {STATUS_INFO[selectedAgent.status]?.label}
+                </div>
+                <div className="theme-bg-card rounded-xl p-3 text-sm italic theme-text-secondary">
+                  &ldquo;{selectedAgent.quote}&rdquo;
+                </div>
+              </div>
             </div>
-          </Accordion>
+          )}
 
-          {/* 5. Consistency */}
-          <Accordion title="สร้างตัวละครให้เหมือนกันทุกฉาก" icon="🔗">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              เทคนิคสำคัญ — ใส่ reference prompt นี้ทุกครั้งเพื่อให้ AI สร้างตัวละครเหมือนกัน
-            </p>
-            <PromptBlock prompt={CONSISTENCY_PROMPT} label="Reference Prompt Template" />
-
-            <h4 className="text-xs font-bold mt-4 mb-2" style={{ color: "var(--text-primary)" }}>
-              เครื่องมือช่วยรักษาความสม่ำเสมอ
-            </h4>
-            <div className="overflow-x-auto rounded-xl" style={{ background: "var(--bg-hover)" }}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>เครื่องมือ</th>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>เทคนิค</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { tool: "Midjourney", tech: "--cref [URL] (Character Reference) + --sref [URL] (Style Reference)" },
-                    { tool: "Stable Diffusion", tech: "LoRA training 20-30 ภาพ + ControlNet pose" },
-                    { tool: "DALL-E 3", tech: "ใส่ detailed description เหมือนกันทุก prompt" },
-                    { tool: "Kling / Runway", tech: "ใช้ภาพ reference เดียวกัน + image-to-video" },
-                  ].map(r => (
-                    <tr key={r.tool} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-3 py-2 font-medium" style={{ color: "var(--text-secondary)" }}>{r.tool}</td>
-                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>{r.tech}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Instructions */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+            <div className="theme-bg-secondary/80 backdrop-blur border theme-border rounded-full px-4 py-1.5 text-[11px] theme-text-muted">
+              🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม · กดที่กุ้งเพื่อดูข้อมูล
             </div>
-          </Accordion>
-
-          {/* 6. Style Modifiers */}
-          <Accordion title="ปรับแต่งสไตล์" icon="🎭">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              เพิ่มท้าย prompt เพื่อเปลี่ยนสไตล์ตัวละคร
-            </p>
-            <div className="overflow-x-auto rounded-xl" style={{ background: "var(--bg-hover)" }}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>สไตล์</th>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>Modifier (เพิ่มท้าย prompt)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {STYLE_MODIFIERS.map(r => (
-                    <tr key={r.style} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-3 py-2 font-medium whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>{r.style}</td>
-                      <td className="px-3 py-2 font-mono" style={{ color: "var(--text-muted)" }}>{r.mod}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Accordion>
-
-          {/* 7. Negative Prompts */}
-          <Accordion title="Negative Prompts" icon="🚫">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              ใส่ใน Negative Prompt เพื่อหลีกเลี่ยงผลลัพธ์ที่ไม่ต้องการ — คัดลอกไปใช้ได้เลย
-            </p>
-            <PromptBlock prompt={NEGATIVE_PROMPT} />
-          </Accordion>
-
-          {/* 8. เครื่องมือแนะนำ */}
-          <Accordion title="เครื่องมือแนะนำ" icon="🧰">
-            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              AI Image & Video Generation Tools ที่แนะนำสำหรับสร้างน้องกุ้ง
-            </p>
-            <div className="overflow-x-auto rounded-xl" style={{ background: "var(--bg-hover)" }}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>เครื่องมือ</th>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>ประเภท</th>
-                    <th className="px-3 py-2 text-left font-bold" style={{ color: "var(--text-primary)" }}>หมายเหตุ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {TOOLS_TABLE.map(r => (
-                    <tr key={r.tool} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-3 py-2 font-medium whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>{r.tool}</td>
-                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--text-muted)" }}>{r.type}</td>
-                      <td className="px-3 py-2" style={{ color: "var(--text-muted)" }}>{r.note}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Accordion>
-
+          </div>
         </div>
-      </main>
+      ) : (
+        /* List View */
+        <main className="max-w-4xl mx-auto p-3 md:p-6 pb-24 md:pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {AGENTS.map((agent) => {
+              const si = STATUS_INFO[agent.status];
+              return (
+                <div key={agent.id} className="theme-bg-secondary border theme-border rounded-xl p-4 hover:border-indigo-500/30 transition cursor-pointer" onClick={() => setSelected(agent.id)}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: agent.color + "22", border: `2px solid ${agent.color}` }}>
+                      <span className={si?.animation}>{agent.emoji}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold">{agent.name}</h3>
+                      <p className="text-[11px] theme-text-muted">{agent.role}</p>
+                    </div>
+                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${si?.bgClass}`}>
+                      {si?.label}
+                    </div>
+                  </div>
+                  <p className="text-xs theme-text-secondary italic pl-13">&ldquo;{agent.quote}&rdquo;</p>
+                </div>
+              );
+            })}
+          </div>
+        </main>
+      )}
     </div>
   );
 }
