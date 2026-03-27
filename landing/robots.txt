@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/api/
+Disallow: /api/
+Disallow: /webhook
+
+Sitemap: https://crm.satistang.com/sitemap.xml
