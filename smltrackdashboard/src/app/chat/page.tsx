@@ -910,31 +910,16 @@ export default function ChatPage() {
     if (authStatus === "unauthenticated") router.replace("/dashboard/login");
   }, [authStatus, router]);
 
-  // Fetch ALL conversations — auto load ทุกหน้า
+  // Fetch ALL conversations — fast API (1 query, ไม่ดึง messages array)
   const [chatPlatform, setChatPlatform] = useState("");
 
   const fetchConversations = useCallback(async (_p = 0, _a = false, platform = "") => {
     try {
-      const pfParam = platform ? `&platform=${platform}` : "";
-      let all: any[] = [];
-      let page = 0;
-      let hasMore = true;
-      while (hasMore) {
-        const res = await fetch(`/dashboard/api/groups?limit=100&page=${page}${pfParam}`);
-        const raw = await res.json();
-        const data = Array.isArray(raw) ? raw : raw.groups;
-        if (!Array.isArray(data) || data.length === 0) break;
-        all = all.concat(data);
-        hasMore = raw.pagination?.hasMore ?? false;
-        page++;
-        if (page > 20) break; // safety limit
-      }
-      all.sort((a, b) => {
-        const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
-        const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
-        return tb - ta;
-      });
-      setConversations(all);
+      const pfParam = platform ? `?platform=${platform}` : "";
+      const res = await fetch(`/dashboard/api/chat-list${pfParam}`);
+      const raw = await res.json();
+      const data = raw.conversations || raw.groups || (Array.isArray(raw) ? raw : []);
+      setConversations(data);
     } catch {}
   }, []);
 
