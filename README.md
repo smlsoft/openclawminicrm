@@ -17,7 +17,7 @@
 [![Facebook](https://img.shields.io/badge/Facebook-Graph_API-1877F2?logo=facebook&logoColor=white)](#multi-platform)
 [![Instagram](https://img.shields.io/badge/Instagram-Graph_API-E4405F?logo=instagram&logoColor=white)](#multi-platform)
 
-[🦐 ทดลอง Demo](https://crm.satistang.com/dashboard) · [หน้าแรก](https://crm.satistang.com/) · [คู่มือ](https://crm.satistang.com/dashboard/guide) · [Report Bug](https://github.com/smlsoft/openclawminicrm/issues)
+[🦐 ทดลอง Demo](https://crm.satistang.com/dashboard) · [หน้าแรก](https://crm.satistang.com/) · [คู่มือ](https://crm.satistang.com/dashboard/guide) · [แจ้งปัญหา](https://github.com/smlsoft/openclawminicrm/issues)
 
 </div>
 
@@ -25,7 +25,9 @@
 
 <img src="landing/images/og-image.jpg" alt="OpenClaw Mini CRM — น้องกุ้ง AI 13 บทบาท" width="400">
 
-> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard, provides AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, and a 24/7 Multi AI Agent system ("น้องกุ้ง 🦐" with 13 roles). Fully self-hosted on Docker Compose + Hetzner VPS. Zero monthly cost.
+> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram conversations in a single dashboard with 30+ screens and 65+ API endpoints. Features include AI-driven chat analysis (sentiment, purchase intent, auto-tagging), automated replies with RAG-powered knowledge base, customer memory & learning, churn prediction, payment slip detection, document classification, appointment management, and a 24/7 Multi AI Agent system ("น้องกุ้ง 🦐" with 13 autonomous roles). All UI is in Thai language. Fully self-hosted on Docker Compose. Zero monthly cost.
+>
+> **Key highlights:** 13 AI Agents running 24/7 (Problem Solver, Sales Hunter, Team Coach, Weekly Strategist, Health Monitor, Payment Guardian, Order Tracker, Re-engagement Bot, Upsell AI, Daily Report, Lead Scorer, Appointment Reminder, Price Watcher) — Admin just replies to customers, น้องกุ้ง handles everything else.
 
 ---
 

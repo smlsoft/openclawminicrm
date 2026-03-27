@@ -87,7 +87,7 @@ export default function TemplatesPage() {
 
   if (loading) return (
     <div className="min-h-screen theme-bg flex items-center justify-center">
-      <div className="theme-text-muted animate-pulse">Loading templates...</div>
+      <div className="theme-text-muted animate-pulse">กำลังโหลดข้อความสำเร็จรูป...</div>
     </div>
   );
 
@@ -98,13 +98,13 @@ export default function TemplatesPage() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg rounded-2xl border theme-border p-6 space-y-4" style={{ background: "var(--bg-card)" }}>
             <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg">⚡ เพิ่ม Template ใหม่</h2>
+              <h2 className="font-bold text-lg">⚡ เพิ่มข้อความสำเร็จรูปใหม่</h2>
               <button onClick={() => { setShowForm(false); setForm({ ...EMPTY_FORM }); }} className="theme-text-muted hover:theme-text text-xl">&times;</button>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[11px] theme-text-muted mb-1">ชื่อ Template *</label>
+                <label className="block text-[11px] theme-text-muted mb-1">ชื่อข้อความสำเร็จรูป *</label>
                 <input type="text" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                   placeholder="ทักทายลูกค้าใหม่"
                   className="w-full px-3 py-2 rounded-lg theme-bg-secondary border theme-border text-sm theme-text" />
@@ -148,13 +148,13 @@ export default function TemplatesPage() {
           <div className="flex items-center gap-4">
             <Link href="/" className="theme-text-muted hover:theme-text text-xl">&larr;</Link>
             <div>
-              <h1 className="text-xl font-bold">⚡ Quick Reply Templates</h1>
+              <h1 className="text-xl font-bold">⚡ ข้อความสำเร็จรูป</h1>
               <p className="text-xs theme-text-muted">ข้อความสำเร็จรูป &middot; {templates.length} รายการ</p>
             </div>
           </div>
           <button onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition">
-            ➕ เพิ่ม Template
+            ➕ เพิ่มข้อความสำเร็จรูป
           </button>
         </div>
       </header>
@@ -182,10 +182,10 @@ export default function TemplatesPage() {
           <div className="text-center theme-text-muted py-16 rounded-xl border theme-border theme-bg-card">
             <div className="space-y-2">
               <p className="text-2xl">⚡</p>
-              <p>{templates.length === 0 ? "ยังไม่มี Template" : "ไม่มี Template ในหมวดนี้"}</p>
+              <p>{templates.length === 0 ? "ยังไม่มีข้อความสำเร็จรูป" : "ไม่มีข้อความสำเร็จรูปในหมวดนี้"}</p>
               {templates.length === 0 && (
                 <button onClick={() => setShowForm(true)} className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition">
-                  ➕ เพิ่ม Template แรก
+                  ➕ เพิ่มข้อความสำเร็จรูปแรก
                 </button>
               )}
             </div>
@@ -230,8 +230,8 @@ export default function TemplatesPage() {
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm">
           <p className="text-amber-400 font-medium mb-1">💡 วิธีใช้งาน</p>
           <p className="text-xs theme-text-muted leading-relaxed">
-            กด <span className="text-amber-300 font-medium">⚡ Quick Reply</span> ที่ด้านล่างของแต่ละ chat card บน Dashboard
-            เพื่อเลือก template แล้วคัดลอกข้อความไปวางในช่องแชท LINE / Facebook / Instagram
+            กด <span className="text-amber-300 font-medium">⚡ Quick Reply</span> ที่ด้านล่างของแต่ละการ์ดแชทบนแดชบอร์ด
+            เพื่อเลือกข้อความสำเร็จรูป แล้วคัดลอกไปวางในช่องแชท LINE / Facebook / Instagram
           </p>
         </div>
       </main>

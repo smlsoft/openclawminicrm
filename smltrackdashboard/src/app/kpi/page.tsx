@@ -154,8 +154,8 @@ export default function KpiPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { const i = setInterval(fetchData, 10000); return () => clearInterval(i); }, [fetchData]);
 
-  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">Loading...</div></div>;
-  if (!data) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="text-red-400">Failed</div></div>;
+  if (loading) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="theme-text-secondary animate-pulse">กำลังโหลด...</div></div>;
+  if (!data) return <div className="min-h-screen theme-bg flex items-center justify-center"><div className="text-red-400">โหลดข้อมูลไม่สำเร็จ</div></div>;
 
   const { summary: s, staffKpi, staffConversion, customerKpi, rooms, pipeline, inactiveCustomers, atRiskCustomers, revenue } = data;
   const filteredRooms = tab === "alert" ? rooms.filter((r) => r.customerSentiment?.level === "red" || r.purchaseIntent?.level === "red")
@@ -167,12 +167,12 @@ export default function KpiPage() {
       <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-base font-bold">📊 KPI Dashboard</h1>
-            <p className="text-xs theme-text-secondary">OpenClaw Mini CRM &middot; Real-time</p>
+            <h1 className="text-base font-bold">📊 แดชบอร์ด KPI</h1>
+            <p className="text-xs theme-text-secondary">OpenClaw Mini CRM &middot; อัปเดตอัตโนมัติ</p>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs text-green-400">Live</span>
+            <span className="text-xs text-green-400">สด</span>
           </div>
         </div>
       </header>
@@ -203,7 +203,7 @@ export default function KpiPage() {
 
         {/* Mini Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <ChartCard title="Pipeline ลูกค้า" subtitle="จำนวนลูกค้าแต่ละสถานะ">
+          <ChartCard title="ไปป์ไลน์ลูกค้า" subtitle="จำนวนลูกค้าแต่ละสถานะ">
             <MiniBarChart
               data={Object.entries(pipeline.counts)
                 .filter(([, v]) => v > 0)
@@ -281,7 +281,7 @@ export default function KpiPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{st.name}</p>
-                          <p className="text-[10px] theme-text-muted">{st.messageCount} msgs &middot; {st.roomCount} ห้อง</p>
+                          <p className="text-[10px] theme-text-muted">{st.messageCount} ข้อความ &middot; {st.roomCount} ห้อง</p>
                         </div>
                       </div>
                     </div>
@@ -407,7 +407,7 @@ export default function KpiPage() {
         {/* Pipeline / อัตราปิดการขาย */}
         {(tab === "all" || tab === "pipeline") && pipeline && (
           <section>
-            <h2 className="text-lg font-bold mb-3">🎯 Pipeline &amp; อัตราปิดการขาย</h2>
+            <h2 className="text-lg font-bold mb-3">🎯 ไปป์ไลน์ &amp; อัตราปิดการขาย</h2>
 
             {/* Pipeline funnel */}
             <div className="theme-bg-secondary border theme-border rounded-xl p-4 mb-4">
@@ -537,19 +537,19 @@ export default function KpiPage() {
             <h2 className="text-lg font-bold mb-3">💰 มูลค่า Deal &amp; รายได้</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
-                <p className="text-[11px] text-blue-400 mb-1">💼 Pipeline รวม</p>
+                <p className="text-[11px] text-blue-400 mb-1">💼 ไปป์ไลน์รวม</p>
                 <p className="text-2xl font-bold text-blue-300">{revenue.totalPipeline > 0 ? formatTHB(revenue.totalPipeline) : "-"}</p>
-                <p className="text-[11px] theme-text-muted mt-1">{revenue.pipelineCount} deal ที่กำลังดำเนินการ</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.pipelineCount} ดีลที่กำลังดำเนินการ</p>
               </div>
               <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
                 <p className="text-[11px] text-emerald-400 mb-1">✅ ปิดการขายได้</p>
                 <p className="text-2xl font-bold text-emerald-300">{revenue.wonRevenue > 0 ? formatTHB(revenue.wonRevenue) : "-"}</p>
-                <p className="text-[11px] theme-text-muted mt-1">{revenue.wonCount} deal</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.wonCount} ดีล</p>
               </div>
               <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
                 <p className="text-[11px] text-red-400 mb-1">❌ ปิดไม่ได้</p>
                 <p className="text-2xl font-bold text-red-300">{revenue.lostRevenue > 0 ? formatTHB(revenue.lostRevenue) : "-"}</p>
-                <p className="text-[11px] theme-text-muted mt-1">{revenue.lostCount} deal</p>
+                <p className="text-[11px] theme-text-muted mt-1">{revenue.lostCount} ดีล</p>
               </div>
             </div>
 

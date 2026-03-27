@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
   return (
     <div className="page-container">
       <header className="page-header">
-        <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>📊 Analytics</h1>
+        <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>📊 วิเคราะห์</h1>
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>กราฟวิเคราะห์ธุรกิจ — สำหรับบริหารและปรับปรุงบริการ</p>
       </header>
 
@@ -111,17 +111,17 @@ export default function AnalyticsPage() {
                 <MiniLineChart data={data.dailyMessages} area height={180} />
               </ChartCard>
 
-              <ChartCard title="📱 ช่องทาง" subtitle="สัดส่วนข้อความแยก platform">
+              <ChartCard title="📱 ช่องทาง" subtitle="สัดส่วนข้อความแยกช่องทาง">
                 <MiniPieChart data={data.platform} colors={data.platform.map((p: any) => PLATFORM_COLORS[p.name] || CHART_COLORS[0])} size={180} />
                 <ChartLegend items={data.platform.map((p: any) => ({ label: p.name.toUpperCase(), color: PLATFORM_COLORS[p.name] || "#999", value: p.value }))} />
               </ChartCard>
 
-              <ChartCard title="😊 Sentiment" subtitle="ความรู้สึกลูกค้า">
+              <ChartCard title="😊 ความรู้สึก" subtitle="ความรู้สึกลูกค้า">
                 <MiniPieChart data={data.sentiment} colors={data.sentiment.map((s: any) => SENTIMENT_COLORS[s.name] || "#999")} size={180} />
                 <ChartLegend items={data.sentiment.map((s: any) => ({ label: SENTIMENT_LABELS[s.name] || s.name, color: SENTIMENT_COLORS[s.name] || "#999", value: s.value }))} />
               </ChartCard>
 
-              <ChartCard title="🛒 โอกาสซื้อ" subtitle="Purchase Intent">
+              <ChartCard title="🛒 โอกาสซื้อ" subtitle="ระดับความสนใจซื้อ">
                 <MiniPieChart data={data.purchaseIntent} colors={data.purchaseIntent.map((p: any) => SENTIMENT_COLORS[p.name] || "#999")} size={180} />
                 <ChartLegend items={data.purchaseIntent.map((p: any) => ({ label: PURCHASE_LABELS[p.name] || p.name, color: SENTIMENT_COLORS[p.name] || "#999", value: p.value }))} />
               </ChartCard>
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
         {/* ─── การขาย ─── */}
         {tab === "sales" && (
           <div className="space-y-4">
-            <ChartCard title="📊 Pipeline" subtitle="จำนวนลูกค้าแยกตาม stage">
+            <ChartCard title="📊 สถานะการขาย" subtitle="จำนวนลูกค้าแยกตามขั้นตอน">
               <MiniBarChart
                 data={data.pipeline.map((p: any) => ({ name: PIPELINE_LABELS[p.name] || p.name, value: p.count || p.value }))}
                 colors={Object.fromEntries(data.pipeline.map((p: any) => [PIPELINE_LABELS[p.name] || p.name, PIPELINE_COLORS[p.name] || "#999"]))}
@@ -142,7 +142,7 @@ export default function AnalyticsPage() {
             </ChartCard>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ChartCard title="💰 มูลค่า Pipeline" subtitle="มูลค่ารวมแยกตาม stage">
+              <ChartCard title="💰 มูลค่าสถานะการขาย" subtitle="มูลค่ารวมแยกตามขั้นตอน">
                 <MiniBarChart
                   data={data.pipeline.filter((p: any) => (p.amount || 0) > 0).map((p: any) => ({ name: PIPELINE_LABELS[p.name] || p.name, value: p.amount || 0 }))}
                   colors={Object.fromEntries(data.pipeline.map((p: any) => [PIPELINE_LABELS[p.name] || p.name, PIPELINE_COLORS[p.name] || "#999"]))}
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
                 />
               </ChartCard>
 
-              <ChartCard title="🏆 Win / Loss" subtitle="ปิดได้ vs ปิดไม่ได้">
+              <ChartCard title="🏆 ปิดได้ / เสีย" subtitle="ปิดได้ vs ปิดไม่ได้">
                 {(() => {
                   const won = data.pipeline.find((p: any) => p.name === "closed_won");
                   const lost = data.pipeline.find((p: any) => p.name === "closed_lost");
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
             </ChartCard>
 
             {kpiData?.staffKpi && kpiData.staffKpi.length > 0 && (
-              <ChartCard title="⏱️ Response Time" subtitle="เวลาตอบเฉลี่ย (นาที)">
+              <ChartCard title="⏱️ เวลาตอบกลับ" subtitle="เวลาตอบเฉลี่ย (นาที)">
                 <MiniBarChart
                   data={kpiData.staffKpi.map((s: any) => ({ name: s.name.replace("SML-", ""), value: s.responseTime?.avgMinutes || 0 }))}
                   color="#fbbf24"
@@ -216,7 +216,7 @@ export default function AnalyticsPage() {
               </ChartCard>
 
               {costsData?.byProvider && (
-                <ChartCard title="🤖 AI Cost by Provider">
+                <ChartCard title="🤖 ค่าใช้จ่าย AI แยกผู้ให้บริการ">
                   <MiniPieChart
                     data={(costsData.byProvider || []).map((p: any) => ({ name: p._id || "unknown", value: p.calls || 0 }))}
                     size={180}
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
             </div>
 
             {costsData?.daily && costsData.daily.length > 0 && (
-              <ChartCard title="📈 AI Cost รายวัน" subtitle="Token usage 7 วันล่าสุด">
+              <ChartCard title="📈 ค่าใช้จ่าย AI รายวัน" subtitle="จำนวนคำที่ใช้ 7 วันล่าสุด">
                 <MiniLineChart
                   data={costsData.daily.map((d: any) => ({ name: (d._id || "").substring(5), value: d.totalTokens || 0 }))}
                   area
@@ -246,14 +246,14 @@ export default function AnalyticsPage() {
         {tab === "customers" && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ChartCard title="❤️ สุขภาพลูกค้า" subtitle="Active / At-risk / Inactive">
+              <ChartCard title="❤️ สุขภาพลูกค้า" subtitle="ใช้งาน / เสี่ยง / ไม่ใช้งาน">
                 <MiniPieChart data={data.customerHealth} colors={["#34d399", "#fbbf24", "#f87171"]} size={180} />
                 <ChartLegend items={data.customerHealth.map((h: any, i: number) => ({
                   label: h.name, color: ["#34d399", "#fbbf24", "#f87171"][i], value: h.value,
                 }))} />
               </ChartCard>
 
-              <ChartCard title="😊 Sentiment ลูกค้า" subtitle="ความรู้สึกโดยรวม">
+              <ChartCard title="😊 ความรู้สึกลูกค้า" subtitle="ความรู้สึกโดยรวม">
                 <MiniBarChart
                   data={data.sentiment.map((s: any) => ({ name: SENTIMENT_LABELS[s.name] || s.name, value: s.value }))}
                   colors={{ "ดี": "#34d399", "ปานกลาง": "#fbbf24", "แย่": "#f87171" }}
@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
                 />
               </ChartCard>
 
-              <ChartCard title="🛒 Purchase Intent" subtitle="โอกาสซื้อ">
+              <ChartCard title="🛒 โอกาสซื้อ" subtitle="ระดับความสนใจซื้อ">
                 <MiniBarChart
                   data={data.purchaseIntent.map((p: any) => ({ name: PURCHASE_LABELS[p.name] || p.name, value: p.value }))}
                   colors={{ "ไม่สนใจ": "#34d399", "เริ่มสนใจ": "#fbbf24", "สนใจซื้อ": "#f87171" }}
@@ -271,7 +271,7 @@ export default function AnalyticsPage() {
                 />
               </ChartCard>
 
-              <ChartCard title="📱 ลูกค้าแยก Platform">
+              <ChartCard title="📱 ลูกค้าแยกช่องทาง">
                 <MiniPieChart data={data.platform} colors={data.platform.map((p: any) => PLATFORM_COLORS[p.name] || "#999")} size={180} />
                 <ChartLegend items={data.platform.map((p: any) => ({ label: p.name.toUpperCase(), color: PLATFORM_COLORS[p.name] || "#999", value: p.value }))} />
               </ChartCard>

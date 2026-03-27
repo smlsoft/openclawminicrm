@@ -244,7 +244,7 @@ export default function Home() {
       <header className="border-b theme-border px-3 md:px-6 py-3 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-base font-bold">Dashboard</h1>
+            <h1 className="text-base font-bold">หน้าหลัก</h1>
             <p className="text-xs theme-text-muted">LINE · Facebook · Instagram</p>
           </div>
           <div className="ml-auto flex items-center gap-2 flex-wrap">
@@ -314,18 +314,18 @@ export default function Home() {
                 onChange={(e) => setAutoSort(e.target.checked)}
                 className="w-4 h-4 accent-blue-500 rounded"
               />
-              <span className="text-xs theme-text-secondary">Auto Sort</span>
+              <span className="text-xs theme-text-secondary">เรียงอัตโนมัติ</span>
             </label>
             <Link href="/chat" className="px-3 py-1.5 bg-indigo-900/50 hover:bg-indigo-800/50 border border-indigo-700/50 rounded-lg text-xs text-indigo-300 hover:text-white transition">🗨️ แชท</Link>
             <Link href="/crm" className="px-3 py-1.5 bg-cyan-900/50 hover:bg-cyan-800/50 border border-cyan-700/50 rounded-lg text-xs text-cyan-300 hover:text-white transition">👥 CRM</Link>
             <Link href="/tasks" className="px-3 py-1.5 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-700/50 rounded-lg text-xs text-blue-300 hover:text-white transition">📋 งาน</Link>
             <Link href="/kpi" className="px-3 py-1.5 bg-purple-900/50 hover:bg-purple-800/50 border border-purple-700/50 rounded-lg text-xs text-purple-300 hover:text-white transition">📊 KPI</Link>
-            <Link href="/templates" className="px-3 py-1.5 bg-amber-900/50 hover:bg-amber-800/50 border border-amber-700/50 rounded-lg text-xs text-amber-300 hover:text-white transition">⚡ Templates</Link>
+            <Link href="/templates" className="px-3 py-1.5 bg-amber-900/50 hover:bg-amber-800/50 border border-amber-700/50 rounded-lg text-xs text-amber-300 hover:text-white transition">⚡ เทมเพลต</Link>
             <Link href="/advice" className="px-3 py-1.5 bg-orange-900/50 hover:bg-orange-800/50 border border-orange-700/50 rounded-lg text-xs text-orange-300 hover:text-white transition">🦐 น้องกุ้ง</Link>
-            <Link href="/costs" className="px-3 py-1.5 bg-emerald-900/50 hover:bg-emerald-800/50 border border-emerald-700/50 rounded-lg text-xs text-emerald-300 hover:text-white transition">💰 AI Cost</Link>
+            <Link href="/costs" className="px-3 py-1.5 bg-emerald-900/50 hover:bg-emerald-800/50 border border-emerald-700/50 rounded-lg text-xs text-emerald-300 hover:text-white transition">💰 ค่าใช้จ่าย AI</Link>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span className="text-xs text-green-400">{groups.length} groups &middot; Live</span>
+              <span className="text-xs text-green-400">{groups.length} ห้อง &middot; สด</span>
             </div>
           </div>
         </div>
@@ -333,7 +333,7 @@ export default function Home() {
 
       {/* Platform Filter Tabs */}
       <div className="border-b theme-border px-3 md:px-6 py-2 flex items-center gap-2">
-        <span className="text-[11px] theme-text-muted mr-1 shrink-0">Platform:</span>
+        <span className="text-[11px] theme-text-muted mr-1 shrink-0">ช่องทาง:</span>
         {([
           { value: "all", label: "ทั้งหมด", badgeClass: "theme-bg-card theme-text-secondary hover:theme-bg-hover", activeClass: "bg-white text-black" },
           { value: "line", label: "LINE", badgeClass: "bg-green-900/40 text-green-400 hover:bg-green-800/50 border border-green-800/50", activeClass: "bg-green-600 text-white border border-green-500" },

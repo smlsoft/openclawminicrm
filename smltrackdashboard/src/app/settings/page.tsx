@@ -224,10 +224,10 @@ export default function SettingsPage() {
       {/* Header */}
       <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; Dashboard</Link>
+          <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; แดชบอร์ด</Link>
           <div className="w-px h-5 theme-border" />
           <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-sm">⚙️</div>
-          <h1 className="text-lg font-bold">Settings</h1>
+          <h1 className="text-lg font-bold">ตั้งค่า</h1>
           {globalSaving && <span className="ml-auto text-xs theme-text-muted animate-pulse">กำลังบันทึก...</span>}
         </div>
       </header>
@@ -253,7 +253,7 @@ export default function SettingsPage() {
 
         {/* MongoDB */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
-          <SectionHeader icon="🍃" title="ฐานข้อมูล MongoDB" subtitle="MongoDB Atlas M0 ฟรี — ของคุณเอง" />
+          <SectionHeader icon="🍃" title="ฐานข้อมูล MongoDB" subtitle="เชื่อมต่อ MongoDB Atlas M0 ฟรี — ของคุณเอง" />
 
           <div className="space-y-4">
             {/* Current URI */}
@@ -331,7 +331,7 @@ export default function SettingsPage() {
 
         {/* AI API Keys */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
-          <SectionHeader icon="🤖" title="AI API Keys" subtitle="ใช้ key ของคุณเอง — ฟรีทั้งหมด" />
+          <SectionHeader icon="🤖" title="คีย์ AI API" subtitle="ใช้ key ของคุณเอง — ฟรีทั้งหมด" />
           <div className="space-y-4">
             {[
               {
@@ -387,7 +387,7 @@ export default function SettingsPage() {
                     {required && <span className="text-xs bg-red-900/40 text-red-400 border border-red-800/40 px-1 py-0.5 rounded">จำเป็น</span>}
                     {configured && <span className="text-xs text-green-400">✅</span>}
                   </div>
-                  <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-500 hover:text-indigo-400 transition">รับฟรี →</a>
+                  <a href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-500 hover:text-indigo-400 transition">สมัครฟรี →</a>
                 </div>
                 <MaskedField
                   label=""
@@ -403,17 +403,17 @@ export default function SettingsPage() {
 
         {/* LINE OA */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
-          <SectionHeader icon="💬" title="LINE Official Account" subtitle="LINE Developers Console" />
+          <SectionHeader icon="💬" title="LINE Official Account" subtitle="ตั้งค่าจาก LINE Developers Console" />
           <div className="space-y-4">
             <MaskedField
-              label="Channel Access Token"
+              label="Channel Access Token (โทเค็นการเข้าถึง)"
               maskedValue={account?.lineConfig?.channelAccessToken || ""}
               placeholder="Channel Access Token"
               onSave={async (val) => { await saveField({ lineConfig: { channelAccessToken: val } }); }}
               saving={globalSaving}
             />
             <MaskedField
-              label="Channel Secret"
+              label="Channel Secret (รหัสลับช่องทาง)"
               maskedValue={account?.lineConfig?.channelSecret || ""}
               placeholder="Channel Secret"
               onSave={async (val) => { await saveField({ lineConfig: { channelSecret: val } }); }}
@@ -459,24 +459,24 @@ export default function SettingsPage() {
 
         {/* Facebook / Instagram */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
-          <SectionHeader icon="📘" title="Facebook / Instagram" subtitle="Meta Business Suite" />
+          <SectionHeader icon="📘" title="Facebook / Instagram" subtitle="ตั้งค่าจาก Meta Business Suite" />
           <div className="space-y-4">
             <MaskedField
-              label="Page Access Token"
+              label="Page Access Token (โทเค็นเพจ)"
               maskedValue={account?.fbConfig?.pageAccessToken || ""}
               placeholder="EAAxxxxxxxx..."
               onSave={async (val) => { await saveField({ fbConfig: { pageAccessToken: val } }); }}
               saving={globalSaving}
             />
             <MaskedField
-              label="App Secret"
+              label="App Secret (รหัสลับแอป)"
               maskedValue={account?.fbConfig?.appSecret || ""}
               placeholder="App Secret"
               onSave={async (val) => { await saveField({ fbConfig: { appSecret: val } }); }}
               saving={globalSaving}
             />
             <MaskedField
-              label="Verify Token"
+              label="Verify Token (โทเค็นยืนยัน)"
               maskedValue={account?.fbConfig?.verifyToken || ""}
               placeholder="ตั้งเองได้เลย เช่น my-verify-token"
               onSave={async (val) => { await saveField({ fbConfig: { verifyToken: val } }); }}
@@ -498,7 +498,7 @@ export default function SettingsPage() {
 
         {/* Telegram */}
         <section className="theme-bg-secondary border theme-border rounded-2xl p-6">
-          <SectionHeader icon="✈️" title="Telegram — น้องกุ้ง" subtitle="รับคำแนะนำ AI ผ่าน Telegram" />
+          <SectionHeader icon="✈️" title="Telegram — น้องกุ้ง" subtitle="รับคำแนะนำจาก AI ผ่าน Telegram" />
           <div className="flex items-center justify-between">
             <div>
               {account?.telegramChatId ? (
@@ -528,7 +528,7 @@ export default function SettingsPage() {
 
         {/* Danger Zone */}
         <section className="theme-bg-secondary border border-red-900/40 rounded-2xl p-6">
-          <SectionHeader icon="⚠️" title="Danger Zone" subtitle="การกระทำที่ย้อนกลับไม่ได้" />
+          <SectionHeader icon="⚠️" title="โซนอันตราย" subtitle="การกระทำที่ย้อนกลับไม่ได้" />
           <div className="space-y-3">
             <p className="text-sm theme-text-secondary">
               ลบบัญชีนี้จะลบข้อมูลการตั้งค่าทั้งหมด (ข้อมูลใน MongoDB ของคุณจะไม่ถูกลบ)

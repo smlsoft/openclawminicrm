@@ -16,10 +16,10 @@ interface TeamMember {
 }
 
 const ROLES: Record<string, { label: string; color: string; desc: string }> = {
-  admin:     { label: "Admin",     color: "text-red-400 bg-red-900/30 border-red-800/50",     desc: "จัดการทุกอย่างได้" },
-  responder: { label: "Responder", color: "text-blue-400 bg-blue-900/30 border-blue-800/50", desc: "ตอบแชทได้" },
-  reviewer:  { label: "Reviewer",  color: "text-amber-400 bg-amber-900/30 border-amber-800/50", desc: "ดูและ review เท่านั้น" },
-  viewer:    { label: "Viewer",    color: "text-gray-400 bg-gray-800 border-gray-700",        desc: "ดูข้อมูลได้อย่างเดียว" },
+  admin:     { label: "ผู้ดูแล",     color: "text-red-400 bg-red-900/30 border-red-800/50",     desc: "จัดการทุกอย่างได้" },
+  responder: { label: "ผู้ตอบ", color: "text-blue-400 bg-blue-900/30 border-blue-800/50", desc: "ตอบแชทได้" },
+  reviewer:  { label: "ผู้ตรวจ",  color: "text-amber-400 bg-amber-900/30 border-amber-800/50", desc: "ดูและตรวจสอบเท่านั้น" },
+  viewer:    { label: "ผู้ดู",    color: "text-gray-400 bg-gray-800 border-gray-700",        desc: "ดูข้อมูลได้อย่างเดียว" },
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -125,7 +125,7 @@ export default function TeamPage() {
       {/* Header */}
       <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-10">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; Dashboard</Link>
+          <Link href="/dashboard" className="theme-text-secondary hover:theme-text transition text-sm">&larr; แดชบอร์ด</Link>
           <div className="w-px h-5 theme-border" />
           <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center text-sm">👥</div>
           <h1 className="text-lg font-bold">ทีม</h1>
@@ -143,7 +143,7 @@ export default function TeamPage() {
             <div className="w-10 h-10 bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl">✉️</div>
             <div>
               <h2 className="font-semibold">เชิญสมาชิก</h2>
-              <p className="text-xs theme-text-muted">เชิญทีมงานด้วย Email</p>
+              <p className="text-xs theme-text-muted">เชิญทีมงานด้วยอีเมล</p>
             </div>
           </div>
 
@@ -162,9 +162,9 @@ export default function TeamPage() {
                 onChange={(e) => setInviteRole(e.target.value as "responder" | "reviewer" | "viewer")}
                 className="px-3 py-2.5 theme-input border text-sm rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
               >
-                <option value="viewer">Viewer</option>
-                <option value="reviewer">Reviewer</option>
-                <option value="responder">Responder</option>
+                <option value="viewer">ผู้ดู</option>
+                <option value="reviewer">ผู้ตรวจ</option>
+                <option value="responder">ผู้ตอบ</option>
               </select>
               <button
                 onClick={handleInvite}
@@ -206,7 +206,7 @@ export default function TeamPage() {
           {members.length === 0 ? (
             <div className="p-8 text-center">
               <p className="theme-text-muted text-sm">ยังไม่มีสมาชิก</p>
-              <p className="theme-text-muted text-xs mt-1">เชิญสมาชิกด้วยฟอร์มด้านบน</p>
+              <p className="theme-text-muted text-xs mt-1">เชิญสมาชิกด้วยแบบฟอร์มด้านบน</p>
             </div>
           ) : (
             <div className="theme-divide divide-y">
