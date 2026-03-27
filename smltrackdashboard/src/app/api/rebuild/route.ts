@@ -13,6 +13,17 @@ export async function POST() {
     const db = await getDB();
     const results: Record<string, any> = {};
 
+    // === 0. Clean derived data (keep messages + auth + ai_advice + ai_costs) ===
+    const cleaned = await Promise.all([
+      db.collection("groups_meta").deleteMany({}),
+      db.collection("customers").deleteMany({}),
+      db.collection("chat_analytics").deleteMany({}),
+      db.collection("user_skills").deleteMany({}),
+      db.collection("analysis_logs").deleteMany({}),
+    ]);
+    results.cleaned = cleaned.map((r) => r.deletedCount);
+    console.log("[Rebuild] Cleaned:", results.cleaned);
+
     // === 1. Rebuild groups_meta ===
     const sourceIds = await db.collection("messages").distinct("sourceId");
     let groupsUpdated = 0;
