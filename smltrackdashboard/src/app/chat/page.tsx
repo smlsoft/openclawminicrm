@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useNotificationContext } from "@/components/NotificationProvider";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -943,14 +944,17 @@ export default function ChatPage() {
     return () => clearInterval(iv);
   }, [fetchConversations, chatPlatform]);
 
-  // Open panel
+  const { markSeen } = useNotificationContext();
+
+  // Open panel + mark as seen
   const openChat = (id: string) => {
-    if (openPanels.includes(id)) return; // already open
+    if (openPanels.includes(id)) return;
     setOpenPanels((prev) => {
       const next = [...prev, id];
-      if (next.length > MAX_PANELS) next.shift(); // remove oldest if > max
+      if (next.length > MAX_PANELS) next.shift();
       return next;
     });
+    markSeen(id); // แจ้งว่าอ่านแล้ว
   };
 
   const closeChat = (id: string) => {

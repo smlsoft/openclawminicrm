@@ -16,6 +16,7 @@ export async function proxy(req: NextRequest) {
     "/api/auth",
     "/api/seed",
     "/api/rebuild",
+    "/api/notifications",
     "/_next",
     "/favicon.ico",
   ];

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/ThemeProvider";
+import { useNotificationContext } from "@/components/NotificationProvider";
 
 interface NavItem {
   href: string;
@@ -72,7 +73,7 @@ function isActivePath(pathname: string, href: string) {
 /* ──────────────────────────────────────────
    Desktop Sidebar Nav Link
    ────────────────────────────────────────── */
-function SidebarNavLink({ href, icon, label, onClick }: NavItem & { onClick?: () => void }) {
+function SidebarNavLink({ href, icon, label, onClick, badge }: NavItem & { onClick?: () => void; badge?: number }) {
   const pathname = usePathname();
   const active = isActivePath(pathname, href);
 
@@ -88,7 +89,13 @@ function SidebarNavLink({ href, icon, label, onClick }: NavItem & { onClick?: ()
     >
       <span className="text-base leading-none w-5 text-center">{icon}</span>
       <span className="truncate">{label}</span>
-      {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400" />}
+      {badge && badge > 0 ? (
+        <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center animate-pulse">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : active ? (
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400" />
+      ) : null}
     </Link>
   );
 }
@@ -241,25 +248,59 @@ function RebuildButton() {
 /* ──────────────────────────────────────────
    Mobile Bottom Tab Bar
    ────────────────────────────────────────── */
+/* ── Nav with unread badges ── */
+function NavWithBadges() {
+  const { totalUnread } = useNotificationContext();
+  const chatBadge = totalUnread;
+  return (
+    <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 no-scrollbar">
+      {NAV_GROUPS.map((group, gi) => (
+        <div key={gi} className={gi > 0 ? "mt-5" : ""}>
+          {group.groupLabel && (
+            <p className="text-[10px] uppercase tracking-widest px-3 mb-2 font-semibold"
+              style={{ color: "var(--text-muted)" }}>
+              {group.groupLabel}
+            </p>
+          )}
+          {group.items.map((item) => (
+            <SidebarNavLink
+              key={item.href}
+              {...item}
+              badge={item.href === "/chat" || item.href === "/inbox" ? chatBadge : undefined}
+            />
+          ))}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 function BottomTabBar({ onMorePress }: { onMorePress: () => void }) {
   const pathname = usePathname();
+  const { totalUnread } = useNotificationContext();
 
   return (
     <nav className="bottom-nav md:hidden">
       <div className="h-16 flex items-center justify-around px-2">
         {BOTTOM_TABS.map((tab) => {
           const active = isActivePath(pathname, tab.href);
+          const badge = tab.href === "/chat" ? totalUnread : 0;
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center justify-center gap-0.5 w-16 py-1 rounded-xl transition-all ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 w-16 py-1 rounded-xl transition-all ${
                 active ? "text-indigo-400" : "text-[var(--text-muted)]"
               }`}
             >
               <span className={`text-xl leading-none transition-transform ${active ? "scale-110" : ""}`}>{tab.icon}</span>
               <span className={`text-[10px] leading-tight ${active ? "font-semibold" : ""}`}>{tab.label}</span>
               {active && <span className="w-1 h-1 rounded-full bg-indigo-400 mt-0.5" />}
+              {badge > 0 && (
+                <span className="absolute top-0 right-1 px-1 py-0.5 text-[8px] font-bold bg-red-500 text-white rounded-full min-w-[14px] text-center">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -381,21 +422,8 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 no-scrollbar">
-            {NAV_GROUPS.map((group, gi) => (
-              <div key={gi} className={gi > 0 ? "mt-5" : ""}>
-                {group.groupLabel && (
-                  <p className="text-[10px] uppercase tracking-widest px-3 mb-2 font-semibold"
-                    style={{ color: "var(--text-muted)" }}>
-                    {group.groupLabel}
-                  </p>
-                )}
-                {group.items.map((item) => (
-                  <SidebarNavLink key={item.href} {...item} />
-                ))}
-              </div>
-            ))}
-          </nav>
+          <NavWithBadges />
+
 
           {/* Bottom */}
           <div className="px-3 pb-3 pt-2 border-t space-y-2.5" style={{ borderColor: "var(--border)" }}>
