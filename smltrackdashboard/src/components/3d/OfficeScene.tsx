@@ -61,7 +61,7 @@ function ShrimpCharacter({ agent, position, onClick, isSelected }: {
   const color = new THREE.Color(agent.color);
 
   return (
-    <group ref={groupRef} position={position} onClick={(e) => { e.stopPropagation(); onClick(); }} style={{ cursor: "pointer" }}>
+    <group ref={groupRef} position={position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
       {/* ─── Body (ลำตัวกุ้ง — ทรงรี) ─── */}
       <mesh ref={bodyRef} position={[0, 0.55, 0]} castShadow>
         <sphereGeometry args={[0.3, 16, 16]} />

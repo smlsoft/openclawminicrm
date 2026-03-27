@@ -7,19 +7,19 @@ const OfficeScene = dynamic(() => import("@/components/3d/OfficeScene"), { ssr: 
 
 // ─── น้องกุ้ง 13 ตัว ───
 const AGENTS = [
-  { id: 1, name: "กุ้งแก้ว", role: "แก้ปัญหาลูกค้า", emoji: "🔍", color: "#f87171", status: "working", quote: "เจอปัญหาแล้ว! รอแป๊บนะ กำลังหาทางออก..." },
-  { id: 2, name: "กุ้งทอง", role: "หาโอกาสขาย", emoji: "💰", color: "#fbbf24", status: "excited", quote: "ลูกค้าคนนี้พร้อมซื้อแน่นอน! ปิดการขายเลย!" },
-  { id: 3, name: "กุ้งโค้ช", role: "โค้ชทีมงาน", emoji: "👨‍🏫", color: "#a78bfa", status: "working", quote: "ทีมเราเก่งขึ้นทุกวัน แต่ยังตอบช้าอยู่นะ~" },
-  { id: 4, name: "กุ้งวางแผน", role: "วางกลยุทธ์สัปดาห์", emoji: "📋", color: "#60a5fa", status: "thinking", quote: "อืม... สัปดาห์หน้าควรเน้นโปรปูนซีเมนต์..." },
-  { id: 5, name: "กุ้งใจดี", role: "ตรวจสุขภาพลูกค้า", emoji: "❤️", color: "#f472b6", status: "worried", quote: "ลูกค้า 3 รายยังไม่กลับมาเลย ห่วงจัง 😟" },
-  { id: 6, name: "กุ้งเงิน", role: "ตรวจสลิป/เงินเข้า", emoji: "💳", color: "#34d399", status: "working", quote: "สลิปมาแล้ว 5 ใบ! ยังไม่ได้ยืนยัน 2 ใบนะ" },
-  { id: 7, name: "กุ้งส่ง", role: "ติดตามจัดส่ง", emoji: "📦", color: "#fb923c", status: "running", quote: "พัสดุ 3 ชิ้นยังไม่ถึง! ต้องรีบตามแล้ว 🏃" },
-  { id: 8, name: "กุ้งคิดถึง", role: "ดึงลูกค้ากลับ", emoji: "🔄", color: "#38bdf8", status: "sad", quote: "ลูกค้าหายไป 12 คน... คิดถึงจัง ส่งข้อความไปดีไหม?" },
-  { id: 9, name: "กุ้งแนะนำ", role: "แนะนำสินค้าเพิ่ม", emoji: "🎯", color: "#c084fc", status: "excited", quote: "ลูกค้าซื้อปูนไปแล้ว! แนะนำทรายเพิ่มสิ~" },
-  { id: 10, name: "กุ้งสรุป", role: "สรุปรายวัน", emoji: "📊", color: "#2dd4bf", status: "working", quote: "วันนี้ข้อความ 523 ลูกค้าใหม่ 12 คะแนน 8/10 !" },
-  { id: 11, name: "กุ้งให้แต้ม", role: "ให้คะแนนลูกค้า", emoji: "🏆", color: "#facc15", status: "thinking", quote: "คุณสมชาย 85 แต้ม Hot Lead! ติดต่อด่วน!" },
-  { id: 12, name: "กุ้งเตือน", role: "เตือนนัดหมาย", emoji: "📅", color: "#fb7185", status: "alert", quote: "อีก 1 ชม. มีนัดส่งของ! อย่าลืมนะ ⏰" },
-  { id: 13, name: "กุ้งเทียบราคา", role: "วิเคราะห์ราคา", emoji: "📈", color: "#4ade80", status: "working", quote: "ลูกค้า 8 คนถามราคาเหล็ก วันนี้ ควรทำโปร!" },
+  { id: 1, name: "น้องกุ้งแก้ว", role: "แก้ปัญหาลูกค้า", emoji: "🔍", color: "#f87171", status: "working", quote: "เจอปัญหาแล้ว! รอแป๊บนะ พี่แก้วกำลังหาทางออกให้..." },
+  { id: 2, name: "น้องกุ้งทองคำ", role: "หาโอกาสขาย", emoji: "💰", color: "#fbbf24", status: "excited", quote: "เย้! ลูกค้าคนนี้พร้อมซื้อแน่นอน ปิดการขายเลยค่า!" },
+  { id: 3, name: "น้องกุ้งครูโค้ช", role: "โค้ชทีมงาน", emoji: "👨‍🏫", color: "#a78bfa", status: "working", quote: "ทีมเราเก่งขึ้นทุกวันเลย แต่คุณนิดยังตอบช้าอยู่นะ~" },
+  { id: 4, name: "น้องกุ้งอาร์ม", role: "วางกลยุทธ์สัปดาห์", emoji: "📋", color: "#60a5fa", status: "thinking", quote: "อืม... สัปดาห์หน้าควรเน้นโปรปูนซีเมนต์ดีกว่า..." },
+  { id: 5, name: "น้องกุ้งหมอใจ", role: "ตรวจสุขภาพลูกค้า", emoji: "❤️", color: "#f472b6", status: "worried", quote: "ลูกค้า 3 รายยังไม่กลับมาเลย หมอใจห่วงจัง 😟" },
+  { id: 6, name: "น้องกุ้งแบงค์", role: "ตรวจสลิป/เงินเข้า", emoji: "💳", color: "#34d399", status: "working", quote: "สลิปมาแล้ว 5 ใบ! ยังไม่ได้ยืนยัน 2 ใบ แบงค์ตรวจให้เดี๋ยวนะ" },
+  { id: 7, name: "น้องกุ้งเมฆ", role: "ติดตามจัดส่ง", emoji: "📦", color: "#fb923c", status: "running", quote: "พัสดุ 3 ชิ้นยังไม่ถึง! เมฆต้องรีบตามแล้ว 🏃" },
+  { id: 8, name: "น้องกุ้งขนุน", role: "ดึงลูกค้ากลับ", emoji: "🔄", color: "#38bdf8", status: "sad", quote: "ลูกค้าหายไป 12 คน... ขนุนคิดถึงจัง ส่งข้อความทักไปดีไหม?" },
+  { id: 9, name: "น้องกุ้งแนน", role: "แนะนำสินค้าเพิ่ม", emoji: "🎯", color: "#c084fc", status: "excited", quote: "ลูกค้าซื้อปูนไปแล้ว! แนนว่าแนะนำทรายเพิ่มได้เลยค่า~" },
+  { id: 10, name: "น้องกุ้งบุ๋ม", role: "สรุปรายวัน", emoji: "📊", color: "#2dd4bf", status: "working", quote: "บุ๋มสรุปแล้วค่า! วันนี้ข้อความ 523 ลูกค้าใหม่ 12 คะแนน 8/10!" },
+  { id: 11, name: "น้องกุ้งแต้ม", role: "ให้คะแนนลูกค้า", emoji: "🏆", color: "#facc15", status: "thinking", quote: "คุณสมชาย 85 แต้ม Hot Lead เลย! แต้มว่าต้องติดต่อด่วน!" },
+  { id: 12, name: "น้องกุ้งนาฬิกา", role: "เตือนนัดหมาย", emoji: "📅", color: "#fb7185", status: "alert", quote: "อีก 1 ชม. มีนัดส่งของ! อย่าลืมนะคะ นาฬิกาเตือนแล้ว ⏰" },
+  { id: 13, name: "น้องกุ้งเปรียบ", role: "วิเคราะห์ราคา", emoji: "📈", color: "#4ade80", status: "working", quote: "ลูกค้า 8 คนถามราคาเหล็กวันนี้ เปรียบว่าควรทำโปรด่วน!" },
 ];
 
 const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: string }> = {
