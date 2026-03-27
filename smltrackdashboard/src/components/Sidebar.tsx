@@ -23,43 +23,64 @@ interface NavGroup {
 const BOTTOM_TABS: NavItem[] = [
   { href: "/", icon: "📊", label: "หน้าหลัก" },
   { href: "/chat", icon: "💬", label: "แชท" },
-  { href: "/crm", icon: "👥", label: "CRM" },
-  { href: "/kpi", icon: "📈", label: "KPI" },
+  { href: "/crm", icon: "👥", label: "ลูกค้า" },
+  { href: "/catalog", icon: "🏪", label: "สินค้า" },
 ];
 
-// Full navigation groups
+// Full navigation groups — จัดเป็นหมวดงาน
 const NAV_GROUPS: NavGroup[] = [
   {
+    groupLabel: "ภาพรวม",
     items: [
-      { href: "/", icon: "📊", label: "Dashboard" },
-      { href: "/chat", icon: "💬", label: "แชท" },
-      { href: "/inbox", icon: "📥", label: "Inbox" },
-      { href: "/crm", icon: "👥", label: "CRM" },
-      { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
-      { href: "/kpi", icon: "📈", label: "KPI" },
-      { href: "/analytics", icon: "📊", label: "Analytics" },
-      { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
-      { href: "/payments", icon: "💸", label: "เงินเข้า" },
-      { href: "/documents", icon: "📑", label: "เอกสาร" },
-      { href: "/costs", icon: "💰", label: "AI Cost" },
-      { href: "/km", icon: "📚", label: "Knowledge" },
+      { href: "/", icon: "📊", label: "แดชบอร์ด" },
+      { href: "/revenue", icon: "💰", label: "รายได้" },
+      { href: "/analytics", icon: "📈", label: "วิเคราะห์" },
     ],
   },
   {
-    groupLabel: "เชื่อมต่อ",
+    groupLabel: "สื่อสาร",
     items: [
-      { href: "/connections", icon: "🔗", label: "ช่องทาง" },
-      { href: "/bot-config", icon: "🤖", label: "บอท" },
-      { href: "/templates", icon: "📝", label: "Templates" },
+      { href: "/chat", icon: "💬", label: "แชท" },
+      { href: "/inbox", icon: "📥", label: "กล่องข้อความ" },
+      { href: "/broadcast", icon: "📢", label: "ส่งข้อความ" },
+      { href: "/templates", icon: "📝", label: "แม่แบบข้อความ" },
+    ],
+  },
+  {
+    groupLabel: "ลูกค้า",
+    items: [
+      { href: "/crm", icon: "👥", label: "CRM" },
+      { href: "/scorecard", icon: "🏆", label: "คะแนนลูกค้า" },
+      { href: "/merge", icon: "🔀", label: "รวมลูกค้า" },
+      { href: "/auto-closer", icon: "🤝", label: "ติดตามปิดการขาย" },
+    ],
+  },
+  {
+    groupLabel: "ขายของ",
+    items: [
+      { href: "/catalog", icon: "🏪", label: "สินค้า/บริการ" },
+      { href: "/payments", icon: "💸", label: "เงินเข้า" },
+      { href: "/documents", icon: "📑", label: "เอกสาร" },
+      { href: "/appointments", icon: "📅", label: "นัดหมาย" },
+    ],
+  },
+  {
+    groupLabel: "รายงาน",
+    items: [
+      { href: "/kpi", icon: "📈", label: "KPI พนักงาน" },
+      { href: "/costs", icon: "💰", label: "ค่าใช้จ่าย AI" },
+      { href: "/advice", icon: "🦐", label: "น้องกุ้ง" },
     ],
   },
   {
     groupLabel: "ตั้งค่า",
     items: [
-      { href: "/settings", icon: "⚙️", label: "ตั้งค่า" },
+      { href: "/connections", icon: "🔗", label: "ช่องทาง" },
+      { href: "/bot-config", icon: "🤖", label: "บอท" },
+      { href: "/km", icon: "📚", label: "คลังความรู้" },
       { href: "/team", icon: "👔", label: "ทีมงาน" },
       { href: "/tasks", icon: "📋", label: "งาน" },
-      { href: "/appointments", icon: "📅", label: "นัดหมาย" },
+      { href: "/settings", icon: "⚙️", label: "ตั้งค่า" },
     ],
   },
   {

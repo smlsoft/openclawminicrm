@@ -17,7 +17,8 @@
       "Bash(reg query:*)",
       "Bash(powershell -Command \"Get-CimInstance Win32_StartupCommand | Where-Object { $_.Name -like ''*Copilot*'' -or $_.Command -like ''*Copilot*'' } | Format-Table Name,Command,Location -AutoSize\")",
       "Bash(powershell -Command \"Get-ScheduledTask | Where-Object { $_.TaskName -like ''*Copilot*'' -or $_.TaskName -like ''*M365*'' } | Format-Table TaskName,State -AutoSize\")",
-      "Bash(powershell -Command \"Get-AppxPackage *copilot* | Format-Table Name,Status -AutoSize\")"
+      "Bash(powershell -Command \"Get-AppxPackage *copilot* | Format-Table Name,Status -AutoSize\")",
+      "Bash(grep -l \"export default\" /d/code/smltrack/smltrackdashboard/src/app/*/page.tsx)"
     ]
   }
 }
