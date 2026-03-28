@@ -39,12 +39,12 @@ function speak(text: string, enabled: boolean, opts: { pitch: number; rate: numb
 }
 
 async function ceoSpeak(text: string, enabled: boolean) {
-  // CEO พูดก่อน (เสียงสูง เร็ว)
-  await speak(text, enabled, { pitch: 1.4, rate: 1.15 });
-  // 40% โอกาสพนักงานเถียงกลับ (เสียงต่ำ ช้า)
+  // CEO พูดก่อน (เสียงสูง เร็วมาก)
+  await speak(text, enabled, { pitch: 1.5, rate: 1.8 });
+  // 40% โอกาสพนักงานเถียงกลับ (เสียงต่ำ เร็ว)
   if (enabled && Math.random() < 0.4) {
     const reply = EMPLOYEE_REPLIES[Math.floor(Math.random() * EMPLOYEE_REPLIES.length)];
-    await speak(reply, enabled, { pitch: 0.8, rate: 0.95 });
+    await speak(reply, enabled, { pitch: 0.7, rate: 1.6 });
   }
 }
 
