@@ -211,7 +211,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
             <LoopStep step="A" label="โอกาส" value={analysis.opportunity} />
           )}
           {analysis.intentLevel && (
-            <LoopStep step="B" label="ระดับ Intent" value={analysis.intentLevel} />
+            <LoopStep step="B" label="ระดับความสนใจ" value={analysis.intentLevel} />
           )}
           {analysis.strategies && analysis.strategies.length > 0 && (
             <LoopStep step="C" label="กลยุทธ์" list={analysis.strategies} />
@@ -248,7 +248,7 @@ function AnalysisLoop({ type, analysis }: { type?: string; analysis: AnalysisDat
             <LoopStep step="B" label="สัญญาณเตือน" list={analysis.reasons} />
           )}
           {analysis.reEngageOptions && analysis.reEngageOptions.length > 0 && (
-            <LoopStep step="C" label="วิธี Re-engage" list={analysis.reEngageOptions} />
+            <LoopStep step="C" label="วิธีดึงกลับ" list={analysis.reEngageOptions} />
           )}
           {analysis.bestOption && (
             <LoopStep step="D" label="วิธีที่ดีที่สุด" value={analysis.bestOption} highlight />
@@ -468,7 +468,7 @@ export default function AdvicePage() {
       >
         <div className="max-w-7xl mx-auto px-3 md:px-6 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-base font-bold theme-text">น้องกุ้ง — AI Advisor</h1>
+            <h1 className="text-base font-bold theme-text">น้องกุ้ง — ที่ปรึกษา AI</h1>
             <button
               onClick={() => { fetchAdvice(activeTab); fetchCounts(); }}
               disabled={loading}

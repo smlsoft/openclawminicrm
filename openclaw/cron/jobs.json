@@ -24,14 +24,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774510174475,
+        "nextRunAtMs": 1774660500000,
         "lastRunAtMs": 1774506554579,
         "lastRunStatus": "error",
         "lastStatus": "error",
         "lastDurationMs": 19896,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 37,
-        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+        "consecutiveErrors": 37
       }
     },
     {
@@ -57,14 +56,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774509382667,
+        "nextRunAtMs": 1774661400000,
         "lastRunAtMs": 1774505762826,
         "lastRunStatus": "error",
         "lastStatus": "error",
         "lastDurationMs": 19841,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 54,
-        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+        "consecutiveErrors": 54
       }
     },
     {
@@ -90,14 +88,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774522800000,
+        "nextRunAtMs": 1774674000000,
         "lastRunAtMs": 1774501200019,
         "lastRunStatus": "error",
         "lastStatus": "error",
         "lastDurationMs": 19756,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 8,
-        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+        "consecutiveErrors": 8
       }
     },
     {
@@ -156,14 +153,13 @@
         "mode": "silent"
       },
       "state": {
-        "nextRunAtMs": 1774512000000,
+        "nextRunAtMs": 1774663200000,
         "lastRunAtMs": 1774501219775,
         "lastRunStatus": "error",
         "lastStatus": "error",
         "lastDurationMs": 19729,
         "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 17,
-        "lastError": "Channel is required (no configured channels detected). Set delivery.channel explicitly or use a main session with a previous channel."
+        "consecutiveErrors": 17
       }
     },
     {
@@ -188,7 +184,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774662300000
+      }
     },
     {
       "id": "advisor-order-tracker",
@@ -212,7 +210,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774659600000
+      }
     },
     {
       "id": "advisor-re-engagement",
@@ -236,7 +236,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774659600000
+      }
     },
     {
       "id": "advisor-upsell-crosssell",
@@ -260,7 +262,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774659600000
+      }
     },
     {
       "id": "advisor-daily-report",
@@ -284,7 +288,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774702800000
+      }
     },
     {
       "id": "advisor-lead-scorer",
@@ -308,7 +314,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774663200000
+      }
     },
     {
       "id": "advisor-appointment-reminder",
@@ -332,7 +340,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774659600000
+      }
     },
     {
       "id": "advisor-price-watcher",
@@ -356,7 +366,9 @@
       "delivery": {
         "mode": "silent"
       },
-      "state": {}
+      "state": {
+        "nextRunAtMs": 1774738800000
+      }
     }
   ]
 }
