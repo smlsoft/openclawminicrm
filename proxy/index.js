@@ -3425,7 +3425,7 @@ const KUNG_NAMES = Object.keys(KUNG_TO_FEATURE);
 
 // Cache แผนบทสนทนาทั้งหมด { plan: Record<name, {ceo,emp}>, ts }
 let ceoPlanCache = { plan: {}, ts: 0 };
-const PLAN_TTL = 300000; // 5 นาที
+const PLAN_TTL = 120000; // 2 นาที — retry เร็วถ้าได้ไม่ครบ
 
 // Helper: เรียก AI สร้าง 1 batch (max 5 ตัว)
 async function generateCeoBatch(agents) {
@@ -3510,9 +3510,11 @@ app.get("/api/ceo-plan", async (req, res) => {
     for (const r of results) Object.assign(plan, r);
 
     if (Object.keys(plan).length > 0) {
-      ceoPlanCache = { plan, ts: Date.now() };
-      console.log(`[CEO-Plan] ✅ วางแผน ${Object.keys(plan).length}/${agentsWithWork.length} ตัว`);
-      return res.json(plan);
+      // Merge กับ cache เก่า (เพิ่มตัวใหม่ ไม่ทับตัวเก่าที่ยังใช้ได้)
+      const merged = { ...ceoPlanCache.plan, ...plan };
+      ceoPlanCache = { plan: merged, ts: Date.now() };
+      console.log(`[CEO-Plan] ✅ วางแผน ${Object.keys(plan).length} ใหม่ (รวม ${Object.keys(merged).length} ตัว)`);
+      return res.json(merged);
     }
   } catch (e) {
     console.log("[CEO-Plan] error:", e.message);
