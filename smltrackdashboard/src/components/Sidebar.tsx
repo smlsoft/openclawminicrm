@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -432,6 +432,51 @@ function MoreDrawerItem({ href, icon, label, onClick }: NavItem & { onClick: () 
   );
 }
 
+/* ── AI Cost Widget (realtime) ── */
+interface CostData { thb: number; calls: number; tokens?: number; }
+interface CostSummary { today: CostData; yesterday: CostData; week: CostData; month: CostData; }
+
+function AICostWidget() {
+  const [data, setData] = useState<CostSummary | null>(null);
+
+  useEffect(() => {
+    const load = () => fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData).catch(() => {});
+    load();
+    const t = setInterval(load, 30000); // refresh ทุก 30 วินาที
+    return () => clearInterval(t);
+  }, []);
+
+  if (!data) return null;
+  const fmt = (v: number) => v === 0 ? "฿0 ฟรี" : `฿${v.toFixed(2)}`;
+
+  return (
+    <div className="px-4 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
+      <div className="text-[10px] font-semibold mb-1.5" style={{ color: "var(--text-muted)" }}>🤖 ค่า AI</div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div>
+          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>วันนี้</div>
+          <div className="text-xs font-bold" style={{ color: data.today.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.today.thb)}</div>
+          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{data.today.calls} ครั้ง</div>
+        </div>
+        <div>
+          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>เมื่อวาน</div>
+          <div className="text-xs font-bold" style={{ color: data.yesterday.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.yesterday.thb)}</div>
+          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{data.yesterday.calls} ครั้ง</div>
+        </div>
+        <div>
+          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>7 วัน</div>
+          <div className="text-xs font-bold" style={{ color: data.week.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.week.thb)}</div>
+        </div>
+        <div>
+          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>เดือนนี้</div>
+          <div className="text-xs font-bold" style={{ color: data.month.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.month.thb)}</div>
+          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{(data.month.tokens || 0).toLocaleString()} tokens</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ──────────────────────────────────────────
    Main Sidebar Export
    ────────────────────────────────────────── */
@@ -457,6 +502,9 @@ export default function Sidebar() {
               </div>
             </div>
           </div>
+
+          {/* AI Cost */}
+          <AICostWidget />
 
           {/* Navigation */}
           <NavWithBadges />
