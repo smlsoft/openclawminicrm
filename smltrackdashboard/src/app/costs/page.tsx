@@ -285,6 +285,26 @@ export default function CostsPage() {
   );
 }
 
+// ─── Cooldown Badge — นับถอยหลังทุกวินาที ───
+function CooldownBadge({ remainSec, readyColor }: { remainSec: number; readyColor: string }) {
+  const [sec, setSec] = useState(remainSec);
+  useEffect(() => { setSec(remainSec); }, [remainSec]);
+  useEffect(() => {
+    if (sec <= 0) return;
+    const t = setTimeout(() => setSec(s => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [sec]);
+
+  if (sec <= 0) return <span className="text-[10px] shrink-0 font-medium" style={{ color: readyColor }}>✓ พร้อม</span>;
+  const min = Math.floor(sec / 60);
+  const s = sec % 60;
+  return (
+    <span className="text-[10px] shrink-0 font-medium font-mono" style={{ color: "#f87171" }}>
+      ⏳ {min > 0 ? `${min}:${s.toString().padStart(2, "0")}` : `${s}s`}
+    </span>
+  );
+}
+
 // ─── AI Models Realtime — Provider/Model/สถานะ ───
 interface FreeModel { id: string; name: string; context_length: number; }
 interface Cooldown { until: string; remainSec: number; }
@@ -292,12 +312,15 @@ interface FreeModelsData { count: number; lastDiscovery: string | null; models: 
 
 function AIModelsRealtime() {
   const [data, setData] = useState<FreeModelsData | null>(null);
+  const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
-    const load = () => fetch("/dashboard/api/free-models").then(r => r.json()).then(setData).catch(() => {});
+    const load = () => { fetch("/dashboard/api/free-models").then(r => r.json()).then(setData).catch(() => {}); setCountdown(30); };
     load();
     const t = setInterval(load, 30000);
-    return () => clearInterval(t);
+    // นับถอยหลัง ทุก 1 วินาที
+    const cd = setInterval(() => setCountdown(c => c > 0 ? c - 1 : 30), 1000);
+    return () => { clearInterval(t); clearInterval(cd); };
   }, []);
 
   if (!data) return null;
@@ -319,11 +342,15 @@ function AIModelsRealtime() {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-sm font-bold">🤖 AI Models — สถานะ Realtime</h2>
-          <p className="text-[11px] theme-text-muted">อัพเดตทุก 30 วินาที · ค้นพบล่าสุด {data.lastDiscovery ? new Date(data.lastDiscovery).toLocaleTimeString("th-TH") : "—"}</p>
+          <p className="text-[11px] theme-text-muted">ค้นพบล่าสุด {data.lastDiscovery ? new Date(data.lastDiscovery).toLocaleTimeString("th-TH") : "—"}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ color: "#4ade80", background: "rgba(74,222,128,0.1)" }}>✓ พร้อม {readyCount + dedicatedReady}</span>
           {coolingCount > 0 && <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}>⏳ รอ {coolingCount}</span>}
+          {/* Countdown */}
+          <span className="text-[10px] px-2 py-1 rounded-full font-mono" style={{ color: "#64748b", background: "rgba(100,116,139,0.1)" }}>
+            🔄 {countdown}s
+          </span>
         </div>
       </div>
 
@@ -344,9 +371,7 @@ function AIModelsRealtime() {
                   <div className="text-xs font-medium truncate">{model}</div>
                   <div className="text-[10px] theme-text-muted">{provider}</div>
                 </div>
-                <span className="text-[10px] shrink-0 font-medium" style={{ color: isCooling ? "#f87171" : "#4ade80" }}>
-                  {isCooling ? `⏳ ${Math.ceil(cd.remainSec / 60)} นาที` : "✓ พร้อม"}
-                </span>
+                <CooldownBadge remainSec={isCooling ? cd.remainSec : 0} readyColor="#4ade80" />
               </div>
             );
           })}
@@ -369,9 +394,7 @@ function AIModelsRealtime() {
                     <div className="text-xs font-medium">{d.split(" (")[0]}</div>
                     <div className="text-[10px] theme-text-muted">dedicated</div>
                   </div>
-                  <span className="text-[10px] shrink-0 font-medium" style={{ color: isCooling ? "#f87171" : "#60a5fa" }}>
-                    {isCooling ? `⏳ ${Math.ceil(cd.remainSec / 60)} นาที` : "✓ พร้อม"}
-                  </span>
+                  <CooldownBadge remainSec={isCooling ? cd.remainSec : 0} readyColor="#60a5fa" />
                 </div>
               );
             })}
