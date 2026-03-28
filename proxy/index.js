@@ -526,6 +526,7 @@ async function getUserName(source) {
 
 // === Lightweight AI Call — วน providers ทั้งหมด ตัวไหน fail ข้ามทันที ===
 const lightAICooldown = {}; // provider → cooldown until timestamp
+const PAID_AI = process.env.PAID_AI_ENABLED === "true"; // ถ้าไม่ตั้ง = ปิดตัวเสียเงิน
 
 async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 15000 } = {}) {
   // OpenAI-compatible providers (เรียง: ฟรี 100% ก่อน → เสียเงินทีหลัง)
@@ -539,9 +540,11 @@ async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 
     { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
     // ─── ฟรี 100% (dedicated providers) ───
     { name: "SambaNova", url: "https://api.sambanova.ai/v1/chat/completions", key: process.env.SAMBANOVA_API_KEY, model: "Qwen3-235B" },
-    // ─── เสียเงิน (cooldown 5 นาทีหลังใช้) ───
-    { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile" },
-    { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: process.env.CEREBRAS_API_KEY, model: "qwen-3-235b-a22b-instruct-2507" },
+    // ─── เสียเงิน (ต้องเปิด PAID_AI_ENABLED=true) ───
+    ...(PAID_AI ? [
+      { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile" },
+      { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: process.env.CEREBRAS_API_KEY, model: "qwen-3-235b-a22b-instruct-2507" },
+    ] : []),
   ].filter((p) => p.key);
 
   for (const p of providers) {
@@ -1410,9 +1413,11 @@ async function callProvider(messages, tools) {
     { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
     // ─── ฟรี 100% (dedicated) ───
     { name: "SambaNova", url: "https://api.sambanova.ai/v1/chat/completions", key: process.env.SAMBANOVA_API_KEY, model: "Qwen3-235B" },
-    // ─── เสียเงิน (cooldown 5m) ───
-    { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile" },
-    { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: process.env.CEREBRAS_API_KEY, model: "qwen-3-235b-a22b-instruct-2507" },
+    // ─── เสียเงิน (ต้องเปิด PAID_AI_ENABLED=true) ───
+    ...(PAID_AI ? [
+      { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: process.env.GROQ_API_KEY, model: "llama-3.3-70b-versatile" },
+      { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: process.env.CEREBRAS_API_KEY, model: "qwen-3-235b-a22b-instruct-2507" },
+    ] : []),
   ].filter((p) => p.key);
 
   for (const provider of providers) {
