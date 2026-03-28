@@ -5,7 +5,7 @@ import { OrbitControls, Html } from "@react-three/drei";
 import { Suspense, useRef, useMemo, useState } from "react";
 import * as THREE from "three";
 
-import { getRandomConversation } from "./conversations";
+import { getRandomConversation, getQueueRemaining } from "./conversations";
 
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
 interface Props { agents: Agent[]; ttsEnabled?: boolean; }
@@ -165,10 +165,13 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
 
 async function ceoSpeak(agentName: string, enabled: boolean) {
   checkTTSStuck();
-  if (!enabled || ttsBusy) return;
+  if (!enabled) { console.log("[CEO] disabled"); return; }
+  if (ttsBusy) { console.log("[CEO] busy"); return; }
+  if (!agentName) { console.log("[CEO] no agent name"); return; }
 
-  // สุ่มบทสนทนา hardcode (1001 ชุด ไม่ซ้ำจนกว่าจะหมด)
+  // สุ่มบทสนทนา hardcode (897 ชุด ไม่ซ้ำจนกว่าจะหมด)
   const conv = getRandomConversation(agentName);
+  console.log(`[CEO] speak to ${agentName}, conv=${conv?.turns.length || 0} turns, queue=${getQueueRemaining()}`);
   if (!conv || conv.turns.length === 0) return;
 
   ttsBusy = true;
@@ -635,9 +638,10 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
         st.currentAgentName = agents[st.wpIdx % agents.length]?.name || "";
       }
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
-      // พูดทุก waypoint — เรียกชื่อพนักงาน + พูด TTS
+      // พูดทุก waypoint
       st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
       st.quoteTime = now;
+      console.log(`[CEO] arrived wp${st.wpIdx} agent="${st.currentAgentName}" wp=${waypoints.length} tts=${ttsEnabled}`);
       ceoSpeak(st.currentAgentName, ttsEnabled);
       return;
     }
