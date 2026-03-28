@@ -85,12 +85,14 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Redirect ถ้ายังไม่ login หรือยังไม่ setup
+  // Redirect ถ้ายังไม่ login หรือยังไม่ setup → หรือไป kung-room เลย
   useEffect(() => {
     if (authStatus === "unauthenticated") {
       router.replace("/dashboard/login");
     } else if (authStatus === "authenticated" && (session?.user as any)?.setupComplete === false) {
       router.replace("/dashboard/onboarding");
+    } else if (authStatus === "authenticated") {
+      router.replace("/dashboard/kung-room");
     }
   }, [authStatus, session, router]);
 

@@ -26,7 +26,7 @@ export default function LoginPage() {
     // ใช้ credentials provider สำหรับ demo
     await signIn("credentials", {
       email: "demo@smlsoft.com",
-      callbackUrl: "/dashboard",
+      callbackUrl: "/dashboard/kung-room",
     });
   };
 
