@@ -41,28 +41,11 @@ const CONVERSATION_PAIRS: [string, string][] = [
   ["บอสภูมิใจในทีมนี้มาก!", "หนูก็ภูมิใจที่มีบอสดีๆ ค่ะ!"],
 ];
 
-let aiPairs: [string, string][] = [];
-let lastQuoteFetch = 0;
 let pairIdx = 0;
 
-async function fetchAIQuotes() {
-  if (typeof window === "undefined") return;
-  if (Date.now() - lastQuoteFetch < 3600000 && aiPairs.length > 0) return;
-  try {
-    const r = await fetch("/dashboard/api/ceo-quotes");
-    const d = await r.json();
-    if (d.ceo?.length > 0 && d.employee?.length > 0) {
-      // จับคู่ ceo[i] กับ employee[i]
-      aiPairs = d.ceo.map((c: string, i: number) => [c, d.employee[i % d.employee.length]] as [string, string]);
-    }
-    lastQuoteFetch = Date.now();
-  } catch { /* keep existing */ }
-}
-
-function getNextPair(): [string, string] {
-  const pool = aiPairs.length > 0 ? aiPairs : CONVERSATION_PAIRS;
-  pairIdx = (pairIdx + 1) % pool.length;
-  return pool[pairIdx];
+function getNextFallbackPair(): [string, string] {
+  pairIdx = (pairIdx + 1) % CONVERSATION_PAIRS.length;
+  return CONVERSATION_PAIRS[pairIdx];
 }
 
 // Edge TTS (Neural voice) → fallback Web Speech API
@@ -97,7 +80,7 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
   });
 }
 
-// ดึงบทสนทนาจากผลงานจริง (40% โอกาส)
+// ดึงบทสนทนาจากผลงานจริง → fallback เป็น CONVERSATION_PAIRS
 async function fetchReviewPair(agentName: string): Promise<[string, string] | null> {
   if (!agentName) return null;
   try {
@@ -114,20 +97,14 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   ttsBusy = true;
   ttsBusySince = Date.now();
   try {
-    fetchAIQuotes();
-
     let ceoQ: string, empA: string;
 
-    // 40% โอกาส → ดึงจากผลงานจริง (ถ้าได้)
-    if (agentName && Math.random() < 0.4) {
-      const review = await fetchReviewPair(agentName);
-      if (review) {
-        [ceoQ, empA] = review;
-      } else {
-        [ceoQ, empA] = getNextPair();
-      }
+    // ลองดึงผลงานจริงจาก CEO Review ก่อน → fallback เป็น hardcoded pairs
+    const review = await fetchReviewPair(agentName);
+    if (review) {
+      [ceoQ, empA] = review;
     } else {
-      [ceoQ, empA] = getNextPair();
+      [ceoQ, empA] = getNextFallbackPair();
     }
 
     // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
@@ -424,7 +401,7 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   }, [agents, deskPositions]);
 
   // คำพูด CEO สำหรับ balloon text (ดึงจากคู่สนทนา)
-  const CEO_QUOTES = (aiPairs.length > 0 ? aiPairs : CONVERSATION_PAIRS).map(p => p[0]);
+  const CEO_QUOTES = CONVERSATION_PAIRS.map(p => p[0]);
   const hammerRef = useRef<THREE.Group>(null!);
   const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0, currentAgentName: "" });
 

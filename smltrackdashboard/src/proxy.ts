@@ -19,7 +19,6 @@ export async function proxy(req: NextRequest) {
     "/api/notifications",
     "/api/visitor-count",
     "/api/tts",
-    "/api/ceo-quotes",
     "/api/ceo-review",
     "/_next",
     "/favicon.ico",
