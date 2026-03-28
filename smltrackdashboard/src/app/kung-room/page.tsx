@@ -132,10 +132,28 @@ function ActivityLog({ inline = false }: { inline?: boolean } = {}) {
 export default function KungRoomPage() {
   const [view, setView] = useState<"3d" | "list">("3d");
   const [tts, setTts] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    const el = document.getElementById("kung-3d-container");
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
+
+  // ฟัง event fullscreenchange
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
 
   return (
     <div className="min-h-screen theme-bg theme-text">
-      <header className="border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-20">
+      <header className={`border-b theme-border px-3 md:px-6 py-4 sticky top-0 theme-bg backdrop-blur z-20 ${isFullscreen ? "hidden" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold">🦐 ห้องทำงานน้องกุ้ง</h1>
@@ -151,19 +169,36 @@ export default function KungRoomPage() {
             <button onClick={() => setTts(!tts)} className={`px-3 py-1.5 text-xs rounded-lg transition ${tts ? "bg-amber-500 text-white" : "theme-bg-secondary theme-text-secondary"}`} title={tts ? "ปิดเสียง CEO" : "เปิดเสียง CEO"}>
               {tts ? "🔊" : "🔇"}
             </button>
+            {view === "3d" && (
+              <button onClick={toggleFullscreen} className="px-3 py-1.5 text-xs rounded-lg transition theme-bg-secondary theme-text-secondary hover:bg-indigo-500 hover:text-white" title="เต็มจอ">
+                {isFullscreen ? "⬜" : "⛶"}
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       {view === "3d" ? (
-        <div className="relative" style={{ height: "calc(100vh - 120px)" }}>
+        <div id="kung-3d-container" className="relative" style={{ height: isFullscreen ? "100vh" : "calc(100vh - 120px)", background: "#0a0e1a" }}>
           {/* 3D Scene */}
           <OfficeScene agents={AGENTS} ttsEnabled={tts} />
+
+          {/* Fullscreen controls overlay */}
+          {isFullscreen && (
+            <div className="absolute top-4 right-4 z-20 flex gap-2">
+              <button onClick={() => setTts(!tts)} className={`px-3 py-1.5 text-xs rounded-lg transition backdrop-blur ${tts ? "bg-amber-500/80 text-white" : "bg-black/50 text-gray-300"}`}>
+                {tts ? "🔊" : "🔇"}
+              </button>
+              <button onClick={toggleFullscreen} className="px-3 py-1.5 text-xs rounded-lg transition bg-black/50 text-gray-300 backdrop-blur hover:bg-red-500/80 hover:text-white">
+                ✕ ออกเต็มจอ
+              </button>
+            </div>
+          )}
 
           {/* Instructions */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
             <div className="theme-bg-secondary/80 backdrop-blur border theme-border rounded-2xl px-4 py-2 text-[11px] theme-text-muted leading-relaxed text-center">
-              <div>🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม</div>
+              <div>🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม{!isFullscreen ? "" : " · กด ESC ออกเต็มจอ"}</div>
               <div className="mt-1 text-[10px] opacity-70">🦐 กระโดด = กำลังทำงาน · 🎈 มีลูกโป่ง = มีงานรายงาน · 🪑 นั่งนิ่ง = รอคิว</div>
             </div>
           </div>
