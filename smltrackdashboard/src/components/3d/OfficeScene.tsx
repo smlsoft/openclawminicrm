@@ -165,31 +165,27 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
 
 async function ceoSpeak(agentName: string, enabled: boolean) {
   checkTTSStuck();
-  if (!enabled) { console.log("[CEO] disabled"); return; }
-  if (ttsBusy) { console.log("[CEO] busy"); return; }
-  if (!agentName) { console.log("[CEO] no agent name"); return; }
+  if (!enabled || ttsBusy || !agentName) return;
+
+  // ล็อค ttsBusy ทันที ก่อนทำอะไร (ป้องกันเรียกซ้ำ)
+  ttsBusy = true;
+  ttsBusySince = Date.now();
 
   // สุ่มบทสนทนา hardcode (897 ชุด ไม่ซ้ำจนกว่าจะหมด)
   const conv = getRandomConversation(agentName);
-  console.log(`[CEO] speak to ${agentName}, conv=${conv?.turns.length || 0} turns, queue=${getQueueRemaining()}`);
-  if (!conv || conv.turns.length === 0) return;
-
-  ttsBusy = true;
-  ttsBusySince = Date.now();
+  console.log(`[CEO] → ${agentName} ${conv?.turns.length || 0} turns (เหลือ ${getQueueRemaining()})`)
+  if (!conv || conv.turns.length === 0) { ttsBusy = false; return; }
   try {
     // เล่นทุก turn สลับ CEO (Niwat) ↔ พนักงาน (Premwadee)
     for (let i = 0; i < conv.turns.length; i++) {
       if (!enabled) break;
       const text = conv.turns[i];
       const isCeo = i % 2 === 0;
-      console.log(`[CEO] turn ${i+1}/${conv.turns.length} ${isCeo ? "CEO" : "EMP"}: ${text.substring(0, 30)}...`);
       if (isCeo) {
         const ok = await edgeTTS(text, "th-TH-NiwatNeural", 0.9);
-        console.log(`[CEO] edgeTTS=${ok}`);
         if (!ok) await webSpeechFallback(text, 0.5, 0.85);
       } else {
         const ok = await edgeTTS(text, "th-TH-PremwadeeNeural", 1.0);
-        console.log(`[CEO] edgeTTS=${ok}`);
         if (!ok) await webSpeechFallback(text, 1.8, 0.9);
       }
     }
@@ -644,7 +640,6 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
       // พูดทุก waypoint
       st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
       st.quoteTime = now;
-      console.log(`[CEO] arrived wp${st.wpIdx} agent="${st.currentAgentName}" wp=${waypoints.length} tts=${ttsEnabled}`);
       ceoSpeak(st.currentAgentName, ttsEnabled);
       return;
     }
