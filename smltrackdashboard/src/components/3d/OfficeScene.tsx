@@ -239,6 +239,97 @@ function Floor() {
   );
 }
 
+// ─── CEO กุ้ง — เดินตรวจงานทั่วออฟฟิศ (physics-like) ───
+function CEOShrimp() {
+  const ref = useRef<THREE.Group>(null!);
+  const color = useMemo(() => new THREE.Color("#ffd700"), []);
+  const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
+
+  // Waypoints — เดินตามโต๊ะน้องกุ้งแต่ละตัว
+  const waypoints: [number, number][] = useMemo(() => [
+    [-3, -4], [-3, -1.5], [-3, 1], [-3, 3.5],     // แถว 1
+    [0.5, -1], [0.5, 2.5],                          // โต๊ะกาแฟ
+    [-0.5, -4], [-0.5, -1.5], [-0.5, 1], [-0.5, 3.5], // แถว 2
+    [0.5, 0],                                        // กลาง
+    [3.5, -5], [3.5, -2.5], [3.5, 0], [3.5, 2.5], [3.5, 5], // แถว 3
+    [0.5, -3],                                       // กลับกลาง
+  ], []);
+
+  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0 });
+
+  useFrame((s, delta) => {
+    if (!ref.current) return;
+    const st = state.current;
+    const target = waypoints[st.wpIdx];
+    const dx = target[0] - st.x;
+    const dz = target[1] - st.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+
+    // ถึง waypoint → ไป waypoint ถัดไป
+    if (dist < 0.15) {
+      st.wpIdx = (st.wpIdx + 1) % waypoints.length;
+      return;
+    }
+
+    // Physics: เร่ง + แรงเสียดทาน
+    const speed = 1.8;
+    const friction = 0.92;
+    const ax = (dx / dist) * speed * delta;
+    const az = (dz / dist) * speed * delta;
+    st.vx = (st.vx + ax) * friction;
+    st.vz = (st.vz + az) * friction;
+    st.x += st.vx;
+    st.z += st.vz;
+
+    // หันหน้าไปทิศทางที่เดิน (smooth)
+    const targetAngle = Math.atan2(st.vx, st.vz);
+    let angleDiff = targetAngle - st.facingAngle;
+    if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    st.facingAngle += angleDiff * 0.1;
+
+    // ขาแกว่ง (walking)
+    const v = Math.sqrt(st.vx * st.vx + st.vz * st.vz);
+    st.legPhase += v * 25;
+
+    // Bob ขึ้นลงตามจังหวะเดิน
+    const bob = Math.abs(Math.sin(st.legPhase)) * 0.03;
+
+    ref.current.position.set(st.x, 0.25 + bob, st.z);
+    ref.current.rotation.y = st.facingAngle;
+  });
+
+  return (
+    <group ref={ref} position={[0.5, 0.25, 0]}>
+      {/* ตัว CEO — ใหญ่กว่าปกติ 1.3x, สีทอง */}
+      <mesh position={[0, 0.4, 0]} castShadow><sphereGeometry args={[0.26, 16, 16]} /><meshStandardMaterial color={color} roughness={0.2} metalness={0.3} /></mesh>
+      <mesh position={[0, 0.72, 0.03]} castShadow><sphereGeometry args={[0.21, 16, 16]} /><meshStandardMaterial color={color} roughness={0.2} metalness={0.3} /></mesh>
+      {/* ตา */}
+      <mesh position={[-0.07, 0.76, 0.18]}><sphereGeometry args={[0.05, 8, 8]} /><meshStandardMaterial color="white" /></mesh>
+      <mesh position={[-0.07, 0.76, 0.21]}><sphereGeometry args={[0.025, 8, 8]} /><meshStandardMaterial color="#111" /></mesh>
+      <mesh position={[0.07, 0.76, 0.18]}><sphereGeometry args={[0.05, 8, 8]} /><meshStandardMaterial color="white" /></mesh>
+      <mesh position={[0.07, 0.76, 0.21]}><sphereGeometry args={[0.025, 8, 8]} /><meshStandardMaterial color="#111" /></mesh>
+      {/* แขน */}
+      <mesh position={[-0.3, 0.37, 0.08]}><sphereGeometry args={[0.08, 8, 8]} /><meshStandardMaterial color={lighter} /></mesh>
+      <mesh position={[0.3, 0.37, 0.08]}><sphereGeometry args={[0.08, 8, 8]} /><meshStandardMaterial color={lighter} /></mesh>
+      {/* หาง */}
+      <mesh position={[0, 0.2, -0.18]} rotation={[0.5, 0, 0]}><coneGeometry args={[0.09, 0.22, 8]} /><meshStandardMaterial color={color} /></mesh>
+      {/* มงกุฎ 👑 */}
+      <mesh position={[0, 0.96, 0.03]}><coneGeometry args={[0.08, 0.12, 5]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.5} metalness={0.8} /></mesh>
+      <mesh position={[-0.06, 0.93, 0.03]}><coneGeometry args={[0.04, 0.08, 4]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.3} metalness={0.8} /></mesh>
+      <mesh position={[0.06, 0.93, 0.03]}><coneGeometry args={[0.04, 0.08, 4]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.3} metalness={0.8} /></mesh>
+      {/* Name tag */}
+      <Html position={[0, 1.2, 0]} center distanceFactor={7} style={{ pointerEvents: "none" }}>
+        <div style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000", padding: "2px 10px", borderRadius: 6, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", fontFamily: "Prompt,sans-serif", boxShadow: "0 2px 12px rgba(255,215,0,0.5)" }}>
+          👑 น้องกุ้ง CEO
+        </div>
+      </Html>
+      {/* Glow */}
+      <pointLight position={[0, 0.5, 0]} intensity={0.3} color="#ffd700" distance={3} />
+    </group>
+  );
+}
+
 // ─── Office Layout ───
 function OfficeLayout({ agents }: Props) {
   // 3 แถวๆ ละ 4-5 ตัว เว้นช่องทางเดินตรงกลาง
@@ -302,6 +393,9 @@ function OfficeLayout({ agents }: Props) {
       <Lamp position={[-6, 0, 2]} />
       <Lamp position={[5, 0, -3]} />
       <Lamp position={[5, 0, 3]} />
+
+      {/* CEO เดินตรวจงาน */}
+      <CEOShrimp />
 
       {/* ป้าย */}
       <Html position={[0, 3.5, -7]} center distanceFactor={15}>
