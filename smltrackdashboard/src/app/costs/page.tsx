@@ -275,10 +275,110 @@ export default function CostsPage() {
             </div>
           </div>
         </section>
+        {/* AI Models Realtime — สถานะ AI ทั้งหมด */}
+        <AIModelsRealtime />
+
         {/* AI Scores — ตัวไหนเก่งอะไร */}
         <AIScoreBoard />
       </main>
     </div>
+  );
+}
+
+// ─── AI Models Realtime — Provider/Model/สถานะ ───
+interface FreeModel { id: string; name: string; context_length: number; }
+interface Cooldown { until: string; remainSec: number; }
+interface FreeModelsData { count: number; lastDiscovery: string | null; models: FreeModel[]; cooldowns: Record<string, Cooldown>; paidAI: boolean; dedicated: string[]; }
+
+function AIModelsRealtime() {
+  const [data, setData] = useState<FreeModelsData | null>(null);
+
+  useEffect(() => {
+    const load = () => fetch("/dashboard/api/free-models").then(r => r.json()).then(setData).catch(() => {});
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (!data) return null;
+
+  const readyCount = data.models.filter(m => {
+    const sn = "OR-" + m.id.split("/").pop()?.substring(0, 15);
+    const cd = data.cooldowns?.[sn];
+    return !(cd && cd.remainSec > 0);
+  }).length;
+  const coolingCount = data.models.length - readyCount;
+  const dedicatedReady = (data.dedicated || []).filter(d => {
+    const key = d.startsWith("SambaNova") ? "SambaNova" : "Gemini";
+    const cd = data.cooldowns?.[key];
+    return !(cd && cd.remainSec > 0);
+  }).length;
+
+  return (
+    <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-sm font-bold">🤖 AI Models — สถานะ Realtime</h2>
+          <p className="text-[11px] theme-text-muted">อัพเดตทุก 30 วินาที · ค้นพบล่าสุด {data.lastDiscovery ? new Date(data.lastDiscovery).toLocaleTimeString("th-TH") : "—"}</p>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ color: "#4ade80", background: "rgba(74,222,128,0.1)" }}>✓ พร้อม {readyCount + dedicatedReady}</span>
+          {coolingCount > 0 && <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}>⏳ รอ {coolingCount}</span>}
+        </div>
+      </div>
+
+      {/* OpenRouter Models */}
+      <div className="mb-3">
+        <h3 className="text-xs font-semibold theme-text-secondary mb-2">🌐 OpenRouter (ค้นหาอัตโนมัติทุก 1 ชม.)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {data.models.map(m => {
+            const shortName = "OR-" + m.id.split("/").pop()?.substring(0, 15);
+            const cd = data.cooldowns?.[shortName];
+            const isCooling = cd && cd.remainSec > 0;
+            const provider = m.id.split("/")[0];
+            const model = m.id.split("/")[1]?.replace(":free", "") || m.id;
+            return (
+              <div key={m.id} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--bg-primary)" }}>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-green-500"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium truncate">{model}</div>
+                  <div className="text-[10px] theme-text-muted">{provider}</div>
+                </div>
+                <span className="text-[10px] shrink-0 font-medium" style={{ color: isCooling ? "#f87171" : "#4ade80" }}>
+                  {isCooling ? `⏳ ${Math.ceil(cd.remainSec / 60)} นาที` : "✓ พร้อม"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dedicated Models */}
+      {data.dedicated && data.dedicated.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold theme-text-secondary mb-2">⭐ Dedicated (เฉพาะทาง)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {data.dedicated.map(d => {
+              const key = d.startsWith("SambaNova") ? "SambaNova" : "Gemini";
+              const cd = data.cooldowns?.[key];
+              const isCooling = cd && cd.remainSec > 0;
+              return (
+                <div key={d} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--bg-primary)" }}>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-blue-500"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium">{d.split(" (")[0]}</div>
+                    <div className="text-[10px] theme-text-muted">dedicated</div>
+                  </div>
+                  <span className="text-[10px] shrink-0 font-medium" style={{ color: isCooling ? "#f87171" : "#60a5fa" }}>
+                    {isCooling ? `⏳ ${Math.ceil(cd.remainSec / 60)} นาที` : "✓ พร้อม"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
