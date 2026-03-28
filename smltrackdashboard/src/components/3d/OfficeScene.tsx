@@ -14,39 +14,7 @@ let ttsBusySince = 0;
 // Safety: ถ้า ttsBusy ค้างนานกว่า 30 วิ → auto-reset
 function checkTTSStuck() { if (ttsBusy && Date.now() - ttsBusySince > 30000) { ttsBusy = false; } }
 
-// จับคู่ CEO ถาม + พนักงานตอบ ให้สัมพันธ์กัน
-const CONVERSATION_PAIRS: [string, string][] = [
-  ["ยอดขายวันนี้เป็นไงบ้าง?", "ปิดได้ 3 ดีลแล้วค่ะบอส!"],
-  ["ใครยังไม่ตอบแชทลูกค้า?", "ตอบหมดแล้วค่า ไม่ต้องห่วง!"],
-  ["ทำงานเร็วกว่านี้ได้ไหม?", "ก็ทำเร็วสุดแล้วนะบอส!"],
-  ["KPI เดือนนี้โอเคมั้ย?", "เกินเป้า 120% แล้วค่ะ!"],
-  ["ลูกค้ารายนี้ follow up หรือยัง?", "ส่งข้อความไปแล้ว 3 รอบ!"],
-  ["ทำไมยอดตกลงจากเมื่อวาน?", "วันนี้วันจันทร์ ลูกค้ายังไม่ตื่นค่ะ!"],
-  ["กาแฟหมดแล้ว ใครไปซื้อ?", "ให้แมวไปซื้อดีกว่า!"],
-  ["ขยันดีนะ ชอบๆ!", "ขอบคุณค่ะบอส ขอขึ้นเงินเดือนด้วย!"],
-  ["ประชุมอีก 5 นาทีนะ!", "อ๋อ ขอกินโดนัทก่อน!"],
-  ["ลูกค้า VIP โทรมา ดูแลด่วน!", "รับสายแล้วค่ะ กำลังจัดการ!"],
-  ["สต็อกสินค้าเช็คหรือยัง?", "เช็คแล้ว เหลือน้อยมาก ต้องสั่งเพิ่ม!"],
-  ["ใครอยากได้โบนัสยกมือ!", "หนูๆๆ! ยกทั้งสองมือเลย!"],
-  ["ระวังคู่แข่งมาตัดราคานะ!", "รู้แล้วค่ะ เตรียมโปรไว้แล้ว!"],
-  ["วันนี้ใครมาสาย?", "ไม่มีค่ะ มาก่อนบอสอีก!"],
-  ["เงินเดือนออกแล้วนะ!", "เย้! ขอบคุณบอส!"],
-  ["ทำไมแมวมานอนบนโต๊ะอีกแล้ว?", "หนูไล่ไม่ไป มันไม่กลัวหนู!"],
-  ["พรุ่งนี้มีนัดส่งของ อย่าลืม!", "จดไว้แล้วค่ะ พร้อมส่ง!"],
-  ["ตอบแชทให้เร็วนะ ลูกค้ารอ!", "ตอบอยู่ค่ะ มือไม่ว่างเลย!"],
-  ["ใครทำยอดสูงสุดวันนี้?", "หนูเองค่ะ! ปิดไป 5 ราย!"],
-  ["สู้ๆ นะทีม เชื่อมือทุกคน!", "สู้ๆ ค่ะบอส! ไม่ถอย!"],
-  ["ลดราคาอีกได้ไหม ลูกค้าต่อ?", "ลดอีกไม่ได้แล้ว ขาดทุนค่ะ!"],
-  ["ออฟฟิศรกจัง จัดให้หน่อย!", "ก็แมวมันรื้อไง!"],
-  ["บอสภูมิใจในทีมนี้มาก!", "หนูก็ภูมิใจที่มีบอสดีๆ ค่ะ!"],
-];
-
-let pairIdx = 0;
-
-function getNextFallbackPair(): [string, string] {
-  pairIdx = (pairIdx + 1) % CONVERSATION_PAIRS.length;
-  return CONVERSATION_PAIRS[pairIdx];
-}
+// (บทสนทนาทั้งหมดสร้างจาก AI ผ่าน CEO Review API — ไม่ hardcode)
 
 // Edge TTS (Neural voice) → fallback Web Speech API
 async function edgeTTS(text: string, voice: string, speed: number): Promise<boolean> {
@@ -80,7 +48,7 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
   });
 }
 
-// ดึงบทสนทนาจากผลงานจริง → fallback เป็น CONVERSATION_PAIRS
+// ดึงบทสนทนาจาก AI (ผลงานจริง) — ถ้าไม่ได้ก็ข้ามไม่พูด
 async function fetchReviewPair(agentName: string): Promise<[string, string] | null> {
   if (!agentName) return null;
   try {
@@ -97,15 +65,10 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   ttsBusy = true;
   ttsBusySince = Date.now();
   try {
-    let ceoQ: string, empA: string;
-
-    // ลองดึงผลงานจริงจาก CEO Review ก่อน → fallback เป็น hardcoded pairs
+    // ดึงบทสนทนาจาก AI (ผลงานจริง) — ถ้าไม่ได้ก็ข้ามไม่พูด
     const review = await fetchReviewPair(agentName);
-    if (review) {
-      [ceoQ, empA] = review;
-    } else {
-      [ceoQ, empA] = getNextFallbackPair();
-    }
+    if (!review) { return; }
+    const [ceoQ, empA] = review;
 
     // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
     const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
@@ -400,8 +363,8 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     return all;
   }, [agents, deskPositions]);
 
-  // คำพูด CEO สำหรับ balloon text (ดึงจากคู่สนทนา)
-  const CEO_QUOTES = CONVERSATION_PAIRS.map(p => p[0]);
+  // คำพูด CEO สำหรับ balloon text (แสดงระหว่างเดิน)
+  const CEO_QUOTES = ["ตรวจงานหน่อย!", "ใครว่างอยู่?", "สู้ๆ ทีม!", "ทำงานดีมาก!", "เร็วๆ หน่อย!", "ดูผลงานนะ", "มีอะไรรายงาน?", "ขยันดี!", "อย่าแอบนอน!", "เช็คงานหน่อย"];
   const hammerRef = useRef<THREE.Group>(null!);
   const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0, currentAgentName: "" });
 

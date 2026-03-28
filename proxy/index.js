@@ -3450,13 +3450,24 @@ app.get("/api/ceo-review", async (req, res) => {
       .limit(5)
       .toArray();
 
-    if (recentWork.length === 0) return res.json({ ceo: "", emp: "" });
+    // สร้าง context — ถ้ามีผลงานจริงใช้ผลงาน ถ้าไม่มีก็ให้ AI แต่งเอง
+    let prompt;
+    if (recentWork.length > 0) {
+      const workSummary = recentWork.map(w => {
+        const t = w.createdAt ? new Date(w.createdAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "?";
+        return `${t} — ${w.feature} ${w.totalTokens || 0} tokens ${w.costUsd > 0 ? "฿" + (w.costUsd * 35).toFixed(2) : "ฟรี"}`;
+      }).join("\n");
+      prompt = `CEO ชื่อบอส กำลังตรวจงาน "${agentName}" น้องกุ้ง AI
+ผลงานล่าสุด:
+${workSummary}
 
-    // สร้าง context จากผลงานจริง
-    const workSummary = recentWork.map(w => {
-      const t = w.createdAt ? new Date(w.createdAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "?";
-      return `${t} — ${w.feature} ${w.totalTokens || 0} tokens ${w.costUsd > 0 ? "฿" + (w.costUsd * 35).toFixed(2) : "ฟรี"}`;
-    }).join("\n");
+สร้างบทสนทนา 1 คู่ CEO ถามติดตามผลงานจริง + พนักงานเถียงกลับตลกๆ แซวกัน ห้ามซ้ำกับครั้งก่อน
+{"ceo":"ถามเรื่องผลงานจริง สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}`;
+    } else {
+      prompt = `CEO ชื่อบอส กำลังเดินตรวจออฟฟิศ เจอ "${agentName}" น้องกุ้ง AI
+สร้างบทสนทนา 1 คู่ CEO ถามพนักงานตลกๆ + พนักงานเถียงกลับแซวบอส ห้ามซ้ำกับครั้งก่อน เรื่องในออฟฟิศ (กาแฟ แมว งาน ลูกค้า เงินเดือน โบนัส ฯลฯ)
+{"ceo":"ถามตลก สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}`;
+    }
 
     // ให้ AI สร้างบทสนทนา
     const sambaKey = process.env.SAMBANOVA_API_KEY;
@@ -3468,13 +3479,8 @@ app.get("/api/ceo-review", async (req, res) => {
       body: JSON.stringify({
         model: "Qwen3-235B",
         messages: [
-          { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
-          { role: "user", content: `CEO ชื่อบอส กำลังตรวจงาน "${agentName}" น้องกุ้ง AI
-ผลงานล่าสุด:
-${workSummary}
-
-สร้างบทสนทนา 1 คู่ CEO ถามติดตามผลงานจริง + พนักงานเถียงกลับตลกๆ แซวกัน
-{"ceo":"ถามเรื่องผลงานจริง สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}` },
+          { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น ห้ามซ้ำกับครั้งก่อน" },
+          { role: "user", content: prompt },
         ],
         max_tokens: 200,
         response_format: { type: "json_object" },
