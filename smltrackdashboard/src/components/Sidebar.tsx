@@ -113,7 +113,7 @@ function SidebarNavLink({ href, icon, label, onClick, badge }: NavItem & { onCli
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center gap-3 py-2.5 px-3 rounded-xl text-[13px] transition-all duration-150 ${
+      className={`flex items-center gap-2.5 py-1.5 px-3 rounded-lg text-[12px] transition-all duration-150 ${
         active
           ? "bg-gradient-to-r from-indigo-600/20 to-cyan-600/10 text-indigo-400 font-semibold shadow-sm"
           : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
@@ -284,17 +284,28 @@ function RebuildButton() {
 function NavWithBadges() {
   const { totalUnread, pendingPayments } = useNotificationContext();
   const chatBadge = totalUnread;
+  const pathname = usePathname();
+  // Auto-collapse groups ที่ไม่ active — เปิดแค่ group ที่มีหน้าปัจจุบัน
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const toggleGroup = (label: string) => setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
+
   return (
-    <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 no-scrollbar">
-      {NAV_GROUPS.map((group, gi) => (
-        <div key={gi} className={gi > 0 ? "mt-5" : ""}>
-          {group.groupLabel && (
-            <p className="text-[10px] uppercase tracking-widest px-3 mb-2 font-semibold"
+    <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 no-scrollbar">
+      {NAV_GROUPS.map((group, gi) => {
+        const label = group.groupLabel || "";
+        const hasActive = group.items.some(item => isActivePath(pathname, item.href));
+        const isCollapsed = collapsed[label] !== undefined ? collapsed[label] : (!hasActive && gi > 2); // collapse non-active groups below index 2
+        return (
+        <div key={gi} className={gi > 0 ? "mt-2" : ""}>
+          {label && (
+            <button onClick={() => toggleGroup(label)}
+              className="w-full flex items-center justify-between px-3 mb-1 group"
               style={{ color: "var(--text-muted)" }}>
-              {group.groupLabel}
-            </p>
+              <span className="text-[10px] uppercase tracking-widest font-semibold">{label}</span>
+              <span className="text-[9px] opacity-50 group-hover:opacity-100 transition">{isCollapsed ? "▶" : "▼"}</span>
+            </button>
           )}
-          {group.items.map((item) => (
+          {!isCollapsed && group.items.map((item) => (
             <SidebarNavLink
               key={item.href}
               {...item}
@@ -306,7 +317,8 @@ function NavWithBadges() {
             />
           ))}
         </div>
-      ))}
+        );
+      })}
     </nav>
   );
 }
@@ -439,114 +451,31 @@ interface FreeModel { id: string; name: string; context_length: number; }
 interface Cooldown { until: string; remainSec: number; }
 interface FreeModelsData { count: number; lastDiscovery: string | null; models: FreeModel[]; cooldowns: Record<string, Cooldown>; paidAI: boolean; dedicated: string[]; }
 
-function AICostWidget() {
+function AICostMini() {
   const [data, setData] = useState<CostSummary | null>(null);
-  const [models, setModels] = useState<FreeModelsData | null>(null);
-  const [showModels, setShowModels] = useState(true);
+  const [modelCount, setModelCount] = useState(0);
 
   useEffect(() => {
     const loadCost = () => fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData).catch(() => {});
-    const loadModels = () => fetch("/dashboard/api/costs").then(r => r.json()).then(() =>
-      fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData)
-    ).catch(() => {});
-    // free models จาก agent
-    const loadFree = () => fetch("/dashboard/api/free-models").then(r => r.json()).then(setModels).catch(() => {});
+    const loadFree = () => fetch("/dashboard/api/free-models").then(r => r.json()).then((m: FreeModelsData) => setModelCount(m.count + (m.dedicated?.length || 0))).catch(() => {});
     loadCost();
     loadFree();
-    const t1 = setInterval(loadCost, 30000);
-    const t2 = setInterval(loadFree, 60000);
-    return () => { clearInterval(t1); clearInterval(t2); };
+    const t = setInterval(loadCost, 60000);
+    return () => clearInterval(t);
   }, []);
 
   if (!data) return null;
-  const fmt = (v: number) => v === 0 ? "฿0 ฟรี" : `฿${v.toFixed(2)}`;
+  const fmt = (v: number) => v === 0 ? "฿0" : `฿${v.toFixed(2)}`;
 
   return (
-    <div className="px-4 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>🤖 ค่า AI</div>
-        {models && (
-          <button onClick={() => setShowModels(!showModels)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#4ade80", background: "rgba(74,222,128,0.1)" }}>
-            {models.count} ฟรี {showModels ? "▲" : "▼"}
-          </button>
-        )}
+    <Link href="/costs" className="flex items-center justify-between px-4 py-2 border-b transition hover:bg-[var(--bg-hover)]" style={{ borderColor: "var(--border)" }}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs">🤖</span>
+        <span className="text-[11px] font-bold" style={{ color: data.month.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.month.thb)}</span>
+        <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>เดือนนี้</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-        <div>
-          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>วันนี้</div>
-          <div className="text-xs font-bold" style={{ color: data.today.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.today.thb)}</div>
-          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{data.today.calls} ครั้ง</div>
-        </div>
-        <div>
-          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>เมื่อวาน</div>
-          <div className="text-xs font-bold" style={{ color: data.yesterday.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.yesterday.thb)}</div>
-          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{data.yesterday.calls} ครั้ง</div>
-        </div>
-        <div>
-          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>7 วัน</div>
-          <div className="text-xs font-bold" style={{ color: data.week.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.week.thb)}</div>
-        </div>
-        <div>
-          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>เดือนนี้</div>
-          <div className="text-xs font-bold" style={{ color: data.month.thb === 0 ? "#4ade80" : "#fbbf24" }}>{fmt(data.month.thb)}</div>
-          <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{(data.month.tokens || 0).toLocaleString()} tokens</div>
-        </div>
-      </div>
-      {/* Free Models List */}
-      {showModels && models && (
-        <div className="mt-2 pt-2 border-t space-y-0.5" style={{ borderColor: "var(--border)" }}>
-          <div className="text-[9px] mb-1.5 flex items-center justify-between" style={{ color: "var(--text-muted)" }}>
-            <span>🔍 ค้นพบ {models.lastDiscovery ? new Date(models.lastDiscovery).toLocaleTimeString("th-TH") : ""}</span>
-            <span>ทุก 1 ชม.</span>
-          </div>
-          {/* Header */}
-          <div className="flex items-center gap-1 text-[8px] mb-0.5 pb-0.5 border-b" style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
-            <span className="w-2"></span>
-            <span className="flex-1">Provider / Model</span>
-            <span className="w-10 text-right">สถานะ</span>
-          </div>
-          {models.models.map((m) => {
-            const shortName = "OR-" + m.id.split("/").pop()?.substring(0, 15);
-            const cd = models.cooldowns?.[shortName];
-            const isCooling = cd && cd.remainSec > 0;
-            const provider = m.id.split("/")[0];
-            const model = m.id.split("/")[1]?.replace(":free", "") || m.id;
-            return (
-              <div key={m.id} className="flex items-center gap-1" title={m.id}>
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-green-500"}`}></span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[9px] truncate" style={{ color: isCooling ? "var(--text-muted)" : "var(--text-secondary)" }}>
-                    {model}
-                  </div>
-                  <div className="text-[8px]" style={{ color: "var(--text-muted)" }}>{provider}</div>
-                </div>
-                <span className="text-[8px] shrink-0 text-right w-10" style={{ color: isCooling ? "#f87171" : "#4ade80" }}>
-                  {isCooling ? `⏳${Math.ceil(cd.remainSec / 60)}m` : "✓ พร้อม"}
-                </span>
-              </div>
-            );
-          })}
-          {/* Dedicated providers */}
-          {models.dedicated?.map((d) => {
-            const cdKey = d.startsWith("SambaNova") ? "SambaNova" : "Gemini";
-            const cd = models.cooldowns?.[cdKey];
-            const isCooling = cd && cd.remainSec > 0;
-            return (
-              <div key={d} className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-blue-500"}`}></span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{d.split(" (")[0]}</div>
-                  <div className="text-[8px]" style={{ color: "var(--text-muted)" }}>dedicated</div>
-                </div>
-                <span className="text-[8px] shrink-0 text-right w-10" style={{ color: isCooling ? "#f87171" : "#60a5fa" }}>
-                  {isCooling ? `⏳${Math.ceil(cd.remainSec / 60)}m` : "✓ พร้อม"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+      {modelCount > 0 && <span className="text-[8px] px-1.5 py-0.5 rounded-full font-medium" style={{ color: "#4ade80", background: "rgba(74,222,128,0.08)" }}>{modelCount} AI ฟรี</span>}
+    </Link>
   );
 }
 
@@ -576,8 +505,8 @@ export default function Sidebar() {
             </div>
           </div>
 
-          {/* AI Cost */}
-          <AICostWidget />
+          {/* AI Cost — mini, กดไปหน้า costs */}
+          <AICostMini />
 
           {/* Navigation */}
           <NavWithBadges />
