@@ -305,11 +305,11 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
 
     // หยุดพักที่ waypoint — หันหน้าไปหาโต๊ะพนักงาน + เคาะหัว
     if (now < st.pauseUntil) {
-      // หันหน้าเข้าหาพนักงาน (smooth)
+      // หันหน้าเข้าหาพนักงาน (snap เร็ว)
       let angleDiff = st.targetAngleAtPause - st.facingAngle;
       if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
       if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-      st.facingAngle += angleDiff * 0.08;
+      st.facingAngle += angleDiff * 0.2;
       ref.current.position.set(st.x, 0.25, st.z);
       ref.current.rotation.y = st.facingAngle;
       return;
@@ -325,16 +325,21 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
       st.pauseUntil = now + 2 + Math.random() * 1.5; // หยุด 2-3.5 วินาที
       st.vx = 0; st.vz = 0;
       st.hammerSwing = 0;
-      // หันหน้าเข้าหาโต๊ะพนักงาน (ทิศตรงข้ามจาก offset)
+      // หันหน้าเข้าหาตัวน้องกุ้ง (ไม่ใช่โต๊ะ)
       const wp = waypoints[st.wpIdx];
       const agentIdx = agents.findIndex((a, i) => {
         const dp = deskPositions[i];
         if (!dp) return false;
-        return Math.abs(dp.pos[2] - wp[1]) < 1 && Math.abs(dp.pos[0] - wp[0]) < 2;
+        const isActive = a.status === "working" || a.status === "excited" || a.status === "running" || a.status === "alert";
+        return isActive && Math.abs(dp.pos[2] - wp[1]) < 1.5 && Math.abs(dp.pos[0] - wp[0]) < 2.5;
       });
       if (agentIdx >= 0) {
         const dp = deskPositions[agentIdx];
-        st.targetAngleAtPause = Math.atan2(dp.pos[0] - st.x, dp.pos[2] - st.z);
+        const shrimpZ = dp.facing === 0 ? dp.pos[2] + 0.3 : dp.pos[2] - 0.3;
+        // คำนวณมุมจาก CEO ไปหาตัวกุ้ง
+        const toX = dp.pos[0] - st.x;
+        const toZ = shrimpZ - st.z;
+        st.targetAngleAtPause = Math.atan2(toX, toZ);
       }
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
       // เปลี่ยนคำพูดทุก 2 waypoints
@@ -388,10 +393,14 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
       <mesh position={[0.3, 0.37, 0.08]}><sphereGeometry args={[0.08, 8, 8]} /><meshStandardMaterial color={lighter} /></mesh>
       {/* หาง */}
       <mesh position={[0, 0.2, -0.18]} rotation={[0.5, 0, 0]}><coneGeometry args={[0.09, 0.22, 8]} /><meshStandardMaterial color={color} /></mesh>
-      {/* ค้อนเคาะหัวพนักงาน 🔨 */}
-      <group ref={hammerRef} position={[0.35, 0.65, 0.1]}>
-        <mesh position={[0, 0.15, 0]}><cylinderGeometry args={[0.015, 0.015, 0.25, 6]} /><meshStandardMaterial color="#8B4513" roughness={0.8} /></mesh>
-        <mesh position={[0, 0.3, 0]} rotation={[0, 0, Math.PI / 2]}><boxGeometry args={[0.1, 0.06, 0.06]} /><meshStandardMaterial color="#666" metalness={0.6} roughness={0.3} /></mesh>
+      {/* ค้อนเคาะหัวพนักงาน 🔨 — ใหญ่ เห็นชัด */}
+      <group ref={hammerRef} position={[0.32, 0.7, 0.15]}>
+        {/* ด้ามค้อน */}
+        <mesh position={[0, 0.12, 0]}><cylinderGeometry args={[0.025, 0.02, 0.35, 6]} /><meshStandardMaterial color="#8B4513" roughness={0.7} /></mesh>
+        {/* หัวค้อน */}
+        <mesh position={[0, 0.32, 0]} rotation={[0, 0, Math.PI / 2]}><boxGeometry args={[0.15, 0.08, 0.08]} /><meshStandardMaterial color="#cc3333" metalness={0.5} roughness={0.3} /></mesh>
+        {/* หน้าค้อน สีเงิน */}
+        <mesh position={[0.08, 0.32, 0]} rotation={[0, 0, Math.PI / 2]}><boxGeometry args={[0.15, 0.03, 0.08]} /><meshStandardMaterial color="#aaa" metalness={0.8} roughness={0.2} /></mesh>
       </group>
       {/* มงกุฎ 👑 */}
       <mesh position={[0, 0.96, 0.03]}><coneGeometry args={[0.08, 0.12, 5]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.5} metalness={0.8} /></mesh>
