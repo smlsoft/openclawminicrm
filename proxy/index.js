@@ -3425,20 +3425,15 @@ app.get("/api/ceo-quotes", async (req, res) => {
 
   try {
     const result = await callLightAI([
-      { role: "system", content: "คุณเป็น comedy writer สร้างบทสนทนาตลกๆ ภาษาไทย ตอบเป็น JSON เท่านั้น" },
-      { role: "user", content: `สร้างบทสนทนาสั้นๆ ตลกๆ น่ารัก 20 คู่ สำหรับออฟฟิศกุ้ง:
-- CEO (ผู้ชาย) ถามหรือสั่งงาน → พนักงาน (หญิง/ชาย) ตอบหรือเถียงกลับ
-- แต่ละคู่ต้องสัมพันธ์กัน (ถาม-ตอบ ตรงประเด็น)
-- สั้นๆ 5-12 คำต่อประโยค
-- เน้นตลก น่ารัก เรื่องในออฟฟิศ (ขาย ลูกค้า แมว กาแฟ โดนัท เงินเดือน)
-
-ตอบ JSON: {"ceo":["คำถาม1","คำถาม2"...],"employee":["คำตอบ1","คำตอบ2"...]}
-ceo[0] ต้องจับคู่กับ employee[0] เสมอ` },
-    ], { json: true, maxTokens: 1000 });
+      { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
+      { role: "user", content: `สร้าง 15 คู่สนทนา CEO กับพนักงาน ภาษาไทย ตลก แซว สั้นๆ 3-8 คำ
+{"ceo":["ถาม1","ถาม2",...],"employee":["ตอบ1","ตอบ2",...]}
+ceo[i] คู่กับ employee[i]` },
+    ], { json: true, maxTokens: 1500, timeout: 20000 });
 
     if (result) {
       const parsed = JSON.parse(result);
-      if (parsed.ceo?.length > 5 && parsed.employee?.length > 5) {
+      if (parsed.ceo?.length > 3 && parsed.employee?.length > 3) {
         ceoQuotesCache = { ceo: parsed.ceo, employee: parsed.employee, updatedAt: now };
         console.log(`[CEO-Quotes] AI สร้างใหม่: ${parsed.ceo.length} คู่สนทนา`);
         return res.json(ceoQuotesCache);
