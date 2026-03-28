@@ -1,4 +1,13 @@
-# Deploy OpenClaw Mini CRM บน Hetzner VPS
+# Deploy OpenClaw Mini CRM บน Hetzner VPS (เลิกใช้แล้ว)
+
+> **หมายเหตุ:** ย้ายไป **DigitalOcean + Caddy** แล้ว ตั้งแต่ 2026-03-26
+> ดูคู่มือใหม่ที่ [DEPLOY-DIGITALOCEAN.md](DEPLOY-DIGITALOCEAN.md)
+>
+> เอกสารด้านล่างเก็บไว้เป็น reference เท่านั้น
+
+---
+
+# (Legacy) Deploy OpenClaw Mini CRM บน Hetzner VPS
 
 ## สเปค VPS แนะนำ
 

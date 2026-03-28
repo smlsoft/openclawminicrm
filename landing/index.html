@@ -1027,6 +1027,12 @@
         </div>
         <p class="text-[11px] text-gray-600">Open Source เพื่อการศึกษา — Fork &amp; Build</p>
       </div>
+      <div class="mt-4 pt-4 border-t border-white/[0.04] text-center">
+        <span id="visitor-counter" class="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
+          <span class="w-1.5 h-1.5 bg-green-500/60 rounded-full animate-pulse"></span>
+          <span id="visitor-text">กำลังโหลด...</span>
+        </span>
+      </div>
     </div>
   </footer>
 
@@ -1050,6 +1056,41 @@
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+  <!-- Visitor counter -->
+  <script>
+    (function() {
+      var API = '/dashboard/api/visitor-count';
+      var KEY = 'openclaw_visited';
+      var fp = 'v_' + (navigator.userAgent + screen.width + screen.height + navigator.language).split('').reduce(function(a, b) { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+
+      function showCount(n) {
+        var el = document.getElementById('visitor-text');
+        if (el) el.textContent = '\u0E1C\u0E39\u0E49\u0E40\u0E02\u0E49\u0E32\u0E0A\u0E21 ' + n.toLocaleString() + ' \u0E04\u0E19';
+      }
+
+      if (!localStorage.getItem(KEY)) {
+        fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fingerprint: fp })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          localStorage.setItem(KEY, '1');
+          showCount(d.count || 0);
+        })
+        .catch(function() {
+          fetch(API).then(function(r) { return r.json(); }).then(function(d) { showCount(d.count || 0); }).catch(function() { showCount(0); });
+        });
+      } else {
+        fetch(API)
+          .then(function(r) { return r.json(); })
+          .then(function(d) { showCount(d.count || 0); })
+          .catch(function() { showCount(0); });
+      }
+    })();
   </script>
 
 </body>
