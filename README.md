@@ -105,9 +105,10 @@
 | ตัวเสียเงินใช้ได้ | 5 นาที (ให้ตัวฟรีลองก่อน) |
 | Timeout | 10 นาที |
 
-### AI Cost Tracking
+### AI Cost Tracking + AI Score
 - Sidebar แสดงค่า AI **1 บรรทัด** (เดือนนี้ + จำนวน AI ฟรี) กดไปหน้า `/costs` ดูรายละเอียด
 - หน้า `/costs` แสดงครบ: **วันนี้ / เมื่อวาน / 7 วัน / เดือนนี้** + provider + model + cooldown
+- **AI Score Board** 🏆 --- เก็บคะแนน AI ว่าตัวไหนเก่งงานอะไร (JSON/แชท/ภาพ) เลือก AI เหมาะกับงานอัตโนมัติ
 - Sidebar: **Collapsible menu groups** --- auto-collapse ที่ไม่ active ลดเมนูล้นจอ
 
 ---
