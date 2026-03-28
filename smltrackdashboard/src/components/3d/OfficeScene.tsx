@@ -27,6 +27,7 @@ async function fetchCeoPlan() {
     if (d && typeof d === "object" && Object.keys(d).length > 0) {
       ceoPlan = d;
       lastPlanFetch = Date.now();
+      usedPlanKeys.clear(); // plan ใหม่มา → reset ให้ CEO ถามใหม่ได้
     }
   } catch { /* keep existing */ }
 }
@@ -37,12 +38,21 @@ if (typeof window !== "undefined") {
   setInterval(fetchCeoPlan, 60000);
 }
 
+const usedPlanKeys = new Set<string>(); // เก็บชื่อที่ CEO ถามแล้ว
+
 function getCeoPlanFor(agentName: string): [string, string] | null {
-  // ตัดชื่อให้ตรง — เช่น "น้องกุ้งแก้ว" → "แก้ว"
   const shortName = agentName.replace("น้องกุ้ง", "");
+  const key = shortName || agentName;
+  // ข้ามถ้าถามแล้ว
+  if (usedPlanKeys.has(key)) return null;
   const pair = ceoPlan[shortName] || ceoPlan[agentName];
   if (pair?.ceo && pair?.emp) return [pair.ceo, pair.emp];
   return null;
+}
+
+function markPlanUsed(agentName: string) {
+  const shortName = agentName.replace("น้องกุ้ง", "");
+  usedPlanKeys.add(shortName || agentName);
 }
 
 // Edge TTS (Neural voice) → fallback Web Speech API
@@ -83,8 +93,9 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
 
   // ดึงจากแผนที่วางไว้ล่วงหน้า — ไม่ต้องรอ API (instant!)
   const pair = getCeoPlanFor(agentName);
-  if (!pair) return; // ไม่มีข้อมูล → ข้ามเลย
+  if (!pair) return; // ไม่มีข้อมูล หรือถามแล้ว → ข้ามเลย
   const [ceoQ, empA] = pair;
+  markPlanUsed(agentName); // mark ว่าถามแล้ว ไม่ถามซ้ำ
 
   ttsBusy = true;
   ttsBusySince = Date.now();
