@@ -714,22 +714,40 @@ function StarBoard({ position, agents }: { position: [number, number, number]; a
   );
 }
 
-// ─── ป้าย LED ยอดขาย 📊 ───
+// ─── ป้าย LED ยอดขาย 📊 (ดึงจริงจาก API) ───
 function SalesBoard({ position }: { position: [number, number, number] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFrame((s) => {
-    if (!ref.current) return;
-    const n = Math.floor(1234 + Math.sin(s.clock.elapsedTime * 0.1) * 100);
-    ref.current.textContent = `฿${n.toLocaleString()}`;
+  const [sales, setSales] = useState({ today: 0, yesterday: 0, month: 0 });
+  const [show, setShow] = useState(0); // วนแสดง 3 ค่า
+
+  // ดึงยอดจริงทุก 60 วิ
+  useState(() => {
+    const load = () => fetch("/dashboard/api/revenue").then(r => r.json()).then(d => {
+      setSales({ today: d.today?.total || 0, yesterday: d.yesterday?.total || 0, month: d.month?.total || 0 });
+    }).catch(() => {});
+    load();
+    const t = setInterval(load, 60000);
+    return () => clearInterval(t);
   });
+
+  // วนแสดง วันนี้ → เมื่อวาน → เดือน ทุก 5 วิ
+  useState(() => {
+    const t = setInterval(() => setShow(s => (s + 1) % 3), 5000);
+    return () => clearInterval(t);
+  });
+
+  const labels = ["ยอดขายวันนี้", "ยอดเมื่อวาน", "ยอดเดือนนี้"];
+  const values = [sales.today, sales.yesterday, sales.month];
+
   return (
     <group position={position}>
       <mesh castShadow><boxGeometry args={[1.2, 0.6, 0.05]} /><meshStandardMaterial color="#0a0a0a" /></mesh>
       <mesh position={[0, 0, 0.03]}><boxGeometry args={[1.25, 0.65, 0.02]} /><meshStandardMaterial color="#333" /></mesh>
       <Html position={[0, 0, 0.05]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
-        <div style={{ textAlign: "center", fontFamily: "monospace", width: 120 }}>
-          <div style={{ fontSize: 7, color: "#4ade80" }}>📊 ยอดขายวันนี้</div>
-          <div ref={ref} style={{ fontSize: 18, color: "#4ade80", fontWeight: 900, textShadow: "0 0 10px rgba(74,222,128,0.5)" }}>฿1,234</div>
+        <div style={{ textAlign: "center", fontFamily: "monospace", width: 130 }}>
+          <div style={{ fontSize: 7, color: "#4ade80" }}>📊 {labels[show]}</div>
+          <div style={{ fontSize: 18, color: "#4ade80", fontWeight: 900, textShadow: "0 0 10px rgba(74,222,128,0.5)" }}>
+            ฿{values[show].toLocaleString()}
+          </div>
         </div>
       </Html>
       <pointLight position={[0, 0, 0.2]} intensity={0.2} color="#4ade80" distance={2} />
