@@ -9,7 +9,7 @@ interface Agent { id: number; name: string; role: string; emoji: string; color: 
 interface Props { agents: Agent[]; }
 
 // ─── Shrimp (กุ้งน่ารัก) ───
-function Shrimp({ agent, position }: { agent: Agent; position: [number, number, number]; }) {
+function Shrimp({ agent, position, rotationY = 0 }: { agent: Agent; position: [number, number, number]; rotationY?: number; }) {
   const ref = useRef<THREE.Group>(null!);
   const seed = agent.id * 1.7;
   const color = useMemo(() => new THREE.Color(agent.color), [agent.color]);
@@ -30,7 +30,7 @@ function Shrimp({ agent, position }: { agent: Agent; position: [number, number, 
   });
 
   return (
-    <group ref={ref} position={position}>
+    <group ref={ref} position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 0.35, 0]} castShadow><sphereGeometry args={[0.22, 16, 16]} /><meshStandardMaterial color={color} roughness={0.3} /></mesh>
       <mesh position={[0, 0.65, 0.03]} castShadow><sphereGeometry args={[0.18, 16, 16]} /><meshStandardMaterial color={color} roughness={0.3} /></mesh>
       <mesh position={[-0.06, 0.69, 0.16]}><sphereGeometry args={[0.04, 8, 8]} /><meshStandardMaterial color="white" /></mesh>
@@ -271,7 +271,7 @@ function OfficeLayout({ agents }: Props) {
         return (
           <group key={agent.id}>
             <DeskUnit position={dp.pos} color={agent.color} facing={dp.facing} />
-            <Shrimp agent={agent} position={[dp.pos[0], 0.25, shrimpZ]} />
+            <Shrimp agent={agent} position={[dp.pos[0], 0.25, shrimpZ]} rotationY={dp.facing === 0 ? Math.PI : 0} />
             {isActive && <SpeechBalloon agent={agent} position={[dp.pos[0], 0, shrimpZ]} />}
           </group>
         );
