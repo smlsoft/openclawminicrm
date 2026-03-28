@@ -3488,8 +3488,9 @@ ${workSummary}
       }),
     });
     const d = await r.json();
+    if (d.error) console.log(`[CEO-Review] SambaNova error:`, JSON.stringify(d.error).substring(0, 200));
     const result = d.choices?.[0]?.message?.content;
-    console.log(`[CEO-Review] ${agentName}: AI result=${result ? result.substring(0, 100) : "null"}`);
+    console.log(`[CEO-Review] ${agentName}: AI result=${result ? result.substring(0, 100) : "null"}, status=${r.status}`);
     if (result) {
       trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
         inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
