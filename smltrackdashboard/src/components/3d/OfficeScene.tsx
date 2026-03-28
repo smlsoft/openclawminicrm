@@ -285,16 +285,33 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
     "ดีใจที่มีทีมแบบนี้ 🥰", "อย่าลืม follow up!", "สู้ๆ น้องกุ้ง! 💪",
     "ประชุม 5 นาทีนะ", "KPI เดือนนี้โอเคมั้ย?", "ขยันดี ชอบๆ ✨",
   ], []);
-  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0 });
+  const hammerRef = useRef<THREE.Group>(null!);
+  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0 });
 
   useFrame((s, delta) => {
     if (!ref.current) return;
     const st = state.current;
     const now = s.clock.elapsedTime;
 
-    // หยุดพักที่ waypoint 2 วินาที (สังเกตงาน)
+    // ค้อนแกว่ง
+    if (hammerRef.current) {
+      if (now < st.pauseUntil) {
+        st.hammerSwing += delta * 8;
+        hammerRef.current.rotation.z = Math.sin(st.hammerSwing) * 0.6; // เคาะ!
+      } else {
+        hammerRef.current.rotation.z = 0; // เก็บค้อน
+      }
+    }
+
+    // หยุดพักที่ waypoint — หันหน้าไปหาโต๊ะพนักงาน + เคาะหัว
     if (now < st.pauseUntil) {
+      // หันหน้าเข้าหาพนักงาน (smooth)
+      let angleDiff = st.targetAngleAtPause - st.facingAngle;
+      if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      st.facingAngle += angleDiff * 0.08;
       ref.current.position.set(st.x, 0.25, st.z);
+      ref.current.rotation.y = st.facingAngle;
       return;
     }
 
@@ -303,13 +320,25 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
     const dz = target[1] - st.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
 
-    // ถึง waypoint → หยุดดู 2 วิ → ไปต่อ
+    // ถึง waypoint → หยุดดู + เคาะหัว → ไปต่อ
     if (dist < 0.15) {
-      st.pauseUntil = now + 1.5 + Math.random() * 1.5; // หยุด 1.5-3 วินาที
-      st.wpIdx = (st.wpIdx + 1) % waypoints.length;
+      st.pauseUntil = now + 2 + Math.random() * 1.5; // หยุด 2-3.5 วินาที
       st.vx = 0; st.vz = 0;
-      // เปลี่ยนคำพูดทุก 3 waypoints
-      if (st.wpIdx % 3 === 0) {
+      st.hammerSwing = 0;
+      // หันหน้าเข้าหาโต๊ะพนักงาน (ทิศตรงข้ามจาก offset)
+      const wp = waypoints[st.wpIdx];
+      const agentIdx = agents.findIndex((a, i) => {
+        const dp = deskPositions[i];
+        if (!dp) return false;
+        return Math.abs(dp.pos[2] - wp[1]) < 1 && Math.abs(dp.pos[0] - wp[0]) < 2;
+      });
+      if (agentIdx >= 0) {
+        const dp = deskPositions[agentIdx];
+        st.targetAngleAtPause = Math.atan2(dp.pos[0] - st.x, dp.pos[2] - st.z);
+      }
+      st.wpIdx = (st.wpIdx + 1) % waypoints.length;
+      // เปลี่ยนคำพูดทุก 2 waypoints
+      if (st.wpIdx % 2 === 0) {
         st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
         st.quoteTime = now;
       }
@@ -359,6 +388,11 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
       <mesh position={[0.3, 0.37, 0.08]}><sphereGeometry args={[0.08, 8, 8]} /><meshStandardMaterial color={lighter} /></mesh>
       {/* หาง */}
       <mesh position={[0, 0.2, -0.18]} rotation={[0.5, 0, 0]}><coneGeometry args={[0.09, 0.22, 8]} /><meshStandardMaterial color={color} /></mesh>
+      {/* ค้อนเคาะหัวพนักงาน 🔨 */}
+      <group ref={hammerRef} position={[0.35, 0.65, 0.1]}>
+        <mesh position={[0, 0.15, 0]}><cylinderGeometry args={[0.015, 0.015, 0.25, 6]} /><meshStandardMaterial color="#8B4513" roughness={0.8} /></mesh>
+        <mesh position={[0, 0.3, 0]} rotation={[0, 0, Math.PI / 2]}><boxGeometry args={[0.1, 0.06, 0.06]} /><meshStandardMaterial color="#666" metalness={0.6} roughness={0.3} /></mesh>
+      </group>
       {/* มงกุฎ 👑 */}
       <mesh position={[0, 0.96, 0.03]}><coneGeometry args={[0.08, 0.12, 5]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.5} metalness={0.8} /></mesh>
       <mesh position={[-0.06, 0.93, 0.03]}><coneGeometry args={[0.04, 0.08, 4]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.3} metalness={0.8} /></mesh>
