@@ -80,6 +80,38 @@ if (typeof window !== "undefined") {
   window.addEventListener("click", unlock, { once: true });
 }
 
+// ─── นิทานสั้น — CEO ว่างเล่าให้พนักงานฟัง ───
+let ceoStories: string[] = [];
+let lastStoryFetch = 0;
+let storyIdx = 0;
+
+async function fetchCeoStories() {
+  if (typeof window === "undefined") return;
+  if (Date.now() - lastStoryFetch < 300000 && ceoStories.length > 0) return; // ดึงทุก 5 นาที
+  try {
+    const r = await fetch("/dashboard/api/ceo-review?" + new URLSearchParams({ story: "1" }));
+    const d = await r.json();
+    if (d.stories && Array.isArray(d.stories) && d.stories.length > 0) {
+      ceoStories = d.stories;
+      lastStoryFetch = Date.now();
+      storyIdx = 0;
+    }
+  } catch { /* keep existing */ }
+}
+
+function getNextStory(): string | null {
+  if (ceoStories.length === 0) return null;
+  const s = ceoStories[storyIdx % ceoStories.length];
+  storyIdx++;
+  return s;
+}
+
+// โหลดนิทานเริ่มต้น
+if (typeof window !== "undefined") {
+  setTimeout(fetchCeoStories, 5000); // รอ 5 วิ หลังโหลดหน้า
+  setInterval(fetchCeoStories, 300000);
+}
+
 // Edge TTS (Neural voice) → fallback Web Speech API
 async function edgeTTS(text: string, voice: string, speed: number): Promise<boolean> {
   try {
@@ -133,25 +165,36 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   checkTTSStuck();
   if (!enabled || ttsBusy) return;
 
-  // ดึงจากแผนที่วางไว้ล่วงหน้า — ไม่ต้องรอ API (instant!)
+  // ดึงจากแผนที่วางไว้ล่วงหน้า
   const pair = getCeoPlanFor(agentName);
-  if (!pair) return; // ไม่มีข้อมูล หรือถามแล้ว → ข้ามเลย
-  const [ceoQ, empA] = pair;
-  markPlanUsed(agentName); // mark ว่าถามแล้ว ไม่ถามซ้ำ
 
   ttsBusy = true;
   ttsBusySince = Date.now();
   try {
+    if (pair) {
+      // มี plan → ถามพนักงาน
+      const [ceoQ, empA] = pair;
+      markPlanUsed(agentName);
 
-    // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
-    const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
-    const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
-    if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
+      const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
+      const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
+      if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
 
-    // 70% พนักงานตอบ — เสียงหญิง สูง (Premwadee) speed 1.0
-    if (enabled && Math.random() < 0.7) {
-      const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
-      if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
+      // 70% พนักงานตอบ
+      if (enabled && Math.random() < 0.7) {
+        const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
+        if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
+      }
+    } else {
+      // ว่าง → เล่านิทานสั้น (30% โอกาส ไม่เล่าทุกครั้ง)
+      if (Math.random() < 0.3) {
+        const story = getNextStory();
+        if (story) {
+          const text = agentName ? `${agentName} ฟังนะ... ${story}` : story;
+          const ok = await edgeTTS(text, "th-TH-NiwatNeural", 0.9);
+          if (!ok) await webSpeechFallback(text, 0.5, 0.85);
+        }
+      }
     }
   } catch (e) {
     // ป้องกัน ttsBusy ค้าง

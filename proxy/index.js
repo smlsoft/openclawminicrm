@@ -3558,6 +3558,63 @@ ${agentList}
   }
 }
 
+// ─── CEO Stories — นิทานสั้นเล่าให้พนักงานฟังตอนว่าง ───
+let ceoStoriesCache = { stories: [], ts: 0 };
+
+app.get("/api/ceo-stories", async (req, res) => {
+  // cache 5 นาที
+  if (ceoStoriesCache.ts > 0 && Date.now() - ceoStoriesCache.ts < 300000 && ceoStoriesCache.stories.length > 0) {
+    return res.json({ stories: ceoStoriesCache.stories });
+  }
+
+  const prompt = `สร้างนิทานสั้นมากๆ 5 เรื่อง ภาษาไทยล้วน เรื่องละ 1-2 ประโยค (20-40 คำ)
+เนื้อหาเกี่ยวกับ: ออฟฟิศ ทำงาน ลูกค้า แมว กาแฟ บอส พนักงาน ขาย
+ตลก สนุก มีข้อคิด
+ตอบ JSON: {"stories":["เรื่อง1","เรื่อง2",...]}`;
+
+  const msgs = [
+    { role: "system", content: "ตอบ JSON เท่านั้น ภาษาไทยล้วน 100%" },
+    { role: "user", content: prompt },
+  ];
+
+  let result = null;
+  const sambaKey = process.env.SAMBANOVA_API_KEY;
+  if (sambaKey) {
+    try {
+      const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+        method: "POST", signal: AbortSignal.timeout(15000),
+        headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "Qwen3-235B", messages: msgs, max_tokens: 500, response_format: { type: "json_object" } }),
+      });
+      const d = await r.json();
+      if (d.choices?.[0]?.message?.content) {
+        result = d.choices[0].message.content;
+        trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-stories",
+          inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
+      }
+    } catch { /* timeout */ }
+  }
+  if (!result) {
+    try { result = await callLightAI(msgs, { json: true, maxTokens: 500, timeout: 15000 }); } catch { /* silent */ }
+  }
+
+  if (result) {
+    try {
+      const parsed = JSON.parse(result);
+      if (parsed.stories?.length > 0) {
+        // filter: ภาษาไทยล้วน + ยาวพอ
+        const good = parsed.stories.filter(s => s.length >= 10 && !/[a-zA-Z]{3,}/.test(s));
+        if (good.length > 0) {
+          ceoStoriesCache = { stories: good, ts: Date.now() };
+          console.log(`[CEO-Stories] ✅ สร้าง ${good.length} เรื่อง`);
+          return res.json({ stories: good });
+        }
+      }
+    } catch { /* parse fail */ }
+  }
+  res.json({ stories: [] });
+});
+
 // Batch: วางแผนบทสนทนา — แบ่ง batch ละ 5 ตัว (ป้องกัน JSON ถูกตัด)
 app.get("/api/ceo-plan", async (req, res) => {
   // ใช้ cache ถ้ายังไม่หมดอายุ
