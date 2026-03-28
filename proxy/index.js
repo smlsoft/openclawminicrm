@@ -2224,9 +2224,9 @@ async function analyzeImage(imageBuffer) {
     } catch (e) { console.log("[Vision] OpenRouter:", e.message); }
   }
 
-  // 2. Groq vision fallback
+  // 2. Groq vision fallback (เสียเงิน — ต้องเปิด PAID_AI_ENABLED)
   const groqKey = process.env.GROQ_API_KEY;
-  if (groqKey) {
+  if (groqKey && PAID_AI) {
     try {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
