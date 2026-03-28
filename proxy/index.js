@@ -3470,16 +3470,18 @@ app.get("/api/ai-scores", async (req, res) => {
 
 // Helper: เรียก AI สร้าง 1 batch (max 5 ตัว)
 async function generateCeoBatch(agents) {
-  const agentList = agents.map(a => `- ${a.name}: ${a.summary}`).join("\n");
-  const prompt = `บอส CEO เดินตรวจออฟฟิศ พบพนักงานแต่ละคน:
+  const validNames = agents.map(a => a.name);
+  const agentList = agents.map(a => `- "${a.name}": ${a.summary}`).join("\n");
+  const exampleKey = validNames[0];
+  const prompt = `บอส CEO ถามพนักงาน ภาษาไทยล้วน:
 ${agentList}
 
-กฎสำคัญ:
-- ภาษาไทยล้วน 100% ห้ามมีคำอังกฤษ (เช่น token ให้เขียนว่า โทเค็น)
-- CEO ถามเรื่องผลงาน/event จริง ห้ามถามกว้างๆ
-- พนักงานเถียงกลับตลกๆ แซวบอส
-- สั้น 8-20 คำ ห้ามซ้ำ
-- ตัวอย่าง: {"แก้ว":{"ceo":"แก้ว ลูกค้าร้องเรียนเรื่องส่งช้า จัดการยังไงแล้ว?","emp":"จัดการแล้วค่ะบอส แต่แมวมากินสลิปไปก่อน!"}}
+กฎ:
+1. key ต้องเป็นชื่อที่ให้เท่านั้น: ${validNames.map(n => `"${n}"`).join(", ")}
+2. ภาษาไทย 100% ห้ามอังกฤษ
+3. CEO ถามเรื่องงานจริง 8-20 คำ
+4. พนักงานเถียงตลก 8-20 คำ
+ตัวอย่าง: {"${exampleKey}":{"ceo":"${exampleKey} ลูกค้าร้องเรียน จัดการยังไงแล้ว?","emp":"จัดการแล้วค่ะ แต่แมวมากินสลิปไป!"}}
 ตอบ JSON:`;
 
   const msgs = [
@@ -3522,9 +3524,13 @@ ${agentList}
     const parsed = JSON.parse(result);
     const plan = {};
     for (const [name, pair] of Object.entries(parsed)) {
+      // ข้ามถ้า key ไม่ใช่ชื่อกุ้งจริง
+      if (!validNames.includes(name)) continue;
       if (!pair || !pair.ceo || !pair.emp) continue;
       if (pair.ceo.length < 5 || pair.emp.length < 5) continue;
       if (pair.ceo === "ถาม" || pair.emp === "ตอบ") continue;
+      // ข้ามถ้ามีภาษาอังกฤษยาว (3+ ตัว)
+      if (/[a-zA-Z]{3,}/.test(pair.ceo + pair.emp)) continue;
       plan[name] = pair;
     }
     const good = Object.keys(plan).length;
@@ -3603,8 +3609,12 @@ app.get("/api/ceo-plan", async (req, res) => {
     for (const r of results) Object.assign(plan, r);
 
     if (Object.keys(plan).length > 0) {
-      // Merge กับ cache เก่า (เพิ่มตัวใหม่ ไม่ทับตัวเก่าที่ยังใช้ได้)
-      const merged = { ...ceoPlanCache.plan, ...plan };
+      // Merge กับ cache เก่า — เก็บเฉพาะ key ที่เป็นชื่อกุ้งจริง
+      const oldClean = {};
+      for (const [k, v] of Object.entries(ceoPlanCache.plan)) {
+        if (KUNG_NAMES.includes(k)) oldClean[k] = v;
+      }
+      const merged = { ...oldClean, ...plan };
       ceoPlanCache = { plan: merged, ts: Date.now() };
       console.log(`[CEO-Plan] ✅ วางแผน ${Object.keys(plan).length} ใหม่ (รวม ${Object.keys(merged).length} ตัว)`);
       return res.json(merged);
