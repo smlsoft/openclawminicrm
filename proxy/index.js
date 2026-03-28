@@ -555,9 +555,15 @@ async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 
           inputTokens: data.usage?.prompt_tokens || 0,
           outputTokens: data.usage?.completion_tokens || 0,
         });
+        // ถ้าเป็นตัวเสียเงิน → cooldown 5 นาที เพื่อให้รอบถัดไปลองตัวฟรีก่อน
+        const pricing = AI_PRICING[p.name];
+        if (pricing && (pricing.input > 0 || pricing.output > 0)) {
+          lightAICooldown[p.name] = Date.now() + 300000; // 5 min
+          console.log(`[LightAI] ${p.name} ใช้ได้แต่เสียเงิน → cooldown 5m ให้ตัวฟรีลองก่อน`);
+        }
         return data.choices[0].message.content;
       }
-      // Rate limit → cooldown 5 นาที
+      // Rate limit → cooldown 30 นาที
       if (data.error) {
         const errMsg = data.error.message || "";
         if (errMsg.includes("rate") || errMsg.includes("limit") || errMsg.includes("429") || data.error.code === 429) {
@@ -1432,6 +1438,12 @@ async function callProvider(messages, tools) {
           inputTokens: usage.prompt_tokens || 0,
           outputTokens: usage.completion_tokens || 0,
         });
+        // ถ้าเป็นตัวเสียเงิน → cooldown 5 นาที เพื่อให้ตัวฟรีลองก่อนรอบถัดไป
+        const pricing = AI_PRICING[provider.name];
+        if (pricing && (pricing.input > 0 || pricing.output > 0)) {
+          providerCooldown[provider.name] = Date.now() + 300000; // 5 min
+          console.log(`[AI] 💰 ${provider.name} เสียเงิน → cooldown 5m ให้ตัวฟรีลองก่อน`);
+        }
         return {
           provider: provider.name,
           model: provider.model,
