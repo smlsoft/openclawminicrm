@@ -706,6 +706,178 @@ function StarBoard({ position, agents }: { position: [number, number, number]; a
   );
 }
 
+// ─── Holographic Alert Board 🚨 — Sci-Fi แจ้งเตือนเจ้าของกิจการ ───
+interface AlertItem { icon: string; title: string; detail: string; priority: string; time: string; agent: string; }
+
+let holoAlerts: AlertItem[] = [];
+let lastAlertFetch = 0;
+
+async function fetchHoloAlerts() {
+  if (typeof window === "undefined") return;
+  if (Date.now() - lastAlertFetch < 60000 && holoAlerts.length > 0) return;
+  try {
+    // ดึง advice (critical + warning) + alerts รวมกัน
+    const [advRes, alertRes] = await Promise.all([
+      fetch("/dashboard/api/advice?type=all&limit=5").then(r => r.json()).catch(() => []),
+      fetch("/dashboard/api/alerts?limit=5").then(r => r.json()).catch(() => ({ alerts: [] })),
+    ]);
+
+    const items: AlertItem[] = [];
+
+    // จาก advice — เฉพาะ critical + warning
+    for (const rec of (Array.isArray(advRes) ? advRes : [])) {
+      for (const a of (rec.advice || []).slice(0, 2)) {
+        if (a.priority === "critical" || a.priority === "warning" || a.priority === "opportunity") {
+          items.push({
+            icon: a.icon || "🦐",
+            title: a.title || "",
+            detail: (a.detail || "").slice(0, 60),
+            priority: a.priority,
+            time: rec.createdAt ? new Date(rec.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "",
+            agent: "น้องกุ้ง",
+          });
+        }
+      }
+    }
+
+    // จาก alerts
+    for (const al of (alertRes.alerts || [])) {
+      items.push({
+        icon: al.level === "red" ? "🚨" : "⚠️",
+        title: al.customerName || "ลูกค้า",
+        detail: (al.message || "").slice(0, 60),
+        priority: al.level === "red" ? "critical" : "warning",
+        time: al.createdAt ? new Date(al.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "",
+        agent: al.type === "human_handoff" ? "ขอคุยคน" : "ตอบช้า",
+      });
+    }
+
+    if (items.length > 0) {
+      holoAlerts = items.slice(0, 8);
+      lastAlertFetch = Date.now();
+    }
+  } catch { /* silent */ }
+}
+
+// โหลดทุก 1 นาที
+if (typeof window !== "undefined") { fetchHoloAlerts(); setInterval(fetchHoloAlerts, 60000); }
+
+function HoloAlertBoard({ position }: { position: [number, number, number] }) {
+  const groupRef = useRef<THREE.Group>(null!);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [pulse, setPulse] = useState(0);
+
+  // วนแสดง alert ทุก 6 วิ
+  useState(() => {
+    const t = setInterval(() => setCurrentIdx(i => holoAlerts.length > 0 ? (i + 1) % holoAlerts.length : 0), 6000);
+    return () => clearInterval(t);
+  });
+
+  // Holographic pulse animation
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    setPulse(p => p + delta * 2);
+    // ลอยขึ้นลงเบาๆ
+    groupRef.current.position.y = position[1] + Math.sin(pulse) * 0.05;
+  });
+
+  const alert = holoAlerts[currentIdx];
+  const hasCritical = holoAlerts.some(a => a.priority === "critical");
+  const glowColor = hasCritical ? "#ef4444" : "#22d3ee";
+  const bgColor = hasCritical ? "rgba(239,68,68,0.08)" : "rgba(34,211,238,0.08)";
+  const borderColor = hasCritical ? "rgba(239,68,68,0.4)" : "rgba(34,211,238,0.4)";
+
+  return (
+    <group ref={groupRef} position={position}>
+      {/* ฐาน holographic projector */}
+      <mesh position={[0, -0.8, 0]}>
+        <cylinderGeometry args={[0.15, 0.2, 0.1, 8]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* แสง project ขึ้น */}
+      <pointLight position={[0, 0, 0]} intensity={0.3} color={glowColor} distance={3} />
+
+      {/* Holographic display */}
+      <Html center distanceFactor={12}>
+        <div style={{
+          width: 220, minHeight: 100,
+          background: bgColor,
+          border: `1px solid ${borderColor}`,
+          borderRadius: 12,
+          padding: "10px 14px",
+          fontFamily: "Prompt,monospace,sans-serif",
+          backdropFilter: "blur(8px)",
+          boxShadow: `0 0 30px ${glowColor}40, inset 0 0 20px ${glowColor}10`,
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Scan line effect */}
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: 2,
+            background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)`,
+            animation: "scanline 3s linear infinite",
+            opacity: 0.6,
+          }} />
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{ fontSize: 9, color: glowColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
+              ⚡ ALERT SYSTEM
+            </div>
+            <div style={{ fontSize: 8, color: "#64748b" }}>
+              {holoAlerts.length > 0 ? `${currentIdx + 1}/${holoAlerts.length}` : "—"}
+            </div>
+          </div>
+
+          {alert ? (
+            <>
+              {/* Alert content */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>{alert.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: alert.priority === "critical" ? "#f87171" : alert.priority === "warning" ? "#fbbf24" : "#4ade80",
+                  }}>{alert.title}</div>
+                  <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2, lineHeight: 1.4 }}>{alert.detail}</div>
+                </div>
+              </div>
+              {/* Footer */}
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, paddingTop: 4, borderTop: `1px solid ${borderColor}` }}>
+                <span style={{ fontSize: 8, color: "#64748b" }}>🦐 {alert.agent}</span>
+                <span style={{ fontSize: 8, color: "#64748b" }}>{alert.time}</span>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+              <div style={{ fontSize: 20 }}>✅</div>
+              <div style={{ fontSize: 10, color: "#4ade80", marginTop: 4 }}>ไม่มีเรื่องด่วน</div>
+              <div style={{ fontSize: 8, color: "#64748b" }}>น้องกุ้งดูแลอยู่</div>
+            </div>
+          )}
+
+          {/* Priority bar */}
+          {holoAlerts.length > 1 && (
+            <div style={{ display: "flex", gap: 2, marginTop: 6, justifyContent: "center" }}>
+              {holoAlerts.map((a, i) => (
+                <div key={i} style={{
+                  width: i === currentIdx ? 12 : 4, height: 3, borderRadius: 2,
+                  background: a.priority === "critical" ? "#ef4444" : a.priority === "warning" ? "#f59e0b" : "#22d3ee",
+                  opacity: i === currentIdx ? 1 : 0.3,
+                  transition: "all 0.3s",
+                }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* CSS for scan line */}
+        <style>{`@keyframes scanline { 0% { transform: translateY(0); } 100% { transform: translateY(120px); } }`}</style>
+      </Html>
+    </group>
+  );
+}
+
 // ─── ป้าย LED ยอดขาย 📊 (ดึงจริงจาก API) ───
 function SalesBoard({ position }: { position: [number, number, number] }) {
   const [sales, setSales] = useState({ today: 0, yesterday: 0, month: 0 });
@@ -846,6 +1018,9 @@ function OfficeLayout({ agents, ttsEnabled }: Props) {
 
       {/* 📊 ป้าย LED ยอดขาย */}
       <SalesBoard position={[-6.5, 1.8, -4]} />
+
+      {/* 🚨 Holographic Alert Board — Sci-Fi แจ้งเตือน */}
+      <HoloAlertBoard position={[0, 2.5, -6]} />
 
       {/* ป้าย */}
       <Html position={[0, 3.5, -7]} center distanceFactor={15}>
