@@ -105,15 +105,15 @@ function SpeechBalloon({ agent, position }: { agent: Agent; position: [number, n
         <cylinderGeometry args={[0.005, 0.005, 0.25, 4]} />
         <meshStandardMaterial color="#aaa" transparent opacity={0.6} />
       </mesh>
-      {/* Text label on balloon — ตัวใหญ่ แสดงว่าคิดอะไร ทำอะไร */}
-      <Html center distanceFactor={4} style={{ pointerEvents: "none" }}>
+      {/* Text label on balloon — แนวกว้าง อ่านง่าย */}
+      <Html center distanceFactor={4} style={{ pointerEvents: "none", whiteSpace: "nowrap" }}>
         <div style={{
-          maxWidth: 200, textAlign: "center", fontFamily: "Prompt,sans-serif",
-          color: "#fff", lineHeight: 1.4,
-          textShadow: "0 2px 6px rgba(0,0,0,0.7)",
+          textAlign: "center", fontFamily: "Prompt,sans-serif",
+          color: "#fff", lineHeight: 1.3,
+          textShadow: "0 2px 6px rgba(0,0,0,0.8)",
         }}>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>{agent.emoji} {agent.name}</div>
-          <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.95, marginTop: 2, background: "rgba(0,0,0,0.35)", borderRadius: 8, padding: "3px 8px" }}>{agent.quote}</div>
+          <div style={{ fontSize: 12, fontWeight: 800 }}>{agent.emoji} {agent.name}</div>
+          <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.9, marginTop: 2, background: "rgba(0,0,0,0.4)", borderRadius: 6, padding: "2px 8px", whiteSpace: "nowrap" }}>{agent.quote}</div>
         </div>
       </Html>
     </group>
