@@ -73,10 +73,11 @@ function ActivityLog() {
     return () => clearInterval(interval);
   }, []);
 
-  // Show 4 recent log lines
-  const visibleLogs = Array.from({ length: 4 }, (_, i) => {
+  // Show 16 recent log lines
+  const count = 16;
+  const visibleLogs = Array.from({ length: count }, (_, i) => {
     const idx = (currentIdx - i + LOG_MESSAGES.length) % LOG_MESSAGES.length;
-    return { ...LOG_MESSAGES[idx], opacity: i === 0 ? 1 : 0.7 - i * 0.15 };
+    return { ...LOG_MESSAGES[idx], opacity: i === 0 ? 1 : Math.max(0.15, 1 - i * 0.055) };
   }).reverse();
 
   return (
@@ -86,8 +87,8 @@ function ActivityLog() {
           {visibleLogs.map((log, i) => (
             <div
               key={`${currentIdx}-${i}`}
-              className={`flex items-start gap-2 transition-all duration-300 ${i === visibleLogs.length - 1 && fade ? "opacity-100 translate-y-0" : i === visibleLogs.length - 1 && !fade ? "opacity-0 translate-y-2" : ""}`}
-              style={{ opacity: i === visibleLogs.length - 1 ? undefined : log.opacity }}
+              className={`flex items-start gap-2 transition-all duration-300 ${i === count - 1 && fade ? "opacity-100 translate-y-0" : i === count - 1 && !fade ? "opacity-0 translate-y-2" : ""}`}
+              style={{ opacity: i === count - 1 ? undefined : log.opacity }}
             >
               <span className="text-xs font-bold whitespace-nowrap" style={{ color: log.color, minWidth: 80 }}>
                 {log.agent}
