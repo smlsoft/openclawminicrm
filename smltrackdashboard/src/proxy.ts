@@ -18,6 +18,8 @@ export async function proxy(req: NextRequest) {
     "/api/rebuild",
     "/api/notifications",
     "/api/visitor-count",
+    "/api/tts",
+    "/api/ceo-quotes",
     "/_next",
     "/favicon.ico",
   ];

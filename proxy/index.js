@@ -3414,6 +3414,40 @@ app.get("/api/free-models", (req, res) => {
   });
 });
 
+// API: AI สร้างคำพูด CEO + พนักงาน (batch 20 ประโยค, cache 1 ชม.)
+let ceoQuotesCache = { ceo: [], employee: [], updatedAt: 0 };
+
+app.get("/api/ceo-quotes", async (req, res) => {
+  const now = Date.now();
+  if (ceoQuotesCache.updatedAt > 0 && now - ceoQuotesCache.updatedAt < 3600000 && ceoQuotesCache.ceo.length > 0) {
+    return res.json(ceoQuotesCache);
+  }
+
+  try {
+    const result = await callLightAI([
+      { role: "system", content: "คุณเป็น comedy writer สร้างคำพูดตลกๆ สำหรับออฟฟิศกุ้ง ตอบเป็น JSON เท่านั้น" },
+      { role: "user", content: `สร้างคำพูดสั้นๆ ตลกๆ น่ารัก ภาษาไทย สำหรับออฟฟิศที่มีน้องกุ้ง 13 ตัว + CEO กุ้ง:
+1. "ceo" — คำพูด CEO บ่น สั่งงาน ชม หรือขู่ พนักงาน 20 ประโยค (สั้นๆ 5-15 คำ)
+2. "employee" — คำเถียง CEO ของพนักงาน 20 ประโยค (สั้นๆ 5-15 คำ)
+
+ตอบ JSON: {"ceo":["..."],"employee":["..."]}` },
+    ], { json: true, maxTokens: 800 });
+
+    if (result) {
+      const parsed = JSON.parse(result);
+      if (parsed.ceo?.length > 5 && parsed.employee?.length > 5) {
+        ceoQuotesCache = { ceo: parsed.ceo, employee: parsed.employee, updatedAt: now };
+        console.log(`[CEO-Quotes] AI สร้างใหม่: ${parsed.ceo.length} CEO + ${parsed.employee.length} employee`);
+        return res.json(ceoQuotesCache);
+      }
+    }
+  } catch (e) {
+    console.log("[CEO-Quotes] AI error:", e.message);
+  }
+
+  res.json({ ceo: [], employee: [], updatedAt: 0 });
+});
+
 app.get("/api/costs", async (req, res) => {
   const database = await getDB();
   if (!database) return res.json({ today: {}, weekly: {}, daily: [] });

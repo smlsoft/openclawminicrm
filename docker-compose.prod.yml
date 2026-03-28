@@ -120,6 +120,19 @@ services:
           memory: 512M
           cpus: '0.5'
 
+  # === Edge TTS — เสียงไทย Neural ฟรี ===
+  edge-tts:
+    image: travisvn/openai-edge-tts:latest
+    container_name: smltrack-edge-tts
+    restart: always
+    environment:
+      - PORT=5050
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+
   # === Watchtower — Auto-update images ===
   watchtower:
     image: containrrr/watchtower:latest
