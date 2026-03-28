@@ -3424,12 +3424,32 @@ app.get("/api/ceo-quotes", async (req, res) => {
   }
 
   try {
-    const result = await callLightAI([
-      { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
-      { role: "user", content: `สร้าง 15 คู่สนทนา CEO กับพนักงาน ภาษาไทย ตลก แซว สั้นๆ 3-8 คำ
+    // ใช้ SambaNova ตรง (เร็ว ฟรี ไม่ต้องรอ OpenRouter)
+    const sambaKey = process.env.SAMBANOVA_API_KEY;
+    let result = null;
+    if (sambaKey) {
+      const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+        method: "POST", signal: AbortSignal.timeout(20000),
+        headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "Qwen3-235B",
+          messages: [
+            { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
+            { role: "user", content: `สร้าง 15 คู่สนทนาตลกๆ แซวกัน CEO กับพนักงาน ภาษาไทย สั้นๆ 3-10 คำ
 {"ceo":["ถาม1","ถาม2",...],"employee":["ตอบ1","ตอบ2",...]}
 ceo[i] คู่กับ employee[i]` },
-    ], { json: true, maxTokens: 1500, timeout: 20000 });
+          ],
+          max_tokens: 800,
+          response_format: { type: "json_object" },
+        }),
+      });
+      const d = await r.json();
+      result = d.choices?.[0]?.message?.content;
+      if (result) {
+        trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-quotes",
+          inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
+      }
+    }
 
     if (result) {
       // พยายาม parse — ถ้า JSON ถูกตัด ลอง repair
