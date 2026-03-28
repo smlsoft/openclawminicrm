@@ -2,10 +2,10 @@
 
 # OpenClaw Mini CRM
 
-### น้องกุ้ง 13 ตัว Multi AI Agent --- คุมทั้งระบบ 24/7
+### น้องกุ้ง 13 ตัว + CEO รวม 14 ตัว --- Multi AI Agent คุมทั้งระบบ 24/7
 
 **ระบบ CRM อัจฉริยะ Open Source --- ฟรี 100%**
-**LINE . Facebook . Instagram รวมจอเดียว | 30+ หน้าจอ | 65+ API | 13 AI Agents**
+**LINE . Facebook . Instagram รวมจอเดียว | 30+ หน้าจอ | 65+ API | 14 AI Agents**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](docker-compose.caddy.yml)
@@ -21,16 +21,17 @@
 
 ---
 
-> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram in a single dashboard with 30+ screens, 65+ APIs, and 13 autonomous AI agents ("น้องกุ้ง") running 24/7. Features include 3D virtual office, real-time activity log, AI chat analysis, RAG knowledge base, customer memory, churn prediction, payment slip detection, document classification, and more. Self-hosted on Docker Compose. Zero monthly cost.
+> **English:** OpenClaw Mini CRM is a free, open-source AI-powered CRM for Thai SMEs. It unifies LINE, Facebook, and Instagram in a single dashboard with 30+ screens, 65+ APIs, and 14 autonomous AI agents ("น้องกุ้ง" — shrimps) including a CEO that patrols the 3D virtual office. Features include real-time activity log, AI chat analysis, RAG knowledge base, customer memory, churn prediction, payment slip detection, document classification, auto-discover free AI models, cost tracking in Thai Baht, and more. Self-hosted on Docker Compose + Caddy + DigitalOcean. Zero monthly AI cost.
 
 ---
 
-## น้องกุ้ง 13 ตัว --- ทีม AI ที่ทำงานให้คุณ 24/7
+## น้องกุ้ง 14 ตัว --- ทีม AI ที่ทำงานให้คุณ 24/7
 
 น้องกุ้งเป็น **สมองกลางคุมทั้งระบบ** --- Admin แค่ตอบลูกค้า น้องกุ้งจัดการที่เหลือทั้งหมด
 
 | # | ชื่อ | บทบาท | ทำงาน |
 |---|------|--------|--------|
+| | **น้องกุ้ง CEO** | ผู้บริหาร เดินตรวจงาน | ตลอดเวลา --- มงกุฎทอง เดินวนทั้งออฟฟิศ ดูแลน้องกุ้งทุกตัว |
 | 1 | **น้องกุ้งแก้ว** | แก้ปัญหาลูกค้า | ทุก 1 ชม. --- วิเคราะห์ปัญหา หาต้นเหตุ 5 ทางออก |
 | 2 | **น้องกุ้งทองคำ** | หาโอกาสขาย | ทุก 1 ชม. --- หาลูกค้าพร้อมซื้อ กลยุทธ์ปิดการขาย |
 | 3 | **น้องกุ้งครูโค้ช** | โค้ชทีมงาน | ทุก 6 ชม. --- วิเคราะห์ทีม แผนพัฒนารายบุคคล |
@@ -53,16 +54,56 @@
 
 <div align="center">
 
-**`/kung-room`** --- ห้องทำงาน 3D ของน้องกุ้ง 13 ตัว
+**`/kung-room`** --- ห้องทำงาน 3D ของน้องกุ้ง 14 ตัว
 
 </div>
 
-- **3D Virtual Office** --- Three.js + React Three Fiber แสดงน้องกุ้งทั้ง 13 ตัวนั่งทำงาน
+- **3D Virtual Office** --- Three.js + React Three Fiber แสดงน้องกุ้ง 13 ตัวนั่งทำงานที่โต๊ะ
+- **น้องกุ้ง CEO เดินตรวจงาน** --- สวมมงกุฎทอง ตัวใหญ่ 1.3x สีทอง เดินวนทั้งออฟฟิศด้วย physics-based movement
+- **Speech Balloons** --- ลูกโป่งคำพูดลอยขึ้นจากหัวน้องกุ้ง แล้วแตกหายไป
 - **กุ้งกระโดด** เฉพาะตอนที่กำลังทำงาน (working/excited/running/alert)
-- **Speech Balloons** ลอยขึ้นจากหัวน้องกุ้ง --- แสดง quote สิ่งที่กำลังทำ
-- **Activity Log** real-time --- ดึงข้อมูลจาก MongoDB แสดงว่าน้องกุ้งตัวไหนทำอะไรอยู่
+- **Activity Log realtime** --- ดึงจาก MongoDB แสดงว่าน้องกุ้งตัวไหนทำอะไร วันเวลา จำนวน tokens ค่าใช้จ่ายเป็นบาท
 - **สถานะ 8 แบบ:** กำลังทำงาน / นอนหลับ / กำลังคิด / ตื่นเต้น / ห่วงใย / คิดถึง / วิ่งตาม / แจ้งเตือน
 - **เฟอร์นิเจอร์ครบ** --- โต๊ะ เก้าอี้ ต้นไม้ โต๊ะกาแฟ ตู้หนังสือ
+- **Login แล้วมาที่นี่เลย** --- Google OAuth login --> redirect ตรงเข้า kung-room
+
+---
+
+## ระบบ AI อัจฉริยะ
+
+### Auto-Discover Free Models
+- ค้นหา AI models ฟรีจาก **OpenRouter API ทุก 1 ชม.** อัตโนมัติ
+- ไม่ต้องตั้งค่าเอง --- ระบบหา model ฟรีให้เอง
+
+### AI Providers
+
+| ประเภท | Provider | หมายเหตุ |
+|--------|----------|----------|
+| **ฟรี** | OpenRouter (auto-discover 10+ free models) | AI หลัก --- Qwen3, Llama, DeepSeek, Nemotron, StepFlash ฯลฯ |
+| **ฟรี** | SambaNova | dedicated fallback |
+| **ฟรี** | Gemini | embedding + vision + fallback |
+| **เสียเงิน (optional)** | Groq | ต้องเปิด `PAID_AI_ENABLED=true` |
+| **เสียเงิน (optional)** | Cerebras | ต้องเปิด `PAID_AI_ENABLED=true` |
+
+> **`PAID_AI_ENABLED`** --- ปิดตัวเสียเงินโดย default ตั้ง `true` ใน .env ถ้าต้องการใช้ Groq/Cerebras
+
+### Cooldown อัตโนมัติ
+
+ระบบจัดการ rate limit เอง ไม่ต้องทำอะไร:
+
+| สถานการณ์ | Cooldown |
+|-----------|----------|
+| Rate limit (429) | 30 นาที |
+| Model ไม่มี (404) | 1 ชม. |
+| Error ทั่วไป | 5 นาที |
+| ตัวเสียเงินใช้ได้ | 5 นาที (ให้ตัวฟรีลองก่อน) |
+| Timeout | 10 นาที |
+
+### AI Cost Tracking (Sidebar)
+- แสดงค่าใช้จ่าย AI เป็น **เงินบาท** ใน Sidebar
+- แยก 4 ช่วง: **วันนี้ / เมื่อวาน / 7 วัน / เดือนนี้**
+- แสดง provider, model, สถานะ AI แบบ realtime
+- ดู free models + cooldown status ได้ที่ `/api/free-models`
 
 ---
 
@@ -96,6 +137,11 @@
 - Rate Limit + File Validation + Webhook Signature
 - Human Handoff --- ลูกค้าบอก "ขอคุยกับพนักงาน" AI หยุดทันที
 
+### Landing Page + Visitor Counter
+- Visitor counter ด้วย **fingerprint dedup** --- นับคนไม่ซ้ำ
+- **Flag Counter** --- แสดงธงประเทศผู้เยี่ยมชม
+- Google OAuth login --> redirect ตรงเข้าห้องน้องกุ้ง 3D
+
 ### อื่นๆ
 - **Analytics Dashboard** --- 6 tabs กราฟ Recharts (ภาพรวม/ขาย/ทีม/เงิน/ลูกค้า/เอกสาร)
 - **นัดหมาย** --- ปฏิทิน 7 ประเภท 6 สถานะ แจ้งเตือนล่วงหน้า
@@ -121,7 +167,7 @@
 | Dashboard | ภาพรวมแชท + filter platform |
 | CRM | ลูกค้า + pipeline + มอบหมาย staff |
 | น้องกุ้ง (Advice) | AI Advice 13 บทบาท |
-| ห้องน้องกุ้ง 3D | 3D virtual office + activity log |
+| ห้องน้องกุ้ง 3D | 3D virtual office + CEO เดินตรวจ + activity log |
 | Knowledge Base | ฐานความรู้ร้าน |
 | Analytics | กราฟ 6 หมวด Recharts |
 | KPI | พนักงาน + ปิดการขาย + รายได้ |
@@ -133,7 +179,7 @@
 | คะแนนลูกค้า | Lead Scoring |
 | ตั้งค่า Bot | mode/prompt/keywords แต่ละห้อง |
 | ทีมงาน | เชิญคน + role (admin/responder/viewer) |
-| Login | Google OAuth |
+| Login | Google OAuth --> redirect kung-room |
 | คู่มือ | step-by-step 25 sections |
 | ...และอื่นๆ | รวมลูกค้า, Templates, เชื่อมต่อ, ตั้งค่า, Onboarding |
 
@@ -152,7 +198,7 @@ MongoDB (Docker, local)    images ---> Cloudflare R2 CDN
   |
 OpenClaw (cron ทุก 1 ชม.) ---> วิเคราะห์ ---> เก็บ advice
   |
-Dashboard (Next.js) ---> Google Login ---> 30+ หน้าจอ
+Dashboard (Next.js) ---> Google Login ---> 30+ หน้าจอ + ห้องกุ้ง 3D
   |
 Qdrant Cloud (Knowledge Base vector search)
 ```
@@ -164,24 +210,14 @@ Qdrant Cloud (Knowledge Base vector search)
 | Agent | Node.js + Express |
 | Dashboard | Next.js 16 + Tailwind CSS |
 | 3D Office | Three.js + React Three Fiber + @react-three/drei |
-| Database | MongoDB 7 (Docker, local) |
+| Database | MongoDB 7 (Docker, local) --- เก็บทุกอย่าง |
 | Vector Search | Qdrant Cloud + Gemini Embedding (768 dims) |
-| AI Advisor | OpenClaw + OpenRouter (Qwen3-235B) |
-| Auth | Google OAuth (NextAuth) |
-| Deploy | Docker Compose + DigitalOcean VPS (Singapore) |
+| AI Advisor | OpenClaw + OpenRouter (auto-discover free models) |
+| Auth | Google OAuth (NextAuth) --> redirect kung-room |
+| Deploy | Docker Compose + Caddy + DigitalOcean VPS (Singapore) |
 | Reverse Proxy | Caddy (Auto HTTPS) |
 | Image Storage | Cloudflare R2 CDN |
 | ERP | MCP Protocol (61 commands) |
-
-### AI Providers (ฟรีทั้งหมด)
-
-| ลำดับ | Provider | ใช้ทำ |
-|-------|----------|-------|
-| 1 | **OpenRouter** (free models) | AI หลัก --- Qwen3-235B |
-| 2 | **SambaNova** | fallback |
-| 3 | **Groq** | fallback |
-| 4 | **Cerebras** | fallback |
-| 5 | **Gemini** | embedding + vision + fallback |
 
 ### Services
 
@@ -231,7 +267,8 @@ docker compose -f docker-compose.caddy.yml up -d --build
 | รายการ | ราคา |
 |--------|------|
 | OpenClaw Mini CRM | **ฟรี** |
-| AI (OpenRouter + SambaNova + Groq + Cerebras + Gemini) | **ฟรี** |
+| AI (OpenRouter auto-discover + SambaNova + Gemini) | **ฟรี** |
+| AI เสียเงิน (Groq + Cerebras) | **optional** --- ปิดโดย default |
 | MongoDB (Docker, local) | **ฟรี** (ไม่จำกัด) |
 | Qdrant Cloud (Knowledge Base) | **ฟรี** (1GB) |
 | LINE OA / Facebook / Instagram / Telegram | **ฟรี** |
@@ -276,7 +313,7 @@ docker compose -f docker-compose.caddy.yml up -d --build
 
 **OpenClaw Mini CRM**
 
-น้องกุ้ง 13 ตัวทำงานให้คุณ 24/7 --- ฟรี 100% --- ข้อมูลเป็นของคุณ
+น้องกุ้ง 14 ตัว (13 + CEO) ทำงานให้คุณ 24/7 --- ฟรี 100% --- ข้อมูลเป็นของคุณ
 
 [crm.satistang.com](https://crm.satistang.com) · [GitHub](https://github.com/smlsoft/openclawminicrm)
 
