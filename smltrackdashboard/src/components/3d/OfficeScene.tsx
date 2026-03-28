@@ -461,37 +461,9 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — อัพเดตตาม ceoPlan (ตรวจทุก render)
+  // Waypoints — ย้ายเข้า useFrame เพื่อตรวจ ceoPlan (global) ทุก frame
   const waypointsRef = useRef<[number, number][]>([[0.5, 0]]);
   const lastPlanCheck = useRef("");
-  // สร้าง key รวม plan + usedKeys เพื่อตรวจว่าเปลี่ยนหรือยัง
-  const checkKey = Object.keys(ceoPlan).sort().join(",") + "|" + [...usedPlanKeys].join(",");
-  if (checkKey !== lastPlanCheck.current) {
-    lastPlanCheck.current = checkKey;
-    const planned: [number, number][] = [];
-    agents.forEach((agent, i) => {
-      const dp = deskPositions[i];
-      if (!dp) return;
-      if (getCeoPlanFor(agent.name)) {
-        const offset = dp.facing === 0 ? 1.2 : -1.2;
-        planned.push([dp.pos[0] + offset, dp.pos[2]]);
-      }
-    });
-    if (planned.length > 0) {
-      waypointsRef.current = planned;
-    } else {
-      // ถามครบแล้ว / ไม่มี plan → เดินตรวจทุกโต๊ะวนไปเรื่อยๆ
-      const patrol: [number, number][] = [];
-      agents.forEach((_, i) => {
-        const dp = deskPositions[i];
-        if (!dp) return;
-        const offset = dp.facing === 0 ? 1.2 : -1.2;
-        patrol.push([dp.pos[0] + offset, dp.pos[2]]);
-      });
-      waypointsRef.current = patrol.length > 0 ? patrol : [[0.5, 0], [-3, 2], [3, -2]];
-    }
-  }
-  const waypoints = waypointsRef.current;
 
   // คำพูด CEO สำหรับ balloon text (แสดงระหว่างเดิน)
   // CEO balloon text จาก plan (AI สร้าง) ไม่ hardcode
@@ -506,6 +478,37 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     if (!ref.current) return;
     const st = state.current;
     const now = s.clock.elapsedTime;
+
+    // ── อัพเดต waypoints ตาม ceoPlan (ตรวจทุก frame) ──
+    const checkKey = Object.keys(ceoPlan).sort().join(",") + "|" + usedPlanKeys.size;
+    if (checkKey !== lastPlanCheck.current) {
+      lastPlanCheck.current = checkKey;
+      const planned: [number, number][] = [];
+      agents.forEach((agent, i) => {
+        const dp = deskPositions[i];
+        if (!dp) return;
+        if (getCeoPlanFor(agent.name)) {
+          const offset = dp.facing === 0 ? 1.2 : -1.2;
+          planned.push([dp.pos[0] + offset, dp.pos[2]]);
+        }
+      });
+      if (planned.length > 0) {
+        waypointsRef.current = planned;
+      } else {
+        // ว่าง → เดินทุกโต๊ะ
+        const patrol: [number, number][] = [];
+        agents.forEach((_, i) => {
+          const dp = deskPositions[i];
+          if (!dp) return;
+          const offset = dp.facing === 0 ? 1.2 : -1.2;
+          patrol.push([dp.pos[0] + offset, dp.pos[2]]);
+        });
+        waypointsRef.current = patrol.length > 0 ? patrol : [[0.5, 0], [-3, 2], [3, -2]];
+      }
+      // reset wpIdx ถ้าเกิน
+      if (st.wpIdx >= waypointsRef.current.length) st.wpIdx = 0;
+    }
+    const waypoints = waypointsRef.current;
 
     // ธงโบกสบัด — ตลอดเวลา
     st.flagWave += delta * 3;
