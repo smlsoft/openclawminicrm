@@ -699,7 +699,7 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
           <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.2} side={2} />
         </mesh>
         {/* ข้อความบนธง — CEO เต็มธง 90% */}
-        <Html position={[0.22, 0.9, 0.01]} center distanceFactor={4} style={{ pointerEvents: "none" }}>
+        <Html position={[0.22, 0.9, 0.01]} transform distanceFactor={4} style={{ pointerEvents: "none" }}>
           <div style={{ fontSize: 22, fontWeight: 900, color: "#ffd700", textShadow: "0 2px 6px rgba(0,0,0,0.9)", whiteSpace: "nowrap", fontFamily: "Prompt,sans-serif", letterSpacing: 2 }}>
             CEO
           </div>
@@ -902,7 +902,7 @@ function StarBoard({ position, agents }: { position: [number, number, number]; a
     <group position={position}>
       <mesh castShadow><boxGeometry args={[1, 0.8, 0.05]} /><meshStandardMaterial color="#1a1a2e" /></mesh>
       <mesh position={[0, 0, 0.03]}><boxGeometry args={[1.05, 0.85, 0.02]} /><meshStandardMaterial color="#ffd700" metalness={0.5} /></mesh>
-      <Html position={[0, 0, 0.05]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
+      <Html position={[0, 0, 0.05]} transform distanceFactor={6} style={{ pointerEvents: "none" }}>
         <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif", width: 100 }}>
           <div style={{ fontSize: 16 }}>⭐</div>
           <div style={{ fontSize: 8, color: "#ffd700", fontWeight: 700 }}>พนักงานดีเด่น</div>
@@ -1114,7 +1114,7 @@ function SalesBoard({ position }: { position: [number, number, number] }) {
     <group position={position}>
       <mesh castShadow><boxGeometry args={[1.2, 0.6, 0.05]} /><meshStandardMaterial color="#0a0a0a" /></mesh>
       <mesh position={[0, 0, 0.03]}><boxGeometry args={[1.25, 0.65, 0.02]} /><meshStandardMaterial color="#333" /></mesh>
-      <Html position={[0, 0, 0.05]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
+      <Html position={[0, 0, 0.05]} transform distanceFactor={6} style={{ pointerEvents: "none" }}>
         <div style={{ textAlign: "center", fontFamily: "monospace", width: 130 }}>
           <div style={{ fontSize: 7, color: "#4ade80" }}>📊 {labels[show]}</div>
           <div style={{ fontSize: 18, color: "#4ade80", fontWeight: 900, textShadow: "0 0 10px rgba(74,222,128,0.5)" }}>
