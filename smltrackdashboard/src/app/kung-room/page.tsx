@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const OfficeScene = dynamic(() => import("@/components/3d/OfficeScene"), { ssr: false });
 
@@ -22,6 +22,30 @@ const AGENTS = [
   { id: 13, name: "น้องกุ้งเปรียบ", role: "วิเคราะห์ราคา", emoji: "📈", color: "#4ade80", status: "working", quote: "ลูกค้า 8 คนถามราคาเหล็กวันนี้ เปรียบว่าควรทำโปรด่วน!" },
 ];
 
+// ─── Activity Log Messages ───
+const LOG_MESSAGES = [
+  { agent: "🔍 แก้ว", msg: "พบปัญหาลูกค้า \"สมชาย\" — สินค้าไม่ตรงออเดอร์ กำลังหาทางแก้...", color: "#f87171" },
+  { agent: "💰 ทองคำ", msg: "ลูกค้ารายใหม่ \"ร้านทวีโชค\" สนใจปูน 50 ตัน — Hot Lead!", color: "#fbbf24" },
+  { agent: "👨‍🏫 ครูโค้ช", msg: "คุณนิดตอบแชทช้ากว่าเกณฑ์ 15 นาที — ส่งคำแนะนำแล้ว", color: "#a78bfa" },
+  { agent: "📋 อาร์ม", msg: "วางแผนสัปดาห์หน้า: โปรปูนซีเมนต์ + เหล็กรูปพรรณ", color: "#60a5fa" },
+  { agent: "❤️ หมอใจ", msg: "ลูกค้า 3 ราย ไม่กลับมาซื้อ 30 วัน — ส่งแจ้งเตือนทีม", color: "#f472b6" },
+  { agent: "💳 แบงค์", msg: "ตรวจสลิปเข้า 5 ใบ ยืนยันแล้ว 3 รอ 2 — ยอดรวม ฿128,500", color: "#34d399" },
+  { agent: "📦 เมฆ", msg: "พัสดุ 3 ชิ้นยังไม่ถึง — ติดตามขนส่ง Kerry + Flash", color: "#fb923c" },
+  { agent: "🔄 ขนุน", msg: "ส่งข้อความทัก 12 ลูกค้าที่หายไป — ได้ตอบกลับแล้ว 4!", color: "#38bdf8" },
+  { agent: "🎯 แนน", msg: "ลูกค้าซื้อปูน → แนะนำทรายล้าง + อิฐมวลเบาเพิ่ม", color: "#c084fc" },
+  { agent: "📊 บุ๋ม", msg: "สรุปวันนี้: ข้อความ 523 | ลูกค้าใหม่ 12 | คะแนน 8.2/10", color: "#2dd4bf" },
+  { agent: "🏆 แต้ม", msg: "คุณสมชาย 85 แต้ม → อัพเป็น Hot Lead | คุณวิชัย 40 แต้ม → Warm", color: "#facc15" },
+  { agent: "📅 นาฬิกา", msg: "อีก 1 ชม. นัดส่งของคุณสุดา — เตือนทีมจัดส่งแล้ว!", color: "#fb7185" },
+  { agent: "📈 เปรียบ", msg: "ราคาเหล็กตลาดขึ้น 3% — แนะนำปรับโปรด่วนก่อนคู่แข่ง", color: "#4ade80" },
+  { agent: "🔍 แก้ว", msg: "ลูกค้า \"ร้านเจริญกิจ\" ถามเรื่องรับประกัน — ส่งข้อมูลแล้ว", color: "#f87171" },
+  { agent: "💰 ทองคำ", msg: "ปิดดีล! ร้านทวีโชค สั่งปูน 50 ตัน ฿475,000 🎉", color: "#fbbf24" },
+  { agent: "📦 เมฆ", msg: "Kerry ยืนยันส่ง 2 ชิ้นพรุ่งนี้เช้า — เหลือ 1 ชิ้นรอ Flash", color: "#fb923c" },
+  { agent: "💳 แบงค์", msg: "สลิปใบที่ 4 ยืนยันแล้ว — คงเหลือรอ 1 ใบ ฿32,000", color: "#34d399" },
+  { agent: "🔄 ขนุน", msg: "ลูกค้า \"คุณประยุทธ์\" ตอบกลับมา สนใจสั่งรอบใหม่!", color: "#38bdf8" },
+  { agent: "📊 บุ๋ม", msg: "เทียบเมื่อวาน: ข้อความ +12% ลูกค้าใหม่ +25% ยอดขาย +18%", color: "#2dd4bf" },
+  { agent: "👨‍🏫 ครูโค้ช", msg: "คุณนิดปรับตัวดีขึ้นแล้ว! ตอบเร็วขึ้น 40% 👏", color: "#a78bfa" },
+];
+
 const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: string }> = {
   working: { label: "กำลังทำงาน 💪", animation: "animate-pulse", bgClass: "bg-green-500/20 text-green-400" },
   sleeping: { label: "นอนหลับ 😴", animation: "", bgClass: "bg-gray-500/20 text-gray-400" },
@@ -33,10 +57,52 @@ const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: s
   alert: { label: "แจ้งเตือน! ⏰", animation: "animate-ping-slow", bgClass: "bg-red-500/20 text-red-400" },
 };
 
+// ─── Activity Log (วน loop ด้านล่าง) ───
+function ActivityLog() {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setCurrentIdx((prev) => (prev + 1) % LOG_MESSAGES.length);
+        setFade(true);
+      }, 300);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Show 4 recent log lines
+  const visibleLogs = Array.from({ length: 4 }, (_, i) => {
+    const idx = (currentIdx - i + LOG_MESSAGES.length) % LOG_MESSAGES.length;
+    return { ...LOG_MESSAGES[idx], opacity: i === 0 ? 1 : 0.7 - i * 0.15 };
+  }).reverse();
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 z-10">
+      <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-8 pb-3 px-3 md:px-6">
+        <div className="max-w-4xl mx-auto space-y-1">
+          {visibleLogs.map((log, i) => (
+            <div
+              key={`${currentIdx}-${i}`}
+              className={`flex items-start gap-2 transition-all duration-300 ${i === visibleLogs.length - 1 && fade ? "opacity-100 translate-y-0" : i === visibleLogs.length - 1 && !fade ? "opacity-0 translate-y-2" : ""}`}
+              style={{ opacity: i === visibleLogs.length - 1 ? undefined : log.opacity }}
+            >
+              <span className="text-xs font-bold whitespace-nowrap" style={{ color: log.color, minWidth: 80 }}>
+                {log.agent}
+              </span>
+              <span className="text-xs text-gray-300">{log.msg}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function KungRoomPage() {
-  const [selected, setSelected] = useState<number | null>(null);
   const [view, setView] = useState<"3d" | "list">("3d");
-  const selectedAgent = AGENTS.find((a) => a.id === selected);
 
   return (
     <div className="min-h-screen theme-bg theme-text">
@@ -44,7 +110,7 @@ export default function KungRoomPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold">🦐 ห้องทำงานน้องกุ้ง</h1>
-            <p className="text-xs theme-text-secondary">น้องกุ้ง 13 ตัว ทำงาน 24/7 — กดที่ตัวกุ้งเพื่อดูสถานะ</p>
+            <p className="text-xs theme-text-secondary">น้องกุ้ง 13 ตัว ทำงาน 24/7 — ดู log ด้านล่าง</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setView("3d")} className={`px-3 py-1.5 text-xs rounded-lg transition ${view === "3d" ? "bg-indigo-500 text-white" : "theme-bg-secondary theme-text-secondary"}`}>
@@ -60,38 +126,17 @@ export default function KungRoomPage() {
       {view === "3d" ? (
         <div className="relative" style={{ height: "calc(100vh - 120px)" }}>
           {/* 3D Scene */}
-          <OfficeScene agents={AGENTS} selected={selected} onSelect={setSelected} />
-
-          {/* Agent Info Overlay */}
-          {selectedAgent && (
-            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-10">
-              <div className="theme-bg-secondary border theme-border rounded-2xl p-4 shadow-2xl backdrop-blur">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ backgroundColor: selectedAgent.color + "22", border: `2px solid ${selectedAgent.color}` }}>
-                    {selectedAgent.emoji}
-                  </div>
-                  <div>
-                    <h3 className="font-bold">{selectedAgent.name}</h3>
-                    <p className="text-xs theme-text-secondary">{selectedAgent.role}</p>
-                  </div>
-                  <button onClick={() => setSelected(null)} className="ml-auto text-xs theme-text-muted hover:theme-text">✕</button>
-                </div>
-                <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium mb-2 ${STATUS_INFO[selectedAgent.status]?.bgClass}`}>
-                  {STATUS_INFO[selectedAgent.status]?.label}
-                </div>
-                <div className="theme-bg-card rounded-xl p-3 text-sm italic theme-text-secondary">
-                  &ldquo;{selectedAgent.quote}&rdquo;
-                </div>
-              </div>
-            </div>
-          )}
+          <OfficeScene agents={AGENTS} />
 
           {/* Instructions */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
             <div className="theme-bg-secondary/80 backdrop-blur border theme-border rounded-full px-4 py-1.5 text-[11px] theme-text-muted">
-              🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม · กดที่กุ้งเพื่อดูข้อมูล
+              🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม
             </div>
           </div>
+
+          {/* Activity Log — scrolling at bottom */}
+          <ActivityLog />
         </div>
       ) : (
         /* List View */
@@ -100,7 +145,7 @@ export default function KungRoomPage() {
             {AGENTS.map((agent) => {
               const si = STATUS_INFO[agent.status];
               return (
-                <div key={agent.id} className="theme-bg-secondary border theme-border rounded-xl p-4 hover:border-indigo-500/30 transition cursor-pointer" onClick={() => setSelected(agent.id)}>
+                <div key={agent.id} className="theme-bg-secondary border theme-border rounded-xl p-4 hover:border-indigo-500/30 transition cursor-default">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: agent.color + "22", border: `2px solid ${agent.color}` }}>
                       <span className={si?.animation}>{agent.emoji}</span>

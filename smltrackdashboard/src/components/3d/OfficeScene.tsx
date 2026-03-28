@@ -6,27 +6,31 @@ import { Suspense, useRef, useMemo } from "react";
 import * as THREE from "three";
 
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
-interface Props { agents: Agent[]; selected: number | null; onSelect: (id: number | null) => void; }
+interface Props { agents: Agent[]; }
 
 // ─── Shrimp (กุ้งน่ารัก) ───
-function Shrimp({ agent, position, onClick, isSelected }: { agent: Agent; position: [number, number, number]; onClick: () => void; isSelected: boolean; }) {
+function Shrimp({ agent, position }: { agent: Agent; position: [number, number, number]; }) {
   const ref = useRef<THREE.Group>(null!);
   const seed = agent.id * 1.7;
   const color = useMemo(() => new THREE.Color(agent.color), [agent.color]);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
+  // กำลังทำงาน → กระโดด | ไม่ทำงาน → นั่งนิ่งๆ
+  const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
+
   useFrame((s) => {
     if (!ref.current) return;
-    const t = s.clock.elapsedTime;
     const base = position[1];
-    if (agent.status === "sleeping") ref.current.position.y = base + Math.sin(t * 0.5 + seed) * 0.01;
-    else if (agent.status === "excited" || agent.status === "alert") ref.current.position.y = base + Math.abs(Math.sin(t * 3.5 + seed)) * 0.1;
-    else if (agent.status === "running") ref.current.position.y = base + Math.abs(Math.sin(t * 5 + seed)) * 0.06;
-    else ref.current.position.y = base + Math.sin(t * 2 + seed) * 0.02;
+    if (!isActive) {
+      ref.current.position.y = base; // นั่งนิ่ง
+      return;
+    }
+    const t = s.clock.elapsedTime;
+    ref.current.position.y = base + Math.abs(Math.sin(t * 3 + seed)) * 0.12; // กระโดด
   });
 
   return (
-    <group ref={ref} position={position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+    <group ref={ref} position={position}>
       <mesh position={[0, 0.35, 0]} castShadow><sphereGeometry args={[0.22, 16, 16]} /><meshStandardMaterial color={color} roughness={0.3} /></mesh>
       <mesh position={[0, 0.65, 0.03]} castShadow><sphereGeometry args={[0.18, 16, 16]} /><meshStandardMaterial color={color} roughness={0.3} /></mesh>
       <mesh position={[-0.06, 0.69, 0.16]}><sphereGeometry args={[0.04, 8, 8]} /><meshStandardMaterial color="white" /></mesh>
@@ -41,50 +45,75 @@ function Shrimp({ agent, position, onClick, isSelected }: { agent: Agent; positi
           {agent.emoji} {agent.name}
         </div>
       </Html>
-      {isSelected && <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.35, 0.45, 32]} /><meshBasicMaterial color={agent.color} transparent opacity={0.5} toneMapped={false} /></mesh>}
     </group>
   );
 }
 
-// ─── Speech Balloon (ลูกโป่งคำพูดลอยขึ้นแล้วแตก) ───
+// ─── Speech Balloon (ลูกโป่งลอยขึ้นแล้วแตกหายไป) ───
 function SpeechBalloon({ agent, position }: { agent: Agent; position: [number, number, number] }) {
   const ref = useRef<THREE.Group>(null!);
   const seed = agent.id * 3.14;
-  const STATUS_ACTIONS: Record<string, string> = {
-    working: "กำลังทำงาน...", sleeping: "zzZ...", thinking: "กำลังคิด...",
-    excited: "เย้!", worried: "ห่วงจัง...", sad: "คิดถึง...",
-    running: "วิ่ง!", alert: "ด่วน!",
-  };
-  const text = STATUS_ACTIONS[agent.status] || agent.role;
 
   useFrame((s) => {
     if (!ref.current) return;
-    const t = (s.clock.elapsedTime * 0.3 + seed) % 6; // 6 second cycle
-    const progress = t / 6;
-    const y = position[1] + 1.5 + progress * 3; // float up 3 units
-    const scale = progress < 0.8 ? 1 : Math.max(0, 1 - (progress - 0.8) * 5); // shrink at end (pop)
+    const t = (s.clock.elapsedTime * 0.18 + seed) % 10; // 10 second cycle — longer float
+    const progress = t / 10;
+
+    // Phase: 0-0.1 inflate, 0.1-0.85 float up, 0.85-1.0 pop (expand+fade)
+    let scale = 1;
+    if (progress < 0.1) {
+      scale = progress / 0.1; // inflate from 0 to 1
+    } else if (progress < 0.85) {
+      scale = 1;
+    } else {
+      const pop = (progress - 0.85) / 0.15;
+      scale = 1 + pop * 0.5; // expand before disappearing
+      ref.current.children.forEach((c) => {
+        if ((c as THREE.Mesh).material && "opacity" in (c as THREE.Mesh).material) {
+          ((c as THREE.Mesh).material as THREE.MeshStandardMaterial).opacity = Math.max(0, 0.8 * (1 - pop));
+        }
+      });
+    }
+
+    const y = position[1] + 1.8 + progress * 3.5; // float up higher
     ref.current.position.y = y;
-    ref.current.position.x = position[0] + Math.sin(t * 2 + seed) * 0.15; // gentle sway
+    ref.current.position.x = position[0] + Math.sin(t * 1.5 + seed) * 0.2; // gentle sway
+    ref.current.position.z = position[2] + Math.cos(t * 1.2 + seed) * 0.1;
     ref.current.scale.setScalar(scale);
-    ref.current.visible = scale > 0.05;
+    ref.current.visible = progress < 0.98;
   });
 
   return (
     <group ref={ref} position={position}>
-      {/* Balloon sphere */}
+      {/* Balloon body — oval shape */}
       <mesh>
-        <sphereGeometry args={[0.18, 12, 12]} />
-        <meshStandardMaterial color={agent.color} transparent opacity={0.7} roughness={0.2} />
+        <sphereGeometry args={[0.22, 16, 16]} />
+        <meshStandardMaterial color={agent.color} transparent opacity={0.8} roughness={0.15} metalness={0.1} />
       </mesh>
-      {/* String */}
-      <mesh position={[0, -0.22, 0]}>
-        <cylinderGeometry args={[0.003, 0.003, 0.15, 4]} />
-        <meshStandardMaterial color="#999" />
+      {/* Balloon highlight (shine) */}
+      <mesh position={[-0.06, 0.06, 0.15]}>
+        <sphereGeometry args={[0.05, 8, 8]} />
+        <meshStandardMaterial color="white" transparent opacity={0.4} />
       </mesh>
-      {/* Text */}
-      <Html center distanceFactor={6} style={{ pointerEvents: "none" }}>
-        <div style={{ fontSize: 8, color: "#fff", fontWeight: 600, fontFamily: "Prompt,sans-serif", whiteSpace: "nowrap", textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-          {text}
+      {/* Balloon knot */}
+      <mesh position={[0, -0.24, 0]}>
+        <coneGeometry args={[0.03, 0.05, 6]} />
+        <meshStandardMaterial color={agent.color} transparent opacity={0.8} />
+      </mesh>
+      {/* String — curvy */}
+      <mesh position={[0, -0.38, 0]}>
+        <cylinderGeometry args={[0.005, 0.005, 0.25, 4]} />
+        <meshStandardMaterial color="#aaa" transparent opacity={0.6} />
+      </mesh>
+      {/* Text label on balloon — ตัวใหญ่ แสดงว่าคิดอะไร ทำอะไร */}
+      <Html center distanceFactor={4} style={{ pointerEvents: "none" }}>
+        <div style={{
+          maxWidth: 200, textAlign: "center", fontFamily: "Prompt,sans-serif",
+          color: "#fff", lineHeight: 1.4,
+          textShadow: "0 2px 6px rgba(0,0,0,0.7)",
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 800 }}>{agent.emoji} {agent.name}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.95, marginTop: 2, background: "rgba(0,0,0,0.35)", borderRadius: 8, padding: "3px 8px" }}>{agent.quote}</div>
         </div>
       </Html>
     </group>
@@ -211,7 +240,7 @@ function Floor() {
 }
 
 // ─── Office Layout ───
-function OfficeLayout({ agents, selected, onSelect }: Props) {
+function OfficeLayout({ agents }: Props) {
   // 3 แถวๆ ละ 4-5 ตัว เว้นช่องทางเดินตรงกลาง
   const deskPositions: { pos: [number, number, number]; facing: number }[] = [
     // แถวซ้าย — แถวที่ 1 (4 ตัว) หันขวา
@@ -238,16 +267,12 @@ function OfficeLayout({ agents, selected, onSelect }: Props) {
         const dp = deskPositions[i];
         if (!dp) return null;
         const shrimpZ = dp.facing === 0 ? dp.pos[2] + 0.3 : dp.pos[2] - 0.3;
+        const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
         return (
           <group key={agent.id}>
             <DeskUnit position={dp.pos} color={agent.color} facing={dp.facing} />
-            <Shrimp
-              agent={agent}
-              position={[dp.pos[0], 0.25, shrimpZ]}
-              onClick={() => onSelect(selected === agent.id ? null : agent.id)}
-              isSelected={selected === agent.id}
-            />
-            <SpeechBalloon agent={agent} position={[dp.pos[0], 0, shrimpZ]} />
+            <Shrimp agent={agent} position={[dp.pos[0], 0.25, shrimpZ]} />
+            {isActive && <SpeechBalloon agent={agent} position={[dp.pos[0], 0, shrimpZ]} />}
           </group>
         );
       })}
@@ -290,7 +315,7 @@ function OfficeLayout({ agents, selected, onSelect }: Props) {
 }
 
 // ─── Main Scene ───
-export default function OfficeScene({ agents, selected, onSelect }: Props) {
+export default function OfficeScene({ agents }: Props) {
   return (
     <Canvas
       camera={{ position: [8, 6, 10], fov: 50 }}
@@ -308,7 +333,7 @@ export default function OfficeScene({ agents, selected, onSelect }: Props) {
 
       <Suspense fallback={null}>
         <Floor />
-        <OfficeLayout agents={agents} selected={selected} onSelect={onSelect} />
+        <OfficeLayout agents={agents} />
       </Suspense>
 
       <OrbitControls minDistance={4} maxDistance={22} maxPolarAngle={Math.PI / 2.1} minPolarAngle={0.2} enableDamping dampingFactor={0.05} autoRotate autoRotateSpeed={0.2} />
