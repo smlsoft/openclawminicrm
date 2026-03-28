@@ -5,6 +5,8 @@ import { OrbitControls, Html } from "@react-three/drei";
 import { Suspense, useRef, useMemo, useState } from "react";
 import * as THREE from "three";
 
+import { getRandomConversation } from "./conversations";
+
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
 interface Props { agents: Agent[]; ttsEnabled?: boolean; }
 
@@ -165,35 +167,24 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   checkTTSStuck();
   if (!enabled || ttsBusy) return;
 
-  // ดึงจากแผนที่วางไว้ล่วงหน้า
-  const pair = getCeoPlanFor(agentName);
+  // สุ่มบทสนทนา hardcode (1001 ชุด ไม่ซ้ำจนกว่าจะหมด)
+  const conv = getRandomConversation(agentName);
+  if (!conv || conv.turns.length === 0) return;
 
   ttsBusy = true;
   ttsBusySince = Date.now();
   try {
-    if (pair) {
-      // มี plan → ถามพนักงาน
-      const [ceoQ, empA] = pair;
-      markPlanUsed(agentName);
-
-      const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
-      const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
-      if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
-
-      // 70% พนักงานตอบ
-      if (enabled && Math.random() < 0.7) {
-        const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
-        if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
-      }
-    } else {
-      // ว่าง → เล่านิทานสั้น (30% โอกาส ไม่เล่าทุกครั้ง)
-      if (Math.random() < 0.3) {
-        const story = getNextStory();
-        if (story) {
-          const text = agentName ? `${agentName} ฟังนะ... ${story}` : story;
-          const ok = await edgeTTS(text, "th-TH-NiwatNeural", 0.9);
-          if (!ok) await webSpeechFallback(text, 0.5, 0.85);
-        }
+    // เล่นทุก turn สลับ CEO (Niwat) ↔ พนักงาน (Premwadee)
+    for (let i = 0; i < conv.turns.length; i++) {
+      if (!enabled) break;
+      const text = conv.turns[i];
+      const isCeo = i % 2 === 0;
+      if (isCeo) {
+        const ok = await edgeTTS(text, "th-TH-NiwatNeural", 0.9);
+        if (!ok) await webSpeechFallback(text, 0.5, 0.85);
+      } else {
+        const ok = await edgeTTS(text, "th-TH-PremwadeeNeural", 1.0);
+        if (!ok) await webSpeechFallback(text, 1.8, 0.9);
       }
     }
   } catch (e) {
@@ -479,34 +470,17 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     const st = state.current;
     const now = s.clock.elapsedTime;
 
-    // ── อัพเดต waypoints ตาม ceoPlan (ตรวจทุก frame) ──
-    const checkKey = Object.keys(ceoPlan).sort().join(",") + "|" + usedPlanKeys.size;
-    if (checkKey !== lastPlanCheck.current) {
-      lastPlanCheck.current = checkKey;
-      const planned: [number, number][] = [];
-      agents.forEach((agent, i) => {
+    // ── Waypoints: เดินทุกโต๊ะเสมอ (hardcode 1001 ชุด ไม่ต้องพึ่ง AI plan) ──
+    if (lastPlanCheck.current === "") {
+      lastPlanCheck.current = "init";
+      const all: [number, number][] = [];
+      agents.forEach((_, i) => {
         const dp = deskPositions[i];
         if (!dp) return;
-        if (getCeoPlanFor(agent.name)) {
-          const offset = dp.facing === 0 ? 1.2 : -1.2;
-          planned.push([dp.pos[0] + offset, dp.pos[2]]);
-        }
+        const offset = dp.facing === 0 ? 1.2 : -1.2;
+        all.push([dp.pos[0] + offset, dp.pos[2]]);
       });
-      if (planned.length > 0) {
-        waypointsRef.current = planned;
-      } else {
-        // ว่าง → เดินทุกโต๊ะ
-        const patrol: [number, number][] = [];
-        agents.forEach((_, i) => {
-          const dp = deskPositions[i];
-          if (!dp) return;
-          const offset = dp.facing === 0 ? 1.2 : -1.2;
-          patrol.push([dp.pos[0] + offset, dp.pos[2]]);
-        });
-        waypointsRef.current = patrol.length > 0 ? patrol : [[0.5, 0], [-3, 2], [3, -2]];
-      }
-      // reset wpIdx ถ้าเกิน
-      if (st.wpIdx >= waypointsRef.current.length) st.wpIdx = 0;
+      waypointsRef.current = all.length > 0 ? all : [[0.5, 0], [-3, 2], [3, -2]];
     }
     const waypoints = waypointsRef.current;
 
