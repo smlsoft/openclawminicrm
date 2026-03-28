@@ -3470,30 +3470,43 @@ ${workSummary}
 {"ceo":"ถามตลก สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}`;
     }
 
-    // ให้ AI สร้างบทสนทนา
-    const sambaKey = process.env.SAMBANOVA_API_KEY;
-    if (!sambaKey) return res.json({ ceo: "", emp: "" });
+    // ให้ AI สร้างบทสนทนา — ลอง SambaNova ก่อน → fallback callLightAI (OpenRouter)
+    const msgs = [
+      { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น ห้ามซ้ำกับครั้งก่อน" },
+      { role: "user", content: prompt },
+    ];
+    let result = null;
 
-    const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
-      method: "POST", signal: AbortSignal.timeout(15000),
-      headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "Qwen3-235B",
-        messages: [
-          { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น ห้ามซ้ำกับครั้งก่อน" },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 200,
-        response_format: { type: "json_object" },
-      }),
-    });
-    const d = await r.json();
-    if (d.error) console.log(`[CEO-Review] SambaNova error:`, JSON.stringify(d.error).substring(0, 200));
-    const result = d.choices?.[0]?.message?.content;
-    console.log(`[CEO-Review] ${agentName}: AI result=${result ? result.substring(0, 100) : "null"}, status=${r.status}`);
+    // 1) SambaNova
+    const sambaKey = process.env.SAMBANOVA_API_KEY;
+    if (sambaKey) {
+      try {
+        const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+          method: "POST", signal: AbortSignal.timeout(15000),
+          headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "Qwen3-235B", messages: msgs, max_tokens: 200, response_format: { type: "json_object" } }),
+        });
+        const d = await r.json();
+        if (d.choices?.[0]?.message?.content) {
+          result = d.choices[0].message.content;
+          trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
+            inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
+        } else if (d.error) {
+          console.log(`[CEO-Review] SambaNova ${r.status}:`, d.error?.message || "unknown");
+        }
+      } catch (e) { console.log("[CEO-Review] SambaNova timeout:", e.message); }
+    }
+
+    // 2) Fallback: callLightAI (OpenRouter free models)
+    if (!result) {
+      try {
+        const fallback = await callLightAI(msgs, { json: true, maxTokens: 200, timeout: 15000 });
+        if (fallback) result = fallback;
+      } catch { /* silent */ }
+    }
+
+    console.log(`[CEO-Review] ${agentName}: result=${result ? result.substring(0, 80) : "null"}`);
     if (result) {
-      trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
-        inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
       try {
         const parsed = JSON.parse(result);
         if (parsed.ceo && parsed.emp) {
@@ -3501,8 +3514,7 @@ ${workSummary}
           console.log(`[CEO-Review] ✅ ${agentName}: "${parsed.ceo}" → "${parsed.emp}"`);
           return res.json(parsed);
         }
-        console.log(`[CEO-Review] ❌ parsed แต่ไม่มี ceo/emp:`, JSON.stringify(parsed).substring(0, 100));
-      } catch (pe) { console.log(`[CEO-Review] ❌ JSON parse fail:`, pe.message); }
+      } catch { /* parse fail */ }
     }
   } catch (e) {
     console.log("[CEO-Review] error:", e.message);
