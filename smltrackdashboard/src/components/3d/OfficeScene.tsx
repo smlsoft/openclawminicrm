@@ -443,6 +443,143 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   );
 }
 
+// ─── แมวออฟฟิศ 🐱 เดินวนไปมา ───
+function OfficeCat() {
+  const ref = useRef<THREE.Group>(null!);
+  const state = useRef({ x: -2, z: 3, angle: 0, phase: 0 });
+  useFrame((s) => {
+    if (!ref.current) return;
+    const t = s.clock.elapsedTime * 0.3;
+    const st = state.current;
+    st.x = Math.sin(t * 0.7) * 4;
+    st.z = Math.cos(t * 0.5) * 3 + 1;
+    st.angle = Math.atan2(Math.cos(t * 0.7) * 0.7 * 4, -Math.sin(t * 0.5) * 0.5 * 3);
+    st.phase = t * 8;
+    const bob = Math.abs(Math.sin(st.phase)) * 0.02;
+    ref.current.position.set(st.x, bob, st.z);
+    ref.current.rotation.y = st.angle;
+  });
+  return (
+    <group ref={ref}>
+      {/* ตัว */}
+      <mesh position={[0, 0.12, 0]} castShadow><boxGeometry args={[0.15, 0.12, 0.3]} /><meshStandardMaterial color="#ff9944" /></mesh>
+      {/* หัว */}
+      <mesh position={[0, 0.18, 0.18]}><sphereGeometry args={[0.09, 8, 8]} /><meshStandardMaterial color="#ff9944" /></mesh>
+      {/* หู */}
+      <mesh position={[-0.05, 0.26, 0.18]}><coneGeometry args={[0.03, 0.06, 4]} /><meshStandardMaterial color="#ff9944" /></mesh>
+      <mesh position={[0.05, 0.26, 0.18]}><coneGeometry args={[0.03, 0.06, 4]} /><meshStandardMaterial color="#ff9944" /></mesh>
+      {/* หาง */}
+      <mesh position={[0, 0.15, -0.2]} rotation={[0.8, 0, 0]}><cylinderGeometry args={[0.015, 0.01, 0.2, 6]} /><meshStandardMaterial color="#ff9944" /></mesh>
+      {/* ตา */}
+      <mesh position={[-0.03, 0.2, 0.26]}><sphereGeometry args={[0.015, 6, 6]} /><meshStandardMaterial color="#2ecc71" emissive="#2ecc71" emissiveIntensity={0.3} /></mesh>
+      <mesh position={[0.03, 0.2, 0.26]}><sphereGeometry args={[0.015, 6, 6]} /><meshStandardMaterial color="#2ecc71" emissive="#2ecc71" emissiveIntensity={0.3} /></mesh>
+      <Html position={[0, 0.35, 0]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+        <div style={{ fontSize: 8, fontFamily: "Prompt,sans-serif", color: "#ff9944", whiteSpace: "nowrap" }}>🐱 ส้ม</div>
+      </Html>
+    </group>
+  );
+}
+
+// ─── ตู้กดน้ำ 🚰 ───
+function WaterCooler({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.4, 0]} castShadow><boxGeometry args={[0.3, 0.8, 0.25]} /><meshStandardMaterial color="#e0e0e0" /></mesh>
+      <mesh position={[0, 0.82, 0]}><cylinderGeometry args={[0.12, 0.12, 0.04, 12]} /><meshStandardMaterial color="#3498db" transparent opacity={0.5} /></mesh>
+      <mesh position={[0, 0.95, 0]}><cylinderGeometry args={[0.1, 0.12, 0.25, 12]} /><meshStandardMaterial color="#3498db" transparent opacity={0.3} /></mesh>
+      <Html position={[0, 1.2, 0]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+        <div style={{ fontSize: 7, color: "#3498db", fontFamily: "Prompt,sans-serif" }}>🚰 กดน้ำ</div>
+      </Html>
+    </group>
+  );
+}
+
+// ─── พัดลม 🌀 หมุนตลอด ───
+function Fan({ position }: { position: [number, number, number] }) {
+  const bladeRef = useRef<THREE.Mesh>(null!);
+  useFrame((s) => { if (bladeRef.current) bladeRef.current.rotation.z = s.clock.elapsedTime * 8; });
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.5, 0]}><cylinderGeometry args={[0.02, 0.02, 0.5, 6]} /><meshStandardMaterial color="#888" metalness={0.5} /></mesh>
+      <mesh position={[0, 0.76, 0]}><sphereGeometry args={[0.04, 8, 8]} /><meshStandardMaterial color="#555" metalness={0.5} /></mesh>
+      <mesh ref={bladeRef} position={[0, 0.76, 0.02]}>
+        <boxGeometry args={[0.4, 0.02, 0.01]} /><meshStandardMaterial color="#ccc" transparent opacity={0.6} />
+      </mesh>
+      <mesh position={[0, 0.01, 0]}><cylinderGeometry args={[0.1, 0.1, 0.02, 8]} /><meshStandardMaterial color="#555" /></mesh>
+    </group>
+  );
+}
+
+// ─── โดนัทกล่อง 🍩 ───
+function DonutBox({ position }: { position: [number, number, number] }) {
+  const colors = ["#e74c3c", "#f39c12", "#e91e63", "#9b59b6", "#2ecc71", "#3498db"];
+  return (
+    <group position={position}>
+      <mesh position={[0, 0, 0]}><boxGeometry args={[0.25, 0.04, 0.25]} /><meshStandardMaterial color="#f5c6d0" /></mesh>
+      {colors.map((c, i) => (
+        <mesh key={i} position={[(i % 3 - 1) * 0.07, 0.04, (Math.floor(i / 3) - 0.5) * 0.08]}>
+          <torusGeometry args={[0.025, 0.01, 8, 12]} /><meshStandardMaterial color={c} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// ─── กระดิ่งทอง 🔔 (แกว่งเบาๆ) ───
+function GoldenBell({ position }: { position: [number, number, number] }) {
+  const ref = useRef<THREE.Group>(null!);
+  useFrame((s) => { if (ref.current) ref.current.rotation.z = Math.sin(s.clock.elapsedTime * 2) * 0.1; });
+  return (
+    <group ref={ref} position={position}>
+      <mesh position={[0, 0.15, 0]}><cylinderGeometry args={[0.005, 0.005, 0.1, 4]} /><meshStandardMaterial color="#888" /></mesh>
+      <mesh position={[0, 0.08, 0]}><sphereGeometry args={[0.08, 12, 12]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.2} metalness={0.8} /></mesh>
+      <mesh position={[0, 0.02, 0]}><sphereGeometry args={[0.02, 6, 6]} /><meshStandardMaterial color="#333" /></mesh>
+    </group>
+  );
+}
+
+// ─── ป้ายพนักงานดีเด่น ⭐ ───
+function StarBoard({ position, agents }: { position: [number, number, number]; agents: Agent[] }) {
+  const best = agents.reduce((a, b) => (a.status === "working" ? a : b));
+  return (
+    <group position={position}>
+      <mesh castShadow><boxGeometry args={[1, 0.8, 0.05]} /><meshStandardMaterial color="#1a1a2e" /></mesh>
+      <mesh position={[0, 0, 0.03]}><boxGeometry args={[1.05, 0.85, 0.02]} /><meshStandardMaterial color="#ffd700" metalness={0.5} /></mesh>
+      <Html position={[0, 0, 0.05]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
+        <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif", width: 100 }}>
+          <div style={{ fontSize: 16 }}>⭐</div>
+          <div style={{ fontSize: 8, color: "#ffd700", fontWeight: 700 }}>พนักงานดีเด่น</div>
+          <div style={{ fontSize: 10, color: "#fff", fontWeight: 800, marginTop: 2 }}>{best.emoji} {best.name}</div>
+          <div style={{ fontSize: 7, color: "#ccc" }}>{best.role}</div>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+// ─── ป้าย LED ยอดขาย 📊 ───
+function SalesBoard({ position }: { position: [number, number, number] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFrame((s) => {
+    if (!ref.current) return;
+    const n = Math.floor(1234 + Math.sin(s.clock.elapsedTime * 0.1) * 100);
+    ref.current.textContent = `฿${n.toLocaleString()}`;
+  });
+  return (
+    <group position={position}>
+      <mesh castShadow><boxGeometry args={[1.2, 0.6, 0.05]} /><meshStandardMaterial color="#0a0a0a" /></mesh>
+      <mesh position={[0, 0, 0.03]}><boxGeometry args={[1.25, 0.65, 0.02]} /><meshStandardMaterial color="#333" /></mesh>
+      <Html position={[0, 0, 0.05]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
+        <div style={{ textAlign: "center", fontFamily: "monospace", width: 120 }}>
+          <div style={{ fontSize: 7, color: "#4ade80" }}>📊 ยอดขายวันนี้</div>
+          <div ref={ref} style={{ fontSize: 18, color: "#4ade80", fontWeight: 900, textShadow: "0 0 10px rgba(74,222,128,0.5)" }}>฿1,234</div>
+        </div>
+      </Html>
+      <pointLight position={[0, 0, 0.2]} intensity={0.2} color="#4ade80" distance={2} />
+    </group>
+  );
+}
+
 // ─── Office Layout ───
 function OfficeLayout({ agents, ttsEnabled }: Props) {
   // 3 แถวๆ ละ 4-5 ตัว เว้นช่องทางเดินตรงกลาง
@@ -520,11 +657,34 @@ function OfficeLayout({ agents, ttsEnabled }: Props) {
       {/* CEO เดินตรวจเฉพาะโต๊ะที่ทำงาน */}
       <CEOShrimp agents={agents} deskPositions={deskPositions} ttsEnabled={ttsEnabled} />
 
+      {/* 🐱 แมวออฟฟิศ เดินไปมา */}
+      <OfficeCat />
+
+      {/* 🚰 ตู้กดน้ำ */}
+      <WaterCooler position={[-6, 0, -1]} />
+
+      {/* 🌀 พัดลม */}
+      <Fan position={[5, 0, 1.5]} />
+      <Fan position={[-6, 0, 3.5]} />
+
+      {/* 🍩 โดนัท บนโต๊ะกาแฟ */}
+      <DonutBox position={[0.5, 0.43, -1]} />
+      <DonutBox position={[0.5, 0.43, 2.5]} />
+
+      {/* 🔔 กระดิ่งทอง — ดังเมื่อปิดดีล */}
+      <GoldenBell position={[0.5, 1.5, -4]} />
+
+      {/* ⭐ ป้ายพนักงานดีเด่น */}
+      <StarBoard position={[5.5, 1.5, -5]} agents={agents} />
+
+      {/* 📊 ป้าย LED ยอดขาย */}
+      <SalesBoard position={[-6.5, 1.8, -4]} />
+
       {/* ป้าย */}
       <Html position={[0, 3.5, -7]} center distanceFactor={15}>
         <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif" }}>
           <div style={{ color: "#818cf8", fontWeight: 700, fontSize: 20, textShadow: "0 0 20px rgba(129,140,248,0.5)" }}>🦐 OpenClaw Office</div>
-          <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>น้องกุ้ง 13 ตัว ทำงานให้คุณ 24/7</div>
+          <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>น้องกุ้ง 13 ตัว + CEO ทำงานให้คุณ 24/7</div>
         </div>
       </Html>
     </group>
