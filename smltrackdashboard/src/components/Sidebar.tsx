@@ -432,18 +432,30 @@ function MoreDrawerItem({ href, icon, label, onClick }: NavItem & { onClick: () 
   );
 }
 
-/* ── AI Cost Widget (realtime) ── */
+/* ── AI Cost Widget + Free Models (realtime) ── */
 interface CostData { thb: number; calls: number; tokens?: number; }
 interface CostSummary { today: CostData; yesterday: CostData; week: CostData; month: CostData; }
+interface FreeModel { id: string; name: string; context_length: number; }
+interface Cooldown { until: string; remainSec: number; }
+interface FreeModelsData { count: number; lastDiscovery: string | null; models: FreeModel[]; cooldowns: Record<string, Cooldown>; paidAI: boolean; dedicated: string[]; }
 
 function AICostWidget() {
   const [data, setData] = useState<CostSummary | null>(null);
+  const [models, setModels] = useState<FreeModelsData | null>(null);
+  const [showModels, setShowModels] = useState(false);
 
   useEffect(() => {
-    const load = () => fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData).catch(() => {});
-    load();
-    const t = setInterval(load, 30000); // refresh ทุก 30 วินาที
-    return () => clearInterval(t);
+    const loadCost = () => fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData).catch(() => {});
+    const loadModels = () => fetch("/dashboard/api/costs").then(r => r.json()).then(() =>
+      fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData)
+    ).catch(() => {});
+    // free models จาก agent
+    const loadFree = () => fetch("/dashboard/api/free-models").then(r => r.json()).then(setModels).catch(() => {});
+    loadCost();
+    loadFree();
+    const t1 = setInterval(loadCost, 30000);
+    const t2 = setInterval(loadFree, 60000);
+    return () => { clearInterval(t1); clearInterval(t2); };
   }, []);
 
   if (!data) return null;
@@ -451,7 +463,14 @@ function AICostWidget() {
 
   return (
     <div className="px-4 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
-      <div className="text-[10px] font-semibold mb-1.5" style={{ color: "var(--text-muted)" }}>🤖 ค่า AI</div>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>🤖 ค่า AI</div>
+        {models && (
+          <button onClick={() => setShowModels(!showModels)} className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#4ade80", background: "rgba(74,222,128,0.1)" }}>
+            {models.count} ฟรี {showModels ? "▲" : "▼"}
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
         <div>
           <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>วันนี้</div>
@@ -473,6 +492,38 @@ function AICostWidget() {
           <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{(data.month.tokens || 0).toLocaleString()} tokens</div>
         </div>
       </div>
+      {/* Free Models List */}
+      {showModels && models && (
+        <div className="mt-2 pt-2 border-t space-y-0.5" style={{ borderColor: "var(--border)" }}>
+          <div className="text-[9px] mb-1" style={{ color: "var(--text-muted)" }}>
+            🔍 ค้นพบ {models.lastDiscovery ? new Date(models.lastDiscovery).toLocaleTimeString("th-TH") : ""} · รีเฟรชทุก 1 ชม.
+          </div>
+          {models.models.map((m) => {
+            const shortName = "OR-" + m.id.split("/").pop()?.substring(0, 15);
+            const cd = models.cooldowns?.[shortName];
+            const isCooling = cd && cd.remainSec > 0;
+            return (
+              <div key={m.id} className="flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500" : "bg-green-500"}`}></span>
+                <span className="text-[9px] truncate" style={{ color: isCooling ? "var(--text-muted)" : "var(--text-secondary)" }} title={m.id}>
+                  {m.name.replace(" (free)", "")}
+                </span>
+                <span className="text-[8px] ml-auto shrink-0" style={{ color: isCooling ? "#f87171" : "var(--text-muted)" }}>
+                  {isCooling ? `${Math.ceil(cd.remainSec / 60)}m` : `${Math.round(m.context_length / 1000)}K`}
+                </span>
+              </div>
+            );
+          })}
+          {/* Dedicated providers */}
+          {models.dedicated?.map((d) => (
+            <div key={d} className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+              <span className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{d}</span>
+              <span className="text-[8px] ml-auto" style={{ color: "#60a5fa" }}>ฟรี</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

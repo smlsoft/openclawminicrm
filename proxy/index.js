@@ -632,18 +632,22 @@ async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 
         }
         return data.choices[0].message.content;
       }
-      // Rate limit → cooldown 30 นาที
+      // Error → cooldown อัตโนมัติตามประเภท
       if (data.error) {
-        const errMsg = data.error.message || "";
+        const errMsg = data.error.message || JSON.stringify(data.error).substring(0, 100);
         if (errMsg.includes("rate") || errMsg.includes("limit") || errMsg.includes("429") || data.error.code === 429) {
-          lightAICooldown[p.name] = Date.now() + 1800000;
+          lightAICooldown[p.name] = Date.now() + 1800000; // 30m
           console.log(`[LightAI] ${p.name} rate limited → cooldown 30m`);
+        } else if (errMsg.includes("not found") || errMsg.includes("not available") || errMsg.includes("invalid model")) {
+          lightAICooldown[p.name] = Date.now() + 3600000; // 1 ชม. (model ไม่มี)
+          console.log(`[LightAI] ${p.name} model ไม่มี → cooldown 1h`);
         } else {
-          console.log(`[LightAI] ${p.name}: ${errMsg.substring(0, 60)}`);
+          lightAICooldown[p.name] = Date.now() + 300000; // 5m (error อื่นๆ)
+          console.log(`[LightAI] ${p.name} error → cooldown 5m: ${errMsg.substring(0, 60)}`);
         }
       }
     } catch (e) {
-      // Timeout → cooldown 2 นาที
+      // Timeout → cooldown 10 นาที
       lightAICooldown[p.name] = Date.now() + 600000;
       console.log(`[LightAI] ${p.name} timeout → cooldown 10m`);
     }
@@ -3390,13 +3394,23 @@ app.post("/api/advisor/cost", express.json(), async (req, res) => {
 });
 
 // ดึง cost summary สำหรับ dashboard
-// API: ดู free models ที่ค้นพบ
+// API: ดู free models + cooldown status
 app.get("/api/free-models", (req, res) => {
+  const now = Date.now();
+  const cooldowns = {};
+  for (const [k, v] of Object.entries(lightAICooldown)) {
+    if (v > now) cooldowns[k] = { until: new Date(v).toISOString(), remainSec: Math.ceil((v - now) / 1000) };
+  }
+  for (const [k, v] of Object.entries(providerCooldown)) {
+    if (v > now) cooldowns[k] = { until: new Date(v).toISOString(), remainSec: Math.ceil((v - now) / 1000) };
+  }
   res.json({
     count: discoveredFreeModels.length,
     lastDiscovery: lastDiscovery ? new Date(lastDiscovery).toISOString() : null,
     models: discoveredFreeModels,
+    cooldowns,
     paidAI: PAID_AI,
+    dedicated: ["SambaNova (Qwen3-235B)", "Gemini 2.0 Flash"],
   });
 });
 
