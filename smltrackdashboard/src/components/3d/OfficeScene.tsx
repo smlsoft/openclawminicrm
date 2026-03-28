@@ -6,7 +6,28 @@ import { Suspense, useRef, useMemo, useState } from "react";
 import * as THREE from "three";
 
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
-interface Props { agents: Agent[]; }
+interface Props { agents: Agent[]; ttsEnabled?: boolean; }
+
+// ─── CEO TTS (Web Speech API) ───
+let ceoSpeaking = false;
+function ceoSpeak(text: string, enabled: boolean) {
+  if (!enabled || typeof window === "undefined" || !window.speechSynthesis) return;
+  if (ceoSpeaking) return;
+  ceoSpeaking = true;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "th-TH";
+  u.rate = 1.1;
+  u.pitch = 1.3; // เสียงสูงน่ารัก
+  u.volume = 0.8;
+  // หาเสียงไทย
+  const voices = window.speechSynthesis.getVoices();
+  const thVoice = voices.find((v) => v.lang.startsWith("th"));
+  if (thVoice) u.voice = thVoice;
+  u.onend = () => { ceoSpeaking = false; };
+  u.onerror = () => { ceoSpeaking = false; };
+  window.speechSynthesis.speak(u);
+}
+function isCeoSpeaking() { return ceoSpeaking; }
 
 // ─── Shrimp (กุ้งน่ารัก) ───
 function Shrimp({ agent, position, rotationY = 0 }: { agent: Agent; position: [number, number, number]; rotationY?: number; }) {
@@ -256,7 +277,7 @@ function CEOQuote({ quotes, stateRef }: { quotes: string[]; stateRef: React.RefO
 }
 
 // ─── CEO กุ้ง — เดินตรวจเฉพาะโต๊ะที่ทำงาน (physics-like) ───
-function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: { pos: [number, number, number]; facing: number }[] }) {
+function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent[]; deskPositions: { pos: [number, number, number]; facing: number }[]; ttsEnabled?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
@@ -303,8 +324,8 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
       }
     }
 
-    // หยุดพักที่ waypoint — หันหน้าไปหาโต๊ะพนักงาน + เคาะหัว
-    if (now < st.pauseUntil) {
+    // หยุดพักที่ waypoint — หันหน้า + เคาะหัว + รอพูดเสร็จ
+    if (now < st.pauseUntil || isCeoSpeaking()) {
       // หันหน้าเข้าหาพนักงาน (snap เร็ว)
       let angleDiff = st.targetAngleAtPause - st.facingAngle;
       if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -342,10 +363,11 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
         st.targetAngleAtPause = Math.atan2(toX, toZ);
       }
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
-      // เปลี่ยนคำพูดทุก 2 waypoints
+      // เปลี่ยนคำพูดทุก 2 waypoints + พูด TTS
       if (st.wpIdx % 2 === 0) {
         st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
         st.quoteTime = now;
+        ceoSpeak(CEO_QUOTES[st.quoteIdx], ttsEnabled);
       }
       return;
     }
@@ -422,7 +444,7 @@ function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: 
 }
 
 // ─── Office Layout ───
-function OfficeLayout({ agents }: Props) {
+function OfficeLayout({ agents, ttsEnabled }: Props) {
   // 3 แถวๆ ละ 4-5 ตัว เว้นช่องทางเดินตรงกลาง
   const deskPositions: { pos: [number, number, number]; facing: number }[] = [
     // แถวซ้าย — แถวที่ 1 (4 ตัว) หันขวา
@@ -496,7 +518,7 @@ function OfficeLayout({ agents }: Props) {
       <Lamp position={[5, 0, 3]} />
 
       {/* CEO เดินตรวจเฉพาะโต๊ะที่ทำงาน */}
-      <CEOShrimp agents={agents} deskPositions={deskPositions} />
+      <CEOShrimp agents={agents} deskPositions={deskPositions} ttsEnabled={ttsEnabled} />
 
       {/* ป้าย */}
       <Html position={[0, 3.5, -7]} center distanceFactor={15}>
@@ -510,7 +532,7 @@ function OfficeLayout({ agents }: Props) {
 }
 
 // ─── Main Scene ───
-export default function OfficeScene({ agents }: Props) {
+export default function OfficeScene({ agents, ttsEnabled }: Props) {
   return (
     <Canvas
       camera={{ position: [8, 6, 10], fov: 50 }}
@@ -528,7 +550,7 @@ export default function OfficeScene({ agents }: Props) {
 
       <Suspense fallback={null}>
         <Floor />
-        <OfficeLayout agents={agents} />
+        <OfficeLayout agents={agents} ttsEnabled={ttsEnabled} />
       </Suspense>
 
       <OrbitControls minDistance={4} maxDistance={22} maxPolarAngle={Math.PI / 2.1} minPolarAngle={0.2} enableDamping dampingFactor={0.05} autoRotate autoRotateSpeed={0.2} />

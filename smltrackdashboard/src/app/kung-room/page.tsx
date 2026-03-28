@@ -131,6 +131,7 @@ function ActivityLog({ inline = false }: { inline?: boolean } = {}) {
 
 export default function KungRoomPage() {
   const [view, setView] = useState<"3d" | "list">("3d");
+  const [tts, setTts] = useState(true);
 
   return (
     <div className="min-h-screen theme-bg theme-text">
@@ -147,6 +148,9 @@ export default function KungRoomPage() {
             <button onClick={() => setView("list")} className={`px-3 py-1.5 text-xs rounded-lg transition ${view === "list" ? "bg-indigo-500 text-white" : "theme-bg-secondary theme-text-secondary"}`}>
               📋 รายชื่อ
             </button>
+            <button onClick={() => setTts(!tts)} className={`px-3 py-1.5 text-xs rounded-lg transition ${tts ? "bg-amber-500 text-white" : "theme-bg-secondary theme-text-secondary"}`} title={tts ? "ปิดเสียง CEO" : "เปิดเสียง CEO"}>
+              {tts ? "🔊" : "🔇"}
+            </button>
           </div>
         </div>
       </header>
@@ -154,7 +158,7 @@ export default function KungRoomPage() {
       {view === "3d" ? (
         <div className="relative" style={{ height: "calc(100vh - 120px)" }}>
           {/* 3D Scene */}
-          <OfficeScene agents={AGENTS} />
+          <OfficeScene agents={AGENTS} ttsEnabled={tts} />
 
           {/* Instructions */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
