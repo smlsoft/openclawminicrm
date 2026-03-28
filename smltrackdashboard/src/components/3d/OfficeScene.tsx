@@ -8,26 +8,47 @@ import * as THREE from "three";
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
 interface Props { agents: Agent[]; ttsEnabled?: boolean; }
 
-// ─── CEO TTS (Web Speech API) ───
-let ceoSpeaking = false;
-function ceoSpeak(text: string, enabled: boolean) {
-  if (!enabled || typeof window === "undefined" || !window.speechSynthesis) return;
-  if (ceoSpeaking) return;
-  ceoSpeaking = true;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "th-TH";
-  u.rate = 1.1;
-  u.pitch = 1.3; // เสียงสูงน่ารัก
-  u.volume = 0.8;
-  // หาเสียงไทย
-  const voices = window.speechSynthesis.getVoices();
-  const thVoice = voices.find((v) => v.lang.startsWith("th"));
-  if (thVoice) u.voice = thVoice;
-  u.onend = () => { ceoSpeaking = false; };
-  u.onerror = () => { ceoSpeaking = false; };
-  window.speechSynthesis.speak(u);
+// ─── TTS System (Web Speech API) — CEO + พนักงานเถียง ───
+let ttsBusy = false;
+
+// คำเถียงพนักงาน
+const EMPLOYEE_REPLIES = [
+  "ก็ทำอยู่ไง บอส!", "โอ๊ย ไม่ต้องเร่งก็ได้!", "รู้แล้วค่า~", "เดี๋ยวก่อนนน!",
+  "ขอกาแฟแก้วนึงก่อน!", "บอสเอง ก็ไม่เห็นทำ!", "ทำแล้ว ทำอยู่ ทำเสร็จแล้ว!",
+  "อย่ามาเคาะหัวหนู!", "ขยันอยู่นะ!", "เงินเดือนน้อย ทำแค่นี้ก็เก่งแล้ว!",
+  "CEO ไปนั่งเล่นเถอะ!", "มีโดนัทไหมบอส?", "หนูจะลาออก!!! ...แค่พูดเล่น",
+];
+
+function speak(text: string, enabled: boolean, opts: { pitch: number; rate: number }) {
+  if (!enabled || typeof window === "undefined" || !window.speechSynthesis) return Promise.resolve();
+  if (ttsBusy) return Promise.resolve();
+  ttsBusy = true;
+  return new Promise<void>((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "th-TH";
+    u.rate = opts.rate;
+    u.pitch = opts.pitch;
+    u.volume = 0.8;
+    const voices = window.speechSynthesis.getVoices();
+    const thVoice = voices.find((v) => v.lang.startsWith("th"));
+    if (thVoice) u.voice = thVoice;
+    u.onend = () => { ttsBusy = false; resolve(); };
+    u.onerror = () => { ttsBusy = false; resolve(); };
+    window.speechSynthesis.speak(u);
+  });
 }
-function isCeoSpeaking() { return ceoSpeaking; }
+
+async function ceoSpeak(text: string, enabled: boolean) {
+  // CEO พูดก่อน (เสียงสูง เร็ว)
+  await speak(text, enabled, { pitch: 1.4, rate: 1.15 });
+  // 40% โอกาสพนักงานเถียงกลับ (เสียงต่ำ ช้า)
+  if (enabled && Math.random() < 0.4) {
+    const reply = EMPLOYEE_REPLIES[Math.floor(Math.random() * EMPLOYEE_REPLIES.length)];
+    await speak(reply, enabled, { pitch: 0.8, rate: 0.95 });
+  }
+}
+
+function isCeoSpeaking() { return ttsBusy; }
 
 // ─── Shrimp (กุ้งน่ารัก) ───
 function Shrimp({ agent, position, rotationY = 0 }: { agent: Agent; position: [number, number, number]; rotationY?: number; }) {
