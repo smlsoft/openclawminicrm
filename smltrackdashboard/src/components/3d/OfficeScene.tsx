@@ -374,15 +374,116 @@ function CoffeeTable({ position }: { position: [number, number, number] }) {
 }
 
 function Whiteboard({ position, rotation }: { position: [number, number, number]; rotation?: [number, number, number] }) {
+  const [chartType, setChartType] = useState(0);
+  const [bars, setBars] = useState([40, 65, 30, 80, 55, 70, 45]);
+  const [line, setLine] = useState([20, 45, 35, 60, 50, 75, 65, 40, 55, 70]);
+
+  // เปลี่ยนกราฟ + สุ่มค่าทุก 4 วินาที
+  useState(() => {
+    const t = setInterval(() => {
+      setChartType(c => (c + 1) % 3);
+      setBars(prev => prev.map(() => 15 + Math.random() * 75));
+      setLine(prev => prev.map(() => 10 + Math.random() * 80));
+    }, 4000);
+    return () => clearInterval(t);
+  });
+
+  const barColors = ["#6366f1", "#22d3ee", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#f97316"];
+  const titles = ["📊 ยอดขายรายสัปดาห์", "📈 ลูกค้าใหม่รายวัน", "📉 ความพึงพอใจ"];
+
   return (
     <group position={position} rotation={rotation}>
       {/* Frame */}
-      <mesh castShadow><boxGeometry args={[2, 1.2, 0.05]} /><meshStandardMaterial color="#e8e8e8" roughness={0.3} /></mesh>
+      <mesh castShadow><boxGeometry args={[2, 1.2, 0.05]} /><meshStandardMaterial color="#f8fafc" roughness={0.3} /></mesh>
       {/* Border */}
-      <mesh position={[0, 0, 0.03]}><boxGeometry args={[2.1, 1.3, 0.02]} /><meshStandardMaterial color="#888" /></mesh>
+      <mesh position={[0, 0, 0.03]}><boxGeometry args={[2.1, 1.3, 0.02]} /><meshStandardMaterial color="#94a3b8" /></mesh>
       {/* Stand */}
-      <mesh position={[-0.7, -0.9, 0.1]} castShadow><boxGeometry args={[0.04, 0.6, 0.04]} /><meshStandardMaterial color="#888" /></mesh>
-      <mesh position={[0.7, -0.9, 0.1]} castShadow><boxGeometry args={[0.04, 0.6, 0.04]} /><meshStandardMaterial color="#888" /></mesh>
+      <mesh position={[-0.7, -0.9, 0.1]} castShadow><boxGeometry args={[0.04, 0.6, 0.04]} /><meshStandardMaterial color="#94a3b8" /></mesh>
+      <mesh position={[0.7, -0.9, 0.1]} castShadow><boxGeometry args={[0.04, 0.6, 0.04]} /><meshStandardMaterial color="#94a3b8" /></mesh>
+
+      {/* กราฟ Animation */}
+      <Html position={[0, 0, 0.04]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+        <div style={{
+          width: 280, height: 160, background: "#fff", borderRadius: 8, padding: "10px 12px",
+          fontFamily: "Prompt,sans-serif", overflow: "hidden",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#334155", marginBottom: 8 }}>
+            {titles[chartType % 3]}
+          </div>
+
+          {chartType % 3 === 0 ? (
+            /* Bar Chart */
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 100, paddingTop: 4 }}>
+              {bars.map((h, i) => (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  <div style={{
+                    width: "100%", height: h, maxHeight: 90,
+                    background: `linear-gradient(180deg, ${barColors[i]}, ${barColors[i]}88)`,
+                    borderRadius: "3px 3px 0 0",
+                    transition: "height 0.8s cubic-bezier(0.4,0,0.2,1)",
+                  }} />
+                  <span style={{ fontSize: 7, color: "#94a3b8" }}>{["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"][i]}</span>
+                </div>
+              ))}
+            </div>
+          ) : chartType % 3 === 1 ? (
+            /* Line Chart */
+            <svg width="256" height="100" viewBox="0 0 256 100" style={{ display: "block" }}>
+              <defs>
+                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={`M${line.map((v, i) => `${i * 28},${100 - v}`).join(" L")} L${(line.length - 1) * 28},100 L0,100 Z`}
+                fill="url(#lineGrad)" />
+              <polyline points={line.map((v, i) => `${i * 28},${100 - v}`).join(" ")}
+                fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transition: "all 0.8s ease" }} />
+              {line.map((v, i) => (
+                <circle key={i} cx={i * 28} cy={100 - v} r="3" fill="#6366f1" style={{ transition: "all 0.8s ease" }} />
+              ))}
+            </svg>
+          ) : (
+            /* Donut Chart */
+            <div style={{ display: "flex", alignItems: "center", gap: 12, height: 100 }}>
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                {(() => {
+                  const vals = bars.slice(0, 5);
+                  const total = vals.reduce((a, b) => a + b, 0);
+                  let acc = 0;
+                  return vals.map((v, i) => {
+                    const pct = v / total;
+                    const start = acc;
+                    acc += pct;
+                    const r = 32;
+                    const circ = 2 * Math.PI * r;
+                    return (
+                      <circle key={i} cx="40" cy="40" r={r} fill="none"
+                        stroke={barColors[i]} strokeWidth="12"
+                        strokeDasharray={`${pct * circ} ${circ}`}
+                        strokeDashoffset={-start * circ}
+                        style={{ transition: "all 0.8s ease" }} />
+                    );
+                  });
+                })()}
+                <text x="40" y="44" textAnchor="middle" fontSize="12" fontWeight="700" fill="#334155">
+                  {Math.round(bars.slice(0, 5).reduce((a, b) => a + b, 0) / 5)}%
+                </text>
+              </svg>
+              <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.8 }}>
+                {["ขาย", "บริการ", "ส่งของ", "ตอบแชท", "ติดตาม"].map((l, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: 2, background: barColors[i], display: "inline-block" }} />
+                    {l}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </Html>
     </group>
   );
 }
