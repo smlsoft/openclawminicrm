@@ -3430,9 +3430,10 @@ const PLAN_TTL = 120000; // 2 นาที — retry เร็วถ้าได
 // Helper: เรียก AI สร้าง 1 batch (max 5 ตัว)
 async function generateCeoBatch(agents) {
   const agentList = agents.map(a => `- ${a.name}: ${a.summary}`).join("\n");
-  const prompt = `CEO ถามติดตามผลงาน + พนักงานเถียงกลับตลกๆ สั้นๆ 5-12 คำ
+  const prompt = `CEO เดินตรวจงาน ถามเรื่อง event/ผลงานจริง พนักงานเถียงกลับตลกๆ ภาษาไทย สั้น 5-12 คำ
+ถ้ามี EVENT/ADVICE ให้ถามเรื่องนั้นโดยเฉพาะ
 ${agentList}
-ตอบ JSON: {"${agents[0].name}":{"ceo":"...","emp":"..."}${agents.length > 1 ? ',"' + agents[1].name + '":{...}' : ''},...}`;
+ตอบ JSON: {"${agents[0].name}":{"ceo":"ถาม","emp":"ตอบ"}${agents.length > 1 ? ',...' : ''}}`;
 
   const msgs = [
     { role: "system", content: "ตอบ JSON เท่านั้น ภาษาไทย สั้นๆ ห้ามซ้ำ" },
@@ -3483,8 +3484,10 @@ app.get("/api/ceo-plan", async (req, res) => {
     const database = await getDB();
     if (!database) return res.json({});
 
-    // ดึงผลงานล่าสุดของทุกตัว
+    // ─── ดึง events จริง: ai_costs + alerts + advice ───
     const agentsWithWork = [];
+
+    // 1) ผลงาน ai_costs
     for (const name of KUNG_NAMES) {
       const feature = KUNG_TO_FEATURE[name];
       const recent = await database.collection("ai_costs")
@@ -3497,6 +3500,33 @@ app.get("/api/ceo-plan", async (req, res) => {
         agentsWithWork.push({ name, summary });
       }
     }
+
+    // 2) alerts (ลูกค้าขอคุยคน, ตอบช้า)
+    const alerts = await database.collection("alerts").find({}).sort({ createdAt: -1 }).limit(5).toArray();
+    for (const al of alerts) {
+      const event = al.type === "human_handoff" ? `ลูกค้า "${al.customerName}" ขอคุยกับพนักงาน` : `${al.staffName || "พนักงาน"} ตอบช้า ${al.responseMinutes || "?"}นาที`;
+      // ใส่ให้แก้ว (แก้ปัญหาลูกค้า)
+      const existing = agentsWithWork.find(a => a.name === "แก้ว");
+      if (existing) existing.summary += ` | EVENT: ${event}`;
+      else agentsWithWork.push({ name: "แก้ว", summary: `EVENT: ${event}` });
+    }
+
+    // 3) advice (คำแนะนำจาก AI — critical/warning)
+    const advices = await database.collection("ai_advice").find({}).sort({ createdAt: -1 }).limit(3).toArray();
+    for (const adv of advices) {
+      for (const item of (adv.advice || []).slice(0, 2)) {
+        if (item.priority === "critical" || item.priority === "warning" || item.priority === "opportunity") {
+          // หาตัวที่เกี่ยวข้องจาก type
+          const mapping = { "problem-analysis": "แก้ว", "sales-opportunity": "ทองคำ", "health-monitor": "หมอใจ", "team-coaching": "ครูโค้ช" };
+          const targetName = mapping[adv.type] || KUNG_NAMES[Math.floor(Math.random() * KUNG_NAMES.length)];
+          const existing = agentsWithWork.find(a => a.name === targetName);
+          const event = `ADVICE[${item.priority}]: ${item.title} — ${(item.detail || "").slice(0, 40)}`;
+          if (existing) existing.summary += ` | ${event}`;
+          else agentsWithWork.push({ name: targetName, summary: event });
+        }
+      }
+    }
+
     if (agentsWithWork.length === 0) return res.json({});
 
     // แบ่ง batch ละ 5 ตัว → สร้างพร้อมกัน
