@@ -57,43 +57,70 @@ const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: s
   alert: { label: "แจ้งเตือน! ⏰", animation: "animate-ping-slow", bgClass: "bg-red-500/20 text-red-400" },
 };
 
-// ─── Activity Log (วน loop ด้านล่าง) ───
+// ─── Activity Log (ข้อมูลจริงจาก API) ───
+interface LogEntry { agent: string; color: string; msg: string; time: string; durationMs?: number; }
+
 function ActivityLog() {
+  const [logs, setLogs] = useState<LogEntry[]>(LOG_MESSAGES.map((m) => ({ ...m, time: "", durationMs: 0 })));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
+  // Fetch real data
+  useEffect(() => {
+    fetch("/dashboard/api/kung-log")
+      .then((r) => r.json())
+      .then((data: LogEntry[]) => { if (data.length > 0) setLogs(data); })
+      .catch(() => {});
+    // Refresh every 60 seconds
+    const timer = setInterval(() => {
+      fetch("/dashboard/api/kung-log")
+        .then((r) => r.json())
+        .then((data: LogEntry[]) => { if (data.length > 0) setLogs(data); })
+        .catch(() => {});
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-scroll
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(false);
       setTimeout(() => {
-        setCurrentIdx((prev) => (prev + 1) % LOG_MESSAGES.length);
+        setCurrentIdx((prev) => (prev + 1) % logs.length);
         setFade(true);
       }, 300);
-    }, 3000);
+    }, 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [logs.length]);
 
-  // Show 16 recent log lines
   const count = 16;
-  const visibleLogs = Array.from({ length: count }, (_, i) => {
-    const idx = (currentIdx - i + LOG_MESSAGES.length) % LOG_MESSAGES.length;
-    return { ...LOG_MESSAGES[idx], opacity: i === 0 ? 1 : Math.max(0.15, 1 - i * 0.055) };
+  const visibleLogs = Array.from({ length: Math.min(count, logs.length) }, (_, i) => {
+    const idx = (currentIdx - i + logs.length) % logs.length;
+    return { ...logs[idx], opacity: i === 0 ? 1 : Math.max(0.15, 1 - i * 0.055) };
   }).reverse();
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10">
       <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-8 pb-3 px-3 md:px-6">
-        <div className="max-w-4xl mx-auto space-y-1">
+        <div className="max-w-5xl mx-auto space-y-0.5">
           {visibleLogs.map((log, i) => (
             <div
               key={`${currentIdx}-${i}`}
-              className={`flex items-start gap-2 transition-all duration-300 ${i === count - 1 && fade ? "opacity-100 translate-y-0" : i === count - 1 && !fade ? "opacity-0 translate-y-2" : ""}`}
-              style={{ opacity: i === count - 1 ? undefined : log.opacity }}
+              className={`flex items-start gap-2 transition-all duration-300 ${i === visibleLogs.length - 1 && fade ? "opacity-100 translate-y-0" : i === visibleLogs.length - 1 && !fade ? "opacity-0 translate-y-2" : ""}`}
+              style={{ opacity: i === visibleLogs.length - 1 ? undefined : log.opacity }}
             >
+              <span className="text-[10px] text-gray-500 whitespace-nowrap font-mono" style={{ minWidth: 95 }}>
+                {log.time}
+              </span>
               <span className="text-xs font-bold whitespace-nowrap" style={{ color: log.color, minWidth: 80 }}>
                 {log.agent}
               </span>
-              <span className="text-xs text-gray-300">{log.msg}</span>
+              <span className="text-xs text-gray-300 truncate">{log.msg}</span>
+              {log.durationMs ? (
+                <span className="text-[10px] text-gray-500 whitespace-nowrap ml-auto">
+                  {(log.durationMs / 1000).toFixed(1)}s
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
