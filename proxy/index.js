@@ -3450,6 +3450,7 @@ app.get("/api/ceo-review", async (req, res) => {
       .limit(5)
       .toArray();
 
+    console.log(`[CEO-Review] ${agentName}: feature=${feature}, recentWork=${recentWork.length}`);
     // สร้าง context — ถ้ามีผลงานจริงใช้ผลงาน ถ้าไม่มีก็ให้ AI แต่งเอง
     let prompt;
     if (recentWork.length > 0) {
@@ -3488,6 +3489,7 @@ ${workSummary}
     });
     const d = await r.json();
     const result = d.choices?.[0]?.message?.content;
+    console.log(`[CEO-Review] ${agentName}: AI result=${result ? result.substring(0, 100) : "null"}`);
     if (result) {
       trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
         inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
@@ -3495,9 +3497,11 @@ ${workSummary}
         const parsed = JSON.parse(result);
         if (parsed.ceo && parsed.emp) {
           ceoReviewCache[agentName] = { ceo: parsed.ceo, emp: parsed.emp, ts: Date.now() };
+          console.log(`[CEO-Review] ✅ ${agentName}: "${parsed.ceo}" → "${parsed.emp}"`);
           return res.json(parsed);
         }
-      } catch { /* parse fail */ }
+        console.log(`[CEO-Review] ❌ parsed แต่ไม่มี ceo/emp:`, JSON.stringify(parsed).substring(0, 100));
+      } catch (pe) { console.log(`[CEO-Review] ❌ JSON parse fail:`, pe.message); }
     }
   } catch (e) {
     console.log("[CEO-Review] error:", e.message);
