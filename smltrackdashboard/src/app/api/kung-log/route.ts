@@ -55,13 +55,15 @@ export async function GET() {
       const timeStr = t.toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
       const dateStr = t.toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", day: "numeric", month: "short" });
       const tokens = c.totalTokens?.toLocaleString() || "?";
-      const costTxt = c.costUsd ? `$${c.costUsd.toFixed(4)}` : "";
+      const costUsd = c.costUsd || 0;
+      const costThb = costUsd * 35; // USD → THB
+      const costTxt = costUsd > 0 ? `฿${costThb.toFixed(2)}` : "ฟรี";
       const ms = c.durationMs || Math.round(Math.random() * 2000 + 500);
       const sec = (ms / 1000).toFixed(1);
 
       logs.push({
         ...kung,
-        msg: `${c.feature || "AI"} — ${c.model || ""} — ${tokens} tokens — ${sec}s ${costTxt}`,
+        msg: `${c.feature || "AI"} — ${c.model || ""} — ${tokens} tokens — ${sec}s — ${costTxt}`,
         time: `${dateStr} ${timeStr}`,
         durationMs: ms,
       });
