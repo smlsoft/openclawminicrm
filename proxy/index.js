@@ -378,8 +378,7 @@ async function sendPrivacyNoticeIfNeeded(sourceId, platform, sendFn) {
 // ราคาโดยประมาณต่อ 1M tokens (USD)
 const AI_PRICING = {
   "OR-Nemotron": { input: 0, output: 0 },
-  "OR-GPT-OSS": { input: 0, output: 0 },
-  "OR-Qwen3": { input: 0, output: 0 },
+  "OR-DeepSeek": { input: 0, output: 0 },
   "OR-Llama": { input: 0, output: 0 },
   "OR-Trinity": { input: 0, output: 0 },
   "OR-StepFlash": { input: 0, output: 0 },
@@ -533,8 +532,7 @@ async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 
   const providers = [
     // ─── ฟรี 100% (OpenRouter free models) ───
     { name: "OR-Nemotron", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "nvidia/nemotron-3-super-120b-a12b:free" },
-    { name: "OR-GPT-OSS", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "openai/gpt-oss-120b:free" },
-    { name: "OR-Qwen3", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "qwen/qwen3-next-80b:free" },
+    { name: "OR-DeepSeek", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "deepseek/deepseek-chat-v3-0324:free" },
     { name: "OR-Llama", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "meta-llama/llama-3.3-70b-instruct:free" },
     { name: "OR-Trinity", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "arcee-ai/trinity-large-preview:free" },
     { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
@@ -1407,8 +1405,7 @@ async function callProvider(messages, tools) {
   const providers = [
     // ─── ฟรี 100% (OpenRouter free) ───
     { name: "OR-Nemotron", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "nvidia/nemotron-3-super-120b-a12b:free" },
-    { name: "OR-GPT-OSS", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "openai/gpt-oss-120b:free" },
-    { name: "OR-Qwen3", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "qwen/qwen3-next-80b:free" },
+    { name: "OR-DeepSeek", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "deepseek/deepseek-chat-v3-0324:free" },
     { name: "OR-Llama", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "meta-llama/llama-3.3-70b-instruct:free" },
     { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
     // ─── ฟรี 100% (dedicated) ───
