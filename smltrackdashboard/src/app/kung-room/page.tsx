@@ -60,7 +60,7 @@ const STATUS_INFO: Record<string, { label: string; animation: string; bgClass: s
 // ─── Activity Log (ข้อมูลจริงจาก API) ───
 interface LogEntry { agent: string; color: string; msg: string; time: string; durationMs?: number; }
 
-function ActivityLog() {
+function ActivityLog({ inline = false }: { inline?: boolean } = {}) {
   const [logs, setLogs] = useState<LogEntry[]>(LOG_MESSAGES.map((m) => ({ ...m, time: "", durationMs: 0 })));
   const [currentIdx, setCurrentIdx] = useState(0);
   const [fade, setFade] = useState(true);
@@ -100,8 +100,8 @@ function ActivityLog() {
   }).reverse();
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10">
-      <div className="bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-8 pb-3 px-3 md:px-6">
+    <div className={inline ? "" : "absolute bottom-0 left-0 right-0 z-10"}>
+      <div className={inline ? "bg-black/80 py-3 px-3 md:px-6" : "bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-8 pb-3 px-3 md:px-6"}>
         <div className="max-w-5xl mx-auto space-y-0.5">
           {visibleLogs.map((log, i) => (
             <div
@@ -168,31 +168,40 @@ export default function KungRoomPage() {
           <ActivityLog />
         </div>
       ) : (
-        /* List View */
-        <main className="max-w-4xl mx-auto p-3 md:p-6 pb-24 md:pb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {AGENTS.map((agent) => {
-              const si = STATUS_INFO[agent.status];
-              return (
-                <div key={agent.id} className="theme-bg-secondary border theme-border rounded-xl p-4 hover:border-indigo-500/30 transition cursor-default">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: agent.color + "22", border: `2px solid ${agent.color}` }}>
-                      <span className={si?.animation}>{agent.emoji}</span>
+        /* List View + Activity Log */
+        <div className="flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
+          <main className="flex-1 overflow-y-auto max-w-4xl mx-auto w-full p-3 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {AGENTS.map((agent) => {
+                const si = STATUS_INFO[agent.status];
+                const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
+                return (
+                  <div key={agent.id} className={`theme-bg-secondary border rounded-xl p-4 transition cursor-default`}
+                    style={{ borderColor: isActive ? agent.color + "50" : "var(--border)", boxShadow: isActive ? `0 0 12px ${agent.color}20` : "none" }}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${isActive ? "animate-bounce" : ""}`} style={{ backgroundColor: agent.color + "22", border: `2px solid ${agent.color}` }}>
+                        {agent.emoji}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold">{agent.name}</h3>
+                        <p className="text-[11px] theme-text-muted">{agent.role}</p>
+                      </div>
+                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${si?.bgClass}`}>
+                        {isActive && <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse mr-1"></span>}
+                        {si?.label}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-bold">{agent.name}</h3>
-                      <p className="text-[11px] theme-text-muted">{agent.role}</p>
-                    </div>
-                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${si?.bgClass}`}>
-                      {si?.label}
-                    </div>
+                    <p className="text-xs theme-text-secondary italic pl-13">&ldquo;{agent.quote}&rdquo;</p>
                   </div>
-                  <p className="text-xs theme-text-secondary italic pl-13">&ldquo;{agent.quote}&rdquo;</p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </main>
+          {/* Activity Log ด้านล่าง */}
+          <div className="shrink-0">
+            <ActivityLog inline />
           </div>
-        </main>
+        </div>
       )}
     </div>
   );
