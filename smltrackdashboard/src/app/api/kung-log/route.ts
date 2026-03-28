@@ -32,9 +32,9 @@ export async function GET() {
   try {
     const db = await getDB();
 
-    // ดึง ai_costs ล่าสุด 30 รายการ
+    // ดึง ai_costs ล่าสุด 30 รายการ (เฉพาะฟรี — ตัดตัวเสียเงินออก)
     const costs = await db.collection("ai_costs")
-      .find({})
+      .find({ $or: [{ costUsd: 0 }, { costUsd: { $exists: false } }] })
       .sort({ createdAt: -1 })
       .limit(30)
       .toArray();
