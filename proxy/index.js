@@ -3427,13 +3427,59 @@ const KUNG_NAMES = Object.keys(KUNG_TO_FEATURE);
 let ceoPlanCache = { plan: {}, ts: 0 };
 const PLAN_TTL = 120000; // 2 นาที — retry เร็วถ้าได้ไม่ครบ
 
+// ─── AI Score System — เก็บคะแนน AI ว่าตัวไหนเก่งงานอะไร ───
+async function trackAIScore(provider, model, taskType, success, detail = "") {
+  try {
+    const database = await getDB();
+    if (!database) return;
+    // Upsert: เพิ่ม success/fail count ต่อ provider+model+taskType
+    const key = `${provider}:${model}`;
+    await database.collection("ai_scores").updateOne(
+      { key, taskType },
+      {
+        $inc: success ? { success: 1 } : { fail: 1 },
+        $set: { provider, model, taskType, updatedAt: new Date() },
+        $setOnInsert: { createdAt: new Date() },
+        ...(detail ? { $push: { recentDetails: { $each: [{ detail, ts: new Date() }], $slice: -5 } } } : {}),
+      },
+      { upsert: true }
+    );
+  } catch { /* silent */ }
+}
+
+// API: ดู AI scores
+app.get("/api/ai-scores", async (req, res) => {
+  try {
+    const database = await getDB();
+    if (!database) return res.json([]);
+    const scores = await database.collection("ai_scores").find({}).sort({ success: -1 }).toArray();
+    // คำนวณ score %
+    const result = scores.map(s => ({
+      provider: s.provider,
+      model: s.model,
+      taskType: s.taskType,
+      success: s.success || 0,
+      fail: s.fail || 0,
+      total: (s.success || 0) + (s.fail || 0),
+      score: (s.success || 0) + (s.fail || 0) > 0 ? Math.round(((s.success || 0) / ((s.success || 0) + (s.fail || 0))) * 100) : 0,
+      updatedAt: s.updatedAt,
+    }));
+    res.json(result);
+  } catch { res.json([]); }
+});
+
 // Helper: เรียก AI สร้าง 1 batch (max 5 ตัว)
 async function generateCeoBatch(agents) {
   const agentList = agents.map(a => `- ${a.name}: ${a.summary}`).join("\n");
-  const prompt = `CEO เดินตรวจงาน ถามเรื่อง event/ผลงานจริง พนักงานเถียงกลับตลกๆ ภาษาไทย สั้น 5-12 คำ
-ถ้ามี EVENT/ADVICE ให้ถามเรื่องนั้นโดยเฉพาะ
+  const prompt = `บอส CEO เดินตรวจออฟฟิศ พบพนักงานแต่ละคน สร้างบทสนทนาภาษาไทย:
 ${agentList}
-ตอบ JSON: {"${agents[0].name}":{"ceo":"ถาม","emp":"ตอบ"}${agents.length > 1 ? ',...' : ''}}`;
+
+กฎ:
+- CEO ถามเรื่องผลงาน/event จริงของแต่ละคน (ห้ามถามกว้างๆ)
+- พนักงานเถียงกลับตลกๆ แซวบอส
+- สั้น 8-20 คำต่อประโยค ห้ามซ้ำ
+- ตัวอย่าง: {"แก้ว":{"ceo":"แก้ว ลูกค้าร้องเรียนเรื่องส่งช้า จัดการยังไง?","emp":"จัดการแล้วค่ะ แต่แมวมากินสลิปไปก่อน!"}}
+ตอบ JSON เท่านั้น:`;
 
   const msgs = [
     { role: "system", content: "ตอบ JSON เท่านั้น ภาษาไทย สั้นๆ ห้ามซ้ำ" },
@@ -3442,6 +3488,7 @@ ${agentList}
 
   // SambaNova → OpenRouter
   let result = null;
+  let usedProvider = "", usedModel = "";
   const sambaKey = process.env.SAMBANOVA_API_KEY;
   if (sambaKey) {
     try {
@@ -3453,24 +3500,39 @@ ${agentList}
       const d = await r.json();
       if (d.choices?.[0]?.message?.content) {
         result = d.choices[0].message.content;
+        usedProvider = "SambaNova"; usedModel = "Qwen3-235B";
         trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-plan",
           inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
       }
     } catch { /* timeout */ }
   }
   if (!result) {
-    try { result = await callLightAI(msgs, { json: true, maxTokens: 600, timeout: 15000 }); } catch { /* silent */ }
+    try {
+      result = await callLightAI(msgs, { json: true, maxTokens: 600, timeout: 15000 });
+      if (result) { usedProvider = "OpenRouter"; usedModel = "free"; }
+    } catch { /* silent */ }
   }
 
-  if (!result) return {};
+  if (!result) {
+    trackAIScore(usedProvider || "unknown", usedModel || "unknown", "json-conversation", false, "no result");
+    return {};
+  }
   try {
     const parsed = JSON.parse(result);
     const plan = {};
     for (const [name, pair] of Object.entries(parsed)) {
-      if (pair && pair.ceo && pair.emp) plan[name] = pair;
+      if (!pair || !pair.ceo || !pair.emp) continue;
+      if (pair.ceo.length < 5 || pair.emp.length < 5) continue;
+      if (pair.ceo === "ถาม" || pair.emp === "ตอบ") continue;
+      plan[name] = pair;
     }
+    const good = Object.keys(plan).length;
+    trackAIScore(usedProvider, usedModel, "json-conversation", good > 0, `${good}/${agents.length} pairs`);
     return plan;
-  } catch { return {}; }
+  } catch {
+    trackAIScore(usedProvider || "unknown", usedModel || "unknown", "json-conversation", false, "json parse fail");
+    return {};
+  }
 }
 
 // Batch: วางแผนบทสนทนา — แบ่ง batch ละ 5 ตัว (ป้องกัน JSON ถูกตัด)

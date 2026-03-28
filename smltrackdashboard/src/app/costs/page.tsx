@@ -275,7 +275,69 @@ export default function CostsPage() {
             </div>
           </div>
         </section>
+        {/* AI Scores — ตัวไหนเก่งอะไร */}
+        <AIScoreBoard />
       </main>
     </div>
+  );
+}
+
+// ─── AI Score Board — แสดงคะแนน AI ว่าตัวไหนเก่งงานอะไร ───
+interface AIScore { provider: string; model: string; taskType: string; success: number; fail: number; total: number; score: number; }
+
+function AIScoreBoard() {
+  const [scores, setScores] = useState<AIScore[]>([]);
+  useEffect(() => {
+    fetch("/dashboard/api/ai-scores").then(r => r.json()).then(setScores).catch(() => {});
+  }, []);
+
+  if (scores.length === 0) return null;
+
+  // จัด group ตาม taskType
+  const byTask: Record<string, AIScore[]> = {};
+  for (const s of scores) {
+    if (!byTask[s.taskType]) byTask[s.taskType] = [];
+    byTask[s.taskType].push(s);
+  }
+
+  const taskLabels: Record<string, string> = {
+    "json-conversation": "🗣️ สร้างบทสนทนา (JSON)",
+    "json": "📋 ตอบ JSON",
+    "chat": "💬 แชท",
+    "embedding": "🔗 Embedding",
+    "vision": "👁️ วิเคราะห์ภาพ",
+  };
+
+  return (
+    <section className="theme-bg-secondary border theme-border rounded-xl p-4">
+      <h2 className="text-sm font-bold mb-1">🏆 AI Score — ตัวไหนเก่งอะไร</h2>
+      <p className="text-[11px] theme-text-muted mb-4">คะแนนจากผลลัพธ์จริง — ใช้เลือก AI ที่เหมาะกับงาน</p>
+      <div className="space-y-4">
+        {Object.entries(byTask).map(([task, items]) => (
+          <div key={task}>
+            <h3 className="text-xs font-semibold theme-text-secondary mb-2">{taskLabels[task] || `📊 ${task}`}</h3>
+            <div className="space-y-1.5">
+              {items.sort((a, b) => b.score - a.score).map((s) => (
+                <div key={`${s.provider}-${s.model}-${s.taskType}`} className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${s.score >= 80 ? "bg-green-500" : s.score >= 50 ? "bg-yellow-500" : "bg-red-500"}`}></span>
+                  <span className="text-xs font-medium w-28 truncate">{s.provider}</span>
+                  <span className="text-[11px] theme-text-secondary w-20 truncate">{s.model}</span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--bg-primary)" }}>
+                    <div className="h-full rounded-full transition-all" style={{
+                      width: `${s.score}%`,
+                      background: s.score >= 80 ? "#4ade80" : s.score >= 50 ? "#fbbf24" : "#f87171",
+                    }} />
+                  </div>
+                  <span className="text-xs font-bold w-10 text-right" style={{ color: s.score >= 80 ? "#4ade80" : s.score >= 50 ? "#fbbf24" : "#f87171" }}>
+                    {s.score}%
+                  </span>
+                  <span className="text-[10px] theme-text-muted w-16 text-right">{s.success}✓ {s.fail}✕</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
