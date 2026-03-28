@@ -74,17 +74,19 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   ttsBusy = true;
   fetchAIQuotes();
 
-  // CEO เรียกชื่อ + พูด — เสียงหญิง (Premwadee)
+  // CEO พูด — เสียงชาย (Niwat) ผู้บริหาร
   const quote = getRandomCeoQuote();
   const ceoText = agentName ? `${agentName}! ${quote}` : quote;
-  const ok = await edgeTTS(ceoText, "th-TH-PremwadeeNeural", 1.3);
-  if (!ok) await webSpeechFallback(ceoText, 1.5, 1.8);
+  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 1.2);
+  if (!ok) await webSpeechFallback(ceoText, 0.8, 1.8);
 
-  // 50% พนักงานเถียงกลับ — เสียงชาย (Niwat)
+  // 50% พนักงานเถียงกลับ — สุ่มชาย/หญิง
   if (enabled && Math.random() < 0.5) {
     const reply = getRandomEmployeeQuote();
-    const ok2 = await edgeTTS(reply, "th-TH-NiwatNeural", 1.1);
-    if (!ok2) await webSpeechFallback(reply, 0.7, 1.6);
+    const isFemale = Math.random() < 0.5;
+    const voice = isFemale ? "th-TH-PremwadeeNeural" : "th-TH-NiwatNeural";
+    const ok2 = await edgeTTS(reply, voice, isFemale ? 1.3 : 1.1);
+    if (!ok2) await webSpeechFallback(reply, isFemale ? 1.4 : 0.7, 1.6);
   }
   ttsBusy = false;
 }
@@ -504,38 +506,114 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   );
 }
 
-// ─── แมวออฟฟิศ 🐱 เดินวนไปมา ───
-function OfficeCat() {
+// ─── แมวออฟฟิศ 🐱 เดินหลบของ + กระโดดขึ้นโต๊ะ + กวนพนักงาน ───
+const CAT_MOODS = ["เหมียว~", "นอนดีกว่า zzZ", "กวนไปวันๆ~", "ขอกินด้วย!", "...แมวไม่สน", "หิวแล้ว!", "เบื่อ~"];
+function OfficeCat({ deskPositions }: { deskPositions: { pos: [number, number, number]; facing: number }[] }) {
   const ref = useRef<THREE.Group>(null!);
-  const state = useRef({ x: -2, z: 3, angle: 0, phase: 0 });
-  useFrame((s) => {
+  const tailRef = useRef<THREE.Mesh>(null!);
+
+  // waypoints: พื้น + บนโต๊ะ (y=0.6) สลับกัน
+  const waypoints = useMemo(() => {
+    const pts: { x: number; y: number; z: number; onDesk: boolean }[] = [
+      { x: 0, y: 0, z: 0, onDesk: false },
+      { x: -2, y: 0, z: -3, onDesk: false },
+      { x: 2, y: 0, z: 4, onDesk: false },
+      { x: -5, y: 0, z: 1, onDesk: false },
+      { x: 3, y: 0, z: -2, onDesk: false },
+    ];
+    // เพิ่มโต๊ะสุ่ม 3 ตัวให้กระโดดขึ้น
+    const shuffled = [...deskPositions].sort(() => Math.random() - 0.5).slice(0, 3);
+    shuffled.forEach((dp) => {
+      pts.push({ x: dp.pos[0], y: 0.6, z: dp.pos[2], onDesk: true }); // บนโต๊ะ
+      pts.push({ x: dp.pos[0] + (Math.random() - 0.5) * 2, y: 0, z: dp.pos[2] + 1, onDesk: false }); // ลงพื้น
+    });
+    return pts;
+  }, [deskPositions]);
+
+  const st = useRef({ wpIdx: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, angle: 0, pauseUntil: 0, moodIdx: 0 });
+
+  useFrame((s, delta) => {
     if (!ref.current) return;
-    const t = s.clock.elapsedTime * 0.3;
-    const st = state.current;
-    st.x = Math.sin(t * 0.7) * 4;
-    st.z = Math.cos(t * 0.5) * 3 + 1;
-    st.angle = Math.atan2(Math.cos(t * 0.7) * 0.7 * 4, -Math.sin(t * 0.5) * 0.5 * 3);
-    st.phase = t * 8;
-    const bob = Math.abs(Math.sin(st.phase)) * 0.02;
-    ref.current.position.set(st.x, bob, st.z);
-    ref.current.rotation.y = st.angle;
+    const c = st.current;
+    const now = s.clock.elapsedTime;
+
+    // หางแกว่ง
+    if (tailRef.current) tailRef.current.rotation.x = 0.8 + Math.sin(now * 3) * 0.3;
+
+    // หยุดพักบนโต๊ะ (กวนพนักงาน 3 วิ)
+    if (now < c.pauseUntil) {
+      ref.current.position.set(c.x, c.y, c.z);
+      ref.current.rotation.y = c.angle;
+      return;
+    }
+
+    const wp = waypoints[c.wpIdx];
+    const dx = wp.x - c.x;
+    const dy = wp.y - c.y;
+    const dz = wp.z - c.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+
+    // ถึง waypoint
+    if (dist < 0.2 && Math.abs(dy) < 0.15) {
+      if (wp.onDesk) {
+        c.pauseUntil = now + 2 + Math.random() * 2; // นั่งบนโต๊ะ 2-4 วิ
+        c.moodIdx = (c.moodIdx + 1) % CAT_MOODS.length;
+      }
+      c.wpIdx = (c.wpIdx + 1) % waypoints.length;
+      c.vx = 0; c.vz = 0;
+      return;
+    }
+
+    // Physics: เดิน + กระโดดขึ้นโต๊ะ
+    const speed = 1.2;
+    const friction = 0.93;
+    c.vx = (c.vx + (dx / Math.max(dist, 0.1)) * speed * delta) * friction;
+    c.vz = (c.vz + (dz / Math.max(dist, 0.1)) * speed * delta) * friction;
+
+    // กระโดด (ถ้าต้องขึ้นโต๊ะ)
+    if (wp.y > c.y + 0.05) {
+      c.vy += 3.0 * delta; // กระโดดขึ้น
+    } else if (c.y > 0.01 && wp.y < 0.1) {
+      c.vy -= 5.0 * delta; // ตกลง (gravity)
+    } else {
+      c.vy *= 0.8;
+    }
+
+    c.x += c.vx;
+    c.y = Math.max(0, c.y + c.vy * delta);
+    c.z += c.vz;
+
+    // หันหน้า
+    const v = Math.sqrt(c.vx * c.vx + c.vz * c.vz);
+    if (v > 0.005) {
+      const target = Math.atan2(c.vx, c.vz);
+      let diff = target - c.angle;
+      if (diff > Math.PI) diff -= Math.PI * 2;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      c.angle += diff * 0.12;
+    }
+
+    // bob เวลาเดินพื้น
+    const bob = c.y < 0.05 ? Math.abs(Math.sin(now * 8)) * 0.015 : 0;
+    ref.current.position.set(c.x, c.y + bob, c.z);
+    ref.current.rotation.y = c.angle;
   });
+
+  const mood = CAT_MOODS[st.current.moodIdx];
   return (
     <group ref={ref}>
-      {/* ตัว */}
       <mesh position={[0, 0.12, 0]} castShadow><boxGeometry args={[0.15, 0.12, 0.3]} /><meshStandardMaterial color="#ff9944" /></mesh>
-      {/* หัว */}
       <mesh position={[0, 0.18, 0.18]}><sphereGeometry args={[0.09, 8, 8]} /><meshStandardMaterial color="#ff9944" /></mesh>
-      {/* หู */}
       <mesh position={[-0.05, 0.26, 0.18]}><coneGeometry args={[0.03, 0.06, 4]} /><meshStandardMaterial color="#ff9944" /></mesh>
       <mesh position={[0.05, 0.26, 0.18]}><coneGeometry args={[0.03, 0.06, 4]} /><meshStandardMaterial color="#ff9944" /></mesh>
-      {/* หาง */}
-      <mesh position={[0, 0.15, -0.2]} rotation={[0.8, 0, 0]}><cylinderGeometry args={[0.015, 0.01, 0.2, 6]} /><meshStandardMaterial color="#ff9944" /></mesh>
-      {/* ตา */}
+      <mesh ref={tailRef} position={[0, 0.15, -0.2]} rotation={[0.8, 0, 0]}><cylinderGeometry args={[0.015, 0.01, 0.2, 6]} /><meshStandardMaterial color="#ff9944" /></mesh>
       <mesh position={[-0.03, 0.2, 0.26]}><sphereGeometry args={[0.015, 6, 6]} /><meshStandardMaterial color="#2ecc71" emissive="#2ecc71" emissiveIntensity={0.3} /></mesh>
       <mesh position={[0.03, 0.2, 0.26]}><sphereGeometry args={[0.015, 6, 6]} /><meshStandardMaterial color="#2ecc71" emissive="#2ecc71" emissiveIntensity={0.3} /></mesh>
       <Html position={[0, 0.35, 0]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
-        <div style={{ fontSize: 8, fontFamily: "Prompt,sans-serif", color: "#ff9944", whiteSpace: "nowrap" }}>🐱 ส้ม</div>
+        <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif" }}>
+          <div style={{ fontSize: 8, color: "#ff9944" }}>🐱 ส้ม</div>
+          <div style={{ fontSize: 7, color: "#ccc", background: "rgba(0,0,0,0.4)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>{mood}</div>
+        </div>
       </Html>
     </group>
   );
@@ -718,8 +796,8 @@ function OfficeLayout({ agents, ttsEnabled }: Props) {
       {/* CEO เดินตรวจเฉพาะโต๊ะที่ทำงาน */}
       <CEOShrimp agents={agents} deskPositions={deskPositions} ttsEnabled={ttsEnabled} />
 
-      {/* 🐱 แมวออฟฟิศ เดินไปมา */}
-      <OfficeCat />
+      {/* 🐱 แมวออฟฟิศ เดินหลบของ + กระโดดขึ้นโต๊ะ */}
+      <OfficeCat deskPositions={deskPositions} />
 
       {/* 🚰 ตู้กดน้ำ */}
       <WaterCooler position={[-6, 0, -1]} />
