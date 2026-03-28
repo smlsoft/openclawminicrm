@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
-import { Suspense, useRef, useMemo } from "react";
+import { Suspense, useRef, useMemo, useState } from "react";
 import * as THREE from "three";
 
 interface Agent { id: number; name: string; role: string; emoji: string; color: string; status: string; quote: string; }
@@ -239,6 +239,22 @@ function Floor() {
   );
 }
 
+// ─── CEO Quote (แสดงคำบ่น) ───
+function CEOQuote({ quotes, stateRef }: { quotes: string[]; stateRef: React.RefObject<{ quoteIdx: number; quoteTime: number }> }) {
+  const [text, setText] = useState(quotes[0]);
+  useFrame((s) => {
+    const st = stateRef.current;
+    if (!st) return;
+    const newText = quotes[st.quoteIdx % quotes.length];
+    if (newText !== text) setText(newText);
+  });
+  return (
+    <div style={{ marginTop: 3, fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.5)", borderRadius: 5, padding: "2px 6px", whiteSpace: "nowrap" }}>
+      {text}
+    </div>
+  );
+}
+
 // ─── CEO กุ้ง — เดินตรวจงานทั่วออฟฟิศ (physics-like) ───
 function CEOShrimp() {
   const ref = useRef<THREE.Group>(null!);
@@ -255,25 +271,46 @@ function CEOShrimp() {
     [0.5, -3],                                       // กลับกลาง
   ], []);
 
-  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0 });
+  const CEO_QUOTES = useMemo(() => [
+    "ทำงานได้ดีมาก! 👏", "เร็วกว่านี้ได้ไหม? 🤔", "ลูกค้ารอนะ! 📞",
+    "ยอดขายเป็นไงบ้าง?", "ใครยังไม่ตอบแชท? 😤", "กาแฟหมดแล้วนะ ☕",
+    "ดีใจที่มีทีมแบบนี้ 🥰", "อย่าลืม follow up!", "สู้ๆ น้องกุ้ง! 💪",
+    "ประชุม 5 นาทีนะ", "KPI เดือนนี้โอเคมั้ย?", "ขยันดี ชอบๆ ✨",
+  ], []);
+  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0 });
 
   useFrame((s, delta) => {
     if (!ref.current) return;
     const st = state.current;
+    const now = s.clock.elapsedTime;
+
+    // หยุดพักที่ waypoint 2 วินาที (สังเกตงาน)
+    if (now < st.pauseUntil) {
+      ref.current.position.set(st.x, 0.25, st.z);
+      return;
+    }
+
     const target = waypoints[st.wpIdx];
     const dx = target[0] - st.x;
     const dz = target[1] - st.z;
     const dist = Math.sqrt(dx * dx + dz * dz);
 
-    // ถึง waypoint → ไป waypoint ถัดไป
+    // ถึง waypoint → หยุดดู 2 วิ → ไปต่อ
     if (dist < 0.15) {
+      st.pauseUntil = now + 1.5 + Math.random() * 1.5; // หยุด 1.5-3 วินาที
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
+      st.vx = 0; st.vz = 0;
+      // เปลี่ยนคำพูดทุก 3 waypoints
+      if (st.wpIdx % 3 === 0) {
+        st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
+        st.quoteTime = now;
+      }
       return;
     }
 
-    // Physics: เร่ง + แรงเสียดทาน
-    const speed = 1.8;
-    const friction = 0.92;
+    // Physics: เร่งช้าลง + แรงเสียดทานสูงขึ้น → เดินเนียน
+    const speed = 0.8;
+    const friction = 0.95;
     const ax = (dx / dist) * speed * delta;
     const az = (dz / dist) * speed * delta;
     st.vx = (st.vx + ax) * friction;
@@ -281,14 +318,14 @@ function CEOShrimp() {
     st.x += st.vx;
     st.z += st.vz;
 
-    // หันหน้าไปทิศทางที่เดิน (smooth)
+    // หันหน้าไปทิศทางที่เดิน (smooth มากขึ้น)
     const targetAngle = Math.atan2(st.vx, st.vz);
     let angleDiff = targetAngle - st.facingAngle;
     if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    st.facingAngle += angleDiff * 0.1;
+    st.facingAngle += angleDiff * 0.06;
 
-    // ขาแกว่ง (walking)
+    // ขาแกว่ง (walking — ช้าลง)
     const v = Math.sqrt(st.vx * st.vx + st.vz * st.vz);
     st.legPhase += v * 25;
 
@@ -318,10 +355,13 @@ function CEOShrimp() {
       <mesh position={[0, 0.96, 0.03]}><coneGeometry args={[0.08, 0.12, 5]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.5} metalness={0.8} /></mesh>
       <mesh position={[-0.06, 0.93, 0.03]}><coneGeometry args={[0.04, 0.08, 4]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.3} metalness={0.8} /></mesh>
       <mesh position={[0.06, 0.93, 0.03]}><coneGeometry args={[0.04, 0.08, 4]} /><meshStandardMaterial color="#ffd700" emissive="#ffa500" emissiveIntensity={0.3} metalness={0.8} /></mesh>
-      {/* Name tag */}
+      {/* Name tag + คำบ่น */}
       <Html position={[0, 1.2, 0]} center distanceFactor={7} style={{ pointerEvents: "none" }}>
-        <div style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000", padding: "2px 10px", borderRadius: 6, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", fontFamily: "Prompt,sans-serif", boxShadow: "0 2px 12px rgba(255,215,0,0.5)" }}>
-          👑 น้องกุ้ง CEO
+        <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif" }}>
+          <div style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000", padding: "2px 10px", borderRadius: 6, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", boxShadow: "0 2px 12px rgba(255,215,0,0.5)" }}>
+            👑 น้องกุ้ง CEO
+          </div>
+          <CEOQuote quotes={CEO_QUOTES} stateRef={state} />
         </div>
       </Html>
       {/* Glow */}
