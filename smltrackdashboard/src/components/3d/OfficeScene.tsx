@@ -380,7 +380,11 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   }, [agents, deskPositions]);
 
   // คำพูด CEO สำหรับ balloon text (แสดงระหว่างเดิน)
-  const CEO_QUOTES = ["ตรวจงานหน่อย!", "ใครว่างอยู่?", "สู้ๆ ทีม!", "ทำงานดีมาก!", "เร็วๆ หน่อย!", "ดูผลงานนะ", "มีอะไรรายงาน?", "ขยันดี!", "อย่าแอบนอน!", "เช็คงานหน่อย"];
+  // CEO balloon text จาก plan (AI สร้าง) ไม่ hardcode
+  const CEO_QUOTES = useMemo(() => {
+    const quotes = Object.values(ceoPlan).map(p => p.ceo).filter(Boolean);
+    return quotes.length > 0 ? quotes : ["..."];
+  }, []);
   const hammerRef = useRef<THREE.Group>(null!);
   const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0, currentAgentName: "" });
 
@@ -798,13 +802,13 @@ function HoloAlertBoard({ position }: { position: [number, number, number] }) {
       <pointLight position={[0, 0, 0]} intensity={0.3} color={glowColor} distance={3} />
 
       {/* Holographic display */}
-      <Html center distanceFactor={12}>
+      <Html center distanceFactor={8}>
         <div style={{
-          width: 220, minHeight: 100,
+          width: 400, minHeight: 180,
           background: bgColor,
           border: `1px solid ${borderColor}`,
-          borderRadius: 12,
-          padding: "10px 14px",
+          borderRadius: 16,
+          padding: "16px 20px",
           fontFamily: "Prompt,monospace,sans-serif",
           backdropFilter: "blur(8px)",
           boxShadow: `0 0 30px ${glowColor}40, inset 0 0 20px ${glowColor}10`,
@@ -820,11 +824,11 @@ function HoloAlertBoard({ position }: { position: [number, number, number] }) {
           }} />
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <div style={{ fontSize: 9, color: glowColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 14, color: glowColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>
               ⚡ ALERT SYSTEM
             </div>
-            <div style={{ fontSize: 8, color: "#64748b" }}>
+            <div style={{ fontSize: 12, color: "#64748b" }}>
               {holoAlerts.length > 0 ? `${currentIdx + 1}/${holoAlerts.length}` : "—"}
             </div>
           </div>
@@ -832,36 +836,36 @@ function HoloAlertBoard({ position }: { position: [number, number, number] }) {
           {alert ? (
             <>
               {/* Alert content */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                <span style={{ fontSize: 18, lineHeight: 1 }}>{alert.icon}</span>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <span style={{ fontSize: 32, lineHeight: 1 }}>{alert.icon}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: 11, fontWeight: 700,
+                    fontSize: 18, fontWeight: 700,
                     color: alert.priority === "critical" ? "#f87171" : alert.priority === "warning" ? "#fbbf24" : "#4ade80",
                   }}>{alert.title}</div>
-                  <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2, lineHeight: 1.4 }}>{alert.detail}</div>
+                  <div style={{ fontSize: 14, color: "#94a3b8", marginTop: 4, lineHeight: 1.5 }}>{alert.detail}</div>
                 </div>
               </div>
               {/* Footer */}
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, paddingTop: 4, borderTop: `1px solid ${borderColor}` }}>
-                <span style={{ fontSize: 8, color: "#64748b" }}>🦐 {alert.agent}</span>
-                <span style={{ fontSize: 8, color: "#64748b" }}>{alert.time}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 8, borderTop: `1px solid ${borderColor}` }}>
+                <span style={{ fontSize: 12, color: "#64748b" }}>🦐 {alert.agent}</span>
+                <span style={{ fontSize: 12, color: "#64748b" }}>{alert.time}</span>
               </div>
             </>
           ) : (
-            <div style={{ textAlign: "center", padding: "12px 0" }}>
-              <div style={{ fontSize: 20 }}>✅</div>
-              <div style={{ fontSize: 10, color: "#4ade80", marginTop: 4 }}>ไม่มีเรื่องด่วน</div>
-              <div style={{ fontSize: 8, color: "#64748b" }}>น้องกุ้งดูแลอยู่</div>
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 36 }}>✅</div>
+              <div style={{ fontSize: 16, color: "#4ade80", marginTop: 6 }}>ไม่มีเรื่องด่วน</div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>น้องกุ้งดูแลอยู่</div>
             </div>
           )}
 
           {/* Priority bar */}
           {holoAlerts.length > 1 && (
-            <div style={{ display: "flex", gap: 2, marginTop: 6, justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: 3, marginTop: 10, justifyContent: "center" }}>
               {holoAlerts.map((a, i) => (
                 <div key={i} style={{
-                  width: i === currentIdx ? 12 : 4, height: 3, borderRadius: 2,
+                  width: i === currentIdx ? 18 : 6, height: 4, borderRadius: 3,
                   background: a.priority === "critical" ? "#ef4444" : a.priority === "warning" ? "#f59e0b" : "#22d3ee",
                   opacity: i === currentIdx ? 1 : 0.3,
                   transition: "all 0.3s",
