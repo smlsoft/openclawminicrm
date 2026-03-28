@@ -299,10 +299,10 @@ function NavWithBadges() {
         <div key={gi} className={gi > 0 ? "mt-2" : ""}>
           {label && (
             <button onClick={() => toggleGroup(label)}
-              className="w-full flex items-center justify-between px-3 mb-1 group"
+              className="w-full flex items-center justify-between px-3 py-1.5 mb-0.5 rounded-lg cursor-pointer transition hover:bg-[var(--bg-hover)] active:scale-[0.98]"
               style={{ color: "var(--text-muted)" }}>
               <span className="text-[10px] uppercase tracking-widest font-semibold">{label}</span>
-              <span className="text-[9px] opacity-50 group-hover:opacity-100 transition">{isCollapsed ? "▶" : "▼"}</span>
+              <span className="text-[10px] transition-transform" style={{ transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>▼</span>
             </button>
           )}
           {!isCollapsed && group.items.map((item) => (
