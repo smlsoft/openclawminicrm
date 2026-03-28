@@ -242,14 +242,16 @@ function DeskUnit({ position, color, facing }: { position: [number, number, numb
       {[[-0.5, 0.27, -0.22], [0.5, 0.27, -0.22], [-0.5, 0.27, 0.22], [0.5, 0.27, 0.22]].map((p, i) => (
         <mesh key={i} position={p as [number, number, number]} castShadow><boxGeometry args={[0.04, 0.54, 0.04]} /><meshStandardMaterial color="#333" /></mesh>
       ))}
-      {/* จอคอม */}
-      <mesh position={[0, 0.82, -0.18]} castShadow><boxGeometry args={[0.42, 0.28, 0.02]} /><meshStandardMaterial color="#1a1a2e" /></mesh>
-      <mesh position={[0, 0.82, -0.165]}><planeGeometry args={[0.38, 0.24]} /><meshBasicMaterial color={color} transparent opacity={0.2} toneMapped={false} /></mesh>
-      <mesh position={[0, 0.66, -0.18]} castShadow><boxGeometry args={[0.06, 0.08, 0.04]} /><meshStandardMaterial color="#222" /></mesh>
-      {/* คีย์บอร์ด */}
-      <mesh position={[0, 0.575, 0.05]}><boxGeometry args={[0.3, 0.01, 0.08]} /><meshStandardMaterial color="#2a2a3a" /></mesh>
-      {/* เมาส์ */}
-      <mesh position={[0.25, 0.575, 0.05]}><boxGeometry args={[0.04, 0.01, 0.06]} /><meshStandardMaterial color="#2a2a3a" /></mesh>
+      {/* จอคอม MacBook สีขาว/เงิน */}
+      <mesh position={[0, 0.82, -0.18]} castShadow><boxGeometry args={[0.42, 0.28, 0.02]} /><meshStandardMaterial color="#e5e7eb" metalness={0.3} roughness={0.4} /></mesh>
+      {/* หน้าจอ — สว่าง */}
+      <mesh position={[0, 0.82, -0.165]}><planeGeometry args={[0.38, 0.24]} /><meshBasicMaterial color="#f0f4ff" toneMapped={false} /></mesh>
+      {/* ขาตั้งจอ เงิน */}
+      <mesh position={[0, 0.66, -0.18]} castShadow><boxGeometry args={[0.06, 0.08, 0.04]} /><meshStandardMaterial color="#d1d5db" metalness={0.4} roughness={0.3} /></mesh>
+      {/* คีย์บอร์ด เงิน */}
+      <mesh position={[0, 0.575, 0.05]}><boxGeometry args={[0.3, 0.01, 0.08]} /><meshStandardMaterial color="#e5e7eb" metalness={0.2} roughness={0.4} /></mesh>
+      {/* เมาส์ เงิน */}
+      <mesh position={[0.25, 0.575, 0.05]}><boxGeometry args={[0.04, 0.01, 0.06]} /><meshStandardMaterial color="#e5e7eb" metalness={0.2} roughness={0.4} /></mesh>
       {/* เก้าอี้ */}
       <mesh position={[0, 0.35, 0.45]} castShadow><boxGeometry args={[0.4, 0.04, 0.4]} /><meshStandardMaterial color={color} roughness={0.5} /></mesh>
       <mesh position={[0, 0.58, 0.62]} castShadow><boxGeometry args={[0.4, 0.4, 0.04]} /><meshStandardMaterial color={color} roughness={0.5} /></mesh>
@@ -511,9 +513,9 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
           <planeGeometry args={[0.45, 0.3, 8, 4]} />
           <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.2} side={2} />
         </mesh>
-        {/* ข้อความบนธง — CEO */}
-        <Html position={[0.22, 0.9, 0.01]} center distanceFactor={5} style={{ pointerEvents: "none" }}>
-          <div style={{ fontSize: 8, fontWeight: 900, color: "#ffd700", textShadow: "0 1px 3px rgba(0,0,0,0.8)", whiteSpace: "nowrap", fontFamily: "Prompt,sans-serif" }}>
+        {/* ข้อความบนธง — CEO เต็มธง 90% */}
+        <Html position={[0.22, 0.9, 0.01]} center distanceFactor={4} style={{ pointerEvents: "none" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#ffd700", textShadow: "0 2px 6px rgba(0,0,0,0.9)", whiteSpace: "nowrap", fontFamily: "Prompt,sans-serif", letterSpacing: 2 }}>
             CEO
           </div>
         </Html>
