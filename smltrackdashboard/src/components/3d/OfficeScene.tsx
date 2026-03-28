@@ -376,21 +376,25 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — ไปเฉพาะตัวที่มีแผนคุย (มีข้อมูลทำงาน) เหมือน CEO ตามงานจริง
-  const waypoints: [number, number][] = useMemo(() => {
+  // Waypoints — อัพเดตตาม ceoPlan (ไม่ใช้ useMemo เพราะ ceoPlan เป็น global)
+  const waypointsRef = useRef<[number, number][]>([[0.5, 0]]);
+  const lastPlanKeys = useRef("");
+  // อัพเดต waypoints เมื่อ plan เปลี่ยน (ตรวจทุก frame)
+  const planKeys = Object.keys(ceoPlan).sort().join(",");
+  if (planKeys !== lastPlanKeys.current) {
+    lastPlanKeys.current = planKeys;
     const planned: [number, number][] = [];
     agents.forEach((agent, i) => {
       const dp = deskPositions[i];
       if (!dp) return;
-      // ไปเฉพาะตัวที่มีแผนคุย
       if (getCeoPlanFor(agent.name)) {
         const offset = dp.facing === 0 ? 1.2 : -1.2;
         planned.push([dp.pos[0] + offset, dp.pos[2]]);
       }
     });
-    if (planned.length === 0) return [[0.5, 0]]; // ยืนรอกลางออฟฟิศถ้ายังไม่มีแผน
-    return planned;
-  }, [agents, deskPositions]);
+    waypointsRef.current = planned.length > 0 ? planned : [[0.5, 0]];
+  }
+  const waypoints = waypointsRef.current;
 
   // คำพูด CEO สำหรับ balloon text (แสดงระหว่างเดิน)
   // CEO balloon text จาก plan (AI สร้าง) ไม่ hardcode
