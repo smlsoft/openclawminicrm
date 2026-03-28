@@ -55,6 +55,31 @@ function markPlanUsed(agentName: string) {
   usedPlanKeys.add(shortName || agentName);
 }
 
+// Unlock audio สำหรับมือถือ — ต้องมี user gesture ก่อน
+let audioUnlocked = false;
+let sharedAudioCtx: AudioContext | null = null;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  try {
+    sharedAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // สร้าง silent buffer เพื่อ unlock
+    const buf = sharedAudioCtx.createBuffer(1, 1, 22050);
+    const src = sharedAudioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(sharedAudioCtx.destination);
+    src.start(0);
+    audioUnlocked = true;
+  } catch { /* silent */ }
+}
+
+// เรียก unlock เมื่อ user แตะหน้าจอ / click
+if (typeof window !== "undefined") {
+  const unlock = () => { unlockAudio(); window.removeEventListener("touchstart", unlock); window.removeEventListener("click", unlock); };
+  window.addEventListener("touchstart", unlock, { once: true });
+  window.addEventListener("click", unlock, { once: true });
+}
+
 // Edge TTS (Neural voice) → fallback Web Speech API
 async function edgeTTS(text: string, voice: string, speed: number): Promise<boolean> {
   try {
@@ -65,6 +90,23 @@ async function edgeTTS(text: string, voice: string, speed: number): Promise<bool
     });
     if (!r.ok) return false;
     const blob = await r.blob();
+
+    // ใช้ AudioContext (มือถือ friendly) ถ้า unlock แล้ว
+    if (sharedAudioCtx && audioUnlocked) {
+      try {
+        const arrayBuf = await blob.arrayBuffer();
+        const audioBuf = await sharedAudioCtx.decodeAudioData(arrayBuf);
+        const source = sharedAudioCtx.createBufferSource();
+        source.buffer = audioBuf;
+        source.connect(sharedAudioCtx.destination);
+        return new Promise((resolve) => {
+          source.onended = () => resolve(true);
+          source.start(0);
+        });
+      } catch { /* fallback to Audio element */ }
+    }
+
+    // Fallback: Audio element (desktop)
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     return new Promise((resolve) => {
