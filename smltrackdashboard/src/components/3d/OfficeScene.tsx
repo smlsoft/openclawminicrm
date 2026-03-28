@@ -69,20 +69,21 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
   });
 }
 
-async function ceoSpeak(_unused: string, enabled: boolean) {
+async function ceoSpeak(agentName: string, enabled: boolean) {
   if (!enabled || ttsBusy) return;
   ttsBusy = true;
-  fetchAIQuotes(); // refresh quotes ถ้าหมดอายุ
+  fetchAIQuotes();
 
-  const ceoText = getRandomCeoQuote();
-  // CEO พูด — เสียงหญิง Neural (Premwadee)
+  // CEO เรียกชื่อ + พูด — เสียงหญิง (Premwadee)
+  const quote = getRandomCeoQuote();
+  const ceoText = agentName ? `${agentName}! ${quote}` : quote;
   const ok = await edgeTTS(ceoText, "th-TH-PremwadeeNeural", 1.3);
   if (!ok) await webSpeechFallback(ceoText, 1.5, 1.8);
 
-  // 40% พนักงานเถียง — เสียงชาย Neural (Niwat)
-  if (enabled && Math.random() < 0.4) {
+  // 50% พนักงานเถียงกลับ — เสียงชาย (Niwat)
+  if (enabled && Math.random() < 0.5) {
     const reply = getRandomEmployeeQuote();
-    const ok2 = await edgeTTS(reply, "th-TH-NiwatNeural", 1.2);
+    const ok2 = await edgeTTS(reply, "th-TH-NiwatNeural", 1.1);
     if (!ok2) await webSpeechFallback(reply, 0.7, 1.6);
   }
   ttsBusy = false;
@@ -369,7 +370,7 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     "ประชุม 5 นาทีนะ", "KPI เดือนนี้โอเคมั้ย?", "ขยันดี ชอบๆ",
   ];
   const hammerRef = useRef<THREE.Group>(null!);
-  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0 });
+  const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0, currentAgentName: "" });
 
   useFrame((s, delta) => {
     if (!ref.current) return;
@@ -419,18 +420,16 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
       if (agentIdx >= 0) {
         const dp = deskPositions[agentIdx];
         const shrimpZ = dp.facing === 0 ? dp.pos[2] + 0.3 : dp.pos[2] - 0.3;
-        // คำนวณมุมจาก CEO ไปหาตัวกุ้ง
         const toX = dp.pos[0] - st.x;
         const toZ = shrimpZ - st.z;
         st.targetAngleAtPause = Math.atan2(toX, toZ);
+        st.currentAgentName = agents[agentIdx].name;
       }
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
-      // เปลี่ยนคำพูดทุก 2 waypoints + พูด TTS
-      if (st.wpIdx % 2 === 0) {
-        st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
-        st.quoteTime = now;
-        ceoSpeak(CEO_QUOTES[st.quoteIdx], ttsEnabled);
-      }
+      // พูดทุก waypoint — เรียกชื่อพนักงาน + พูด TTS
+      st.quoteIdx = (st.quoteIdx + 1) % CEO_QUOTES.length;
+      st.quoteTime = now;
+      ceoSpeak(st.currentAgentName, ttsEnabled);
       return;
     }
 
