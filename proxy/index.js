@@ -3415,13 +3415,25 @@ app.get("/api/free-models", (req, res) => {
 });
 
 // ─── CEO Plan — วางแผนบทสนทนาล่วงหน้าทุกตัว (batch) ───
-const KUNG_TO_FEATURE = {
-  "แก้ว": "crm-analysis", "ทองคำ": "sales-hunter", "ครูโค้ช": "team-coaching",
-  "อาร์ม": "weekly-strategy", "หมอใจ": "health-monitor", "แบงค์": "payment-guardian",
-  "เมฆ": "order-tracker", "ขนุน": "re-engagement", "แนน": "upsell-crosssell",
-  "บุ๋ม": "daily-report", "แต้ม": "lead-scorer", "นาฬิกา": "appointment-reminder", "เปรียบ": "price-watcher",
-};
-const KUNG_NAMES = Object.keys(KUNG_TO_FEATURE);
+// รหัสพนักงาน + ชื่อ + feature — ใช้สื่อสารกับ AI ชัดเจน
+const KUNG_STAFF = [
+  { id: "E01", name: "แก้ว", role: "แก้ปัญหาลูกค้า", feature: "crm-analysis" },
+  { id: "E02", name: "ทองคำ", role: "หาโอกาสขาย", feature: "sales-hunter" },
+  { id: "E03", name: "ครูโค้ช", role: "โค้ชทีมงาน", feature: "team-coaching" },
+  { id: "E04", name: "อาร์ม", role: "วางกลยุทธ์", feature: "weekly-strategy" },
+  { id: "E05", name: "หมอใจ", role: "ดูแลลูกค้า", feature: "health-monitor" },
+  { id: "E06", name: "แบงค์", role: "ตรวจสลิป", feature: "payment-guardian" },
+  { id: "E07", name: "เมฆ", role: "ติดตามส่งของ", feature: "order-tracker" },
+  { id: "E08", name: "ขนุน", role: "ดึงลูกค้ากลับ", feature: "re-engagement" },
+  { id: "E09", name: "แนน", role: "แนะนำสินค้า", feature: "upsell-crosssell" },
+  { id: "E10", name: "บุ๋ม", role: "สรุปรายวัน", feature: "daily-report" },
+  { id: "E11", name: "แต้ม", role: "ให้คะแนน", feature: "lead-scorer" },
+  { id: "E12", name: "นาฬิกา", role: "เตือนนัดหมาย", feature: "appointment-reminder" },
+  { id: "E13", name: "เปรียบ", role: "วิเคราะห์ราคา", feature: "price-watcher" },
+];
+const KUNG_TO_FEATURE = Object.fromEntries(KUNG_STAFF.map(s => [s.name, s.feature]));
+const KUNG_NAMES = KUNG_STAFF.map(s => s.name);
+const KUNG_ID_TO_NAME = Object.fromEntries(KUNG_STAFF.map(s => [s.id, s.name]));
 
 // Cache แผนบทสนทนาทั้งหมด { plan: Record<name, {ceo,emp}>, ts }
 let ceoPlanCache = { plan: {}, ts: 0 };
@@ -3468,20 +3480,22 @@ app.get("/api/ai-scores", async (req, res) => {
   } catch { res.json([]); }
 });
 
-// Helper: เรียก AI สร้าง 1 batch (max 5 ตัว)
+// Helper: เรียก AI สร้าง 1 batch (max 5 ตัว) — ใช้รหัส E01-E13
 async function generateCeoBatch(agents) {
-  const validNames = agents.map(a => a.name);
-  const agentList = agents.map(a => `- "${a.name}": ${a.summary}`).join("\n");
-  const exampleKey = validNames[0];
+  // สร้าง map รหัส → ชื่อ สำหรับ batch นี้
+  const idMap = {}; // { "E01": "แก้ว" }
+  const agentList = agents.map(a => {
+    const staff = KUNG_STAFF.find(s => s.name === a.name);
+    const id = staff?.id || a.name;
+    idMap[id] = a.name;
+    return `- ${id}(${a.name},${staff?.role || ""}): ${a.summary}`;
+  }).join("\n");
+  const ids = Object.keys(idMap);
   const prompt = `บอส CEO ถามพนักงาน ภาษาไทยล้วน:
 ${agentList}
 
-กฎ:
-1. key ต้องเป็นชื่อที่ให้เท่านั้น: ${validNames.map(n => `"${n}"`).join(", ")}
-2. ภาษาไทย 100% ห้ามอังกฤษ
-3. CEO ถามเรื่องงานจริง 8-20 คำ
-4. พนักงานเถียงตลก 8-20 คำ
-ตัวอย่าง: {"${exampleKey}":{"ceo":"${exampleKey} ลูกค้าร้องเรียน จัดการยังไงแล้ว?","emp":"จัดการแล้วค่ะ แต่แมวมากินสลิปไป!"}}
+กฎ: key ใช้รหัส ${ids.join(",")} เท่านั้น ภาษาไทย 100% CEO ถามเรื่องงาน 8-20 คำ พนักงานเถียงตลก 8-20 คำ
+ตัวอย่าง: {"${ids[0]}":{"ceo":"${idMap[ids[0]]} ลูกค้าร้องเรียน จัดการยังไง?","emp":"จัดการแล้วค่ะ แต่แมวมากินสลิป!"}}
 ตอบ JSON:`;
 
   const msgs = [
@@ -3523,15 +3537,17 @@ ${agentList}
   try {
     const parsed = JSON.parse(result);
     const plan = {};
-    for (const [name, pair] of Object.entries(parsed)) {
-      // ข้ามถ้า key ไม่ใช่ชื่อกุ้งจริง
-      if (!validNames.includes(name)) continue;
+    for (const [key, pair] of Object.entries(parsed)) {
+      // แปลง key: รหัส E01 → ชื่อจริง "แก้ว" หรือใช้ชื่อตรงๆ
+      const realName = idMap[key] || (KUNG_NAMES.includes(key) ? key : null);
+      if (!realName) continue;
       if (!pair || !pair.ceo || !pair.emp) continue;
       if (pair.ceo.length < 5 || pair.emp.length < 5) continue;
       if (pair.ceo === "ถาม" || pair.emp === "ตอบ") continue;
-      // ข้ามถ้ามีภาษาอังกฤษยาว (3+ ตัว)
-      if (/[a-zA-Z]{3,}/.test(pair.ceo + pair.emp)) continue;
-      plan[name] = pair;
+      // ข้ามถ้ามีภาษาอังกฤษยาว (3+ ตัว) ยกเว้น CEO/E01 etc.
+      const cleaned = (pair.ceo + pair.emp).replace(/E\d{2}/g, "").replace(/CEO/g, "");
+      if (/[a-zA-Z]{3,}/.test(cleaned)) continue;
+      plan[realName] = pair;
     }
     const good = Object.keys(plan).length;
     trackAIScore(usedProvider, usedModel, "json-conversation", good > 0, `${good}/${agents.length} pairs`);
