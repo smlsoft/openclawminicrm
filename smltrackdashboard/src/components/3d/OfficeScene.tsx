@@ -541,11 +541,12 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
       // ธง — ไม่ต้อง reset (โบกตลอด)
       // หันหน้าเข้าหาตัวน้องกุ้ง (ไม่ใช่โต๊ะ)
       const wp = waypoints[st.wpIdx];
-      const agentIdx = agents.findIndex((a, i) => {
+      const agentIdx = agents.findIndex((_, i) => {
         const dp = deskPositions[i];
         if (!dp) return false;
-        const isActive = a.status === "working" || a.status === "excited" || a.status === "running" || a.status === "alert";
-        return isActive && Math.abs(dp.pos[2] - wp[1]) < 1.5 && Math.abs(dp.pos[0] - wp[0]) < 2.5;
+        // หาพนักงานที่อยู่ใกล้ waypoint (ทุก status ไม่ใช่แค่ active)
+        const offset = dp.facing === 0 ? 1.2 : -1.2;
+        return Math.abs((dp.pos[0] + offset) - wp[0]) < 0.5 && Math.abs(dp.pos[2] - wp[1]) < 0.5;
       });
       if (agentIdx >= 0) {
         const dp = deskPositions[agentIdx];
@@ -554,6 +555,9 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
         const toZ = shrimpZ - st.z;
         st.targetAngleAtPause = Math.atan2(toX, toZ);
         st.currentAgentName = agents[agentIdx].name;
+      } else {
+        // ไม่เจอ agent → ใช้ชื่อแรกที่ใกล้ที่สุด
+        st.currentAgentName = agents[st.wpIdx % agents.length]?.name || "";
       }
       st.wpIdx = (st.wpIdx + 1) % waypoints.length;
       // พูดทุก waypoint — เรียกชื่อพนักงาน + พูด TTS
