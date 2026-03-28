@@ -132,31 +132,42 @@ export function generateAllConversations(): { name: string; conv: Conversation }
   return all;
 }
 
-// สุ่มบทสนทนาสำหรับพนักงานคนนี้
-let allConvs: { name: string; conv: Conversation }[] | null = null;
-let usedIndices = new Set<number>();
+// ─── Global Queue — สุ่ม 1001 ชุดเรียง ดึงทีละตัว ไม่ซ้ำจนหมดแล้ววน ───
+let queue: { name: string; conv: Conversation }[] = [];
+
+function shuffleQueue() {
+  const all = generateAllConversations();
+  // Fisher-Yates shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  queue = all;
+}
 
 export function getRandomConversation(agentName: string): Conversation | null {
-  if (!allConvs) allConvs = generateAllConversations();
+  if (queue.length === 0) shuffleQueue();
 
   const shortName = agentName.replace("น้องกุ้ง", "");
-  // หาบทสนทนาที่ตรงชื่อ + ยังไม่เคยใช้
-  const candidates = allConvs
-    .map((c, i) => ({ ...c, idx: i }))
-    .filter(c => c.name === shortName && !usedIndices.has(c.idx));
 
-  if (candidates.length === 0) {
-    // ใช้หมดแล้ว → reset
-    usedIndices.clear();
-    return getRandomConversation(agentName);
+  // หาตัวแรกในคิวที่ตรงชื่อ
+  const idx = queue.findIndex(c => c.name === shortName);
+  if (idx >= 0) {
+    const pick = queue.splice(idx, 1)[0];
+    return pick.conv;
   }
 
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  usedIndices.add(pick.idx);
-  return pick.conv;
+  // ไม่มีชื่อนี้เหลือ → ดึงตัวแรกในคิว (คนอื่นก็ได้ เปลี่ยนชื่อ)
+  const pick = queue.shift()!;
+  return {
+    turns: pick.conv.turns.map(t => t.replace(new RegExp(pick.name, "g"), shortName)),
+  };
 }
 
 export function getTotalConversations(): number {
-  if (!allConvs) allConvs = generateAllConversations();
-  return allConvs.length;
+  return TEMPLATES.length * NAMES.length;
+}
+
+export function getQueueRemaining(): number {
+  return queue.length;
 }
