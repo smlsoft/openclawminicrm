@@ -255,21 +255,29 @@ function CEOQuote({ quotes, stateRef }: { quotes: string[]; stateRef: React.RefO
   );
 }
 
-// ─── CEO กุ้ง — เดินตรวจงานทั่วออฟฟิศ (physics-like) ───
-function CEOShrimp() {
+// ─── CEO กุ้ง — เดินตรวจเฉพาะโต๊ะที่ทำงาน (physics-like) ───
+function CEOShrimp({ agents, deskPositions }: { agents: Agent[]; deskPositions: { pos: [number, number, number]; facing: number }[] }) {
   const ref = useRef<THREE.Group>(null!);
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — เดินตามโต๊ะน้องกุ้งแต่ละตัว
-  const waypoints: [number, number][] = useMemo(() => [
-    [-3, -4], [-3, -1.5], [-3, 1], [-3, 3.5],     // แถว 1
-    [0.5, -1], [0.5, 2.5],                          // โต๊ะกาแฟ
-    [-0.5, -4], [-0.5, -1.5], [-0.5, 1], [-0.5, 3.5], // แถว 2
-    [0.5, 0],                                        // กลาง
-    [3.5, -5], [3.5, -2.5], [3.5, 0], [3.5, 2.5], [3.5, 5], // แถว 3
-    [0.5, -3],                                       // กลับกลาง
-  ], []);
+  // Waypoints — เฉพาะโต๊ะที่น้องกุ้งกำลังทำงาน
+  const waypoints: [number, number][] = useMemo(() => {
+    const active: [number, number][] = [];
+    agents.forEach((agent, i) => {
+      const dp = deskPositions[i];
+      if (!dp) return;
+      const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
+      if (isActive) {
+        // ยืนข้างโต๊ะ (ฝั่งทางเดิน)
+        const offset = dp.facing === 0 ? 1.2 : -1.2;
+        active.push([dp.pos[0] + offset, dp.pos[2]]);
+      }
+    });
+    // ถ้าไม่มีใครทำงาน → ยืนกลางออฟฟิศ
+    if (active.length === 0) return [[0.5, 0]];
+    return active;
+  }, [agents, deskPositions]);
 
   const CEO_QUOTES = useMemo(() => [
     "ทำงานได้ดีมาก! 👏", "เร็วกว่านี้ได้ไหม? 🤔", "ลูกค้ารอนะ! 📞",
@@ -404,6 +412,16 @@ function OfficeLayout({ agents }: Props) {
             <DeskUnit position={dp.pos} color={agent.color} facing={dp.facing} />
             <Shrimp agent={agent} position={[dp.pos[0], 0.25, shrimpZ]} rotationY={dp.facing === 0 ? Math.PI : 0} />
             {isActive && <SpeechBalloon agent={agent} position={[dp.pos[0], 0, shrimpZ]} />}
+            {!isActive && (
+              <Html position={[dp.pos[0], 1.6, shrimpZ]} center distanceFactor={6} style={{ pointerEvents: "none" }}>
+                <div style={{ textAlign: "center", fontFamily: "Prompt,sans-serif", animation: "pulse 2s infinite" }}>
+                  <div style={{ fontSize: 18 }}>🟥</div>
+                  <div style={{ fontSize: 8, color: "#f87171", fontWeight: 700, background: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 5px", whiteSpace: "nowrap" }}>
+                    ระวังไล่ออก!
+                  </div>
+                </div>
+              </Html>
+            )}
           </group>
         );
       })}
@@ -434,8 +452,8 @@ function OfficeLayout({ agents }: Props) {
       <Lamp position={[5, 0, -3]} />
       <Lamp position={[5, 0, 3]} />
 
-      {/* CEO เดินตรวจงาน */}
-      <CEOShrimp />
+      {/* CEO เดินตรวจเฉพาะโต๊ะที่ทำงาน */}
+      <CEOShrimp agents={agents} deskPositions={deskPositions} />
 
       {/* ป้าย */}
       <Html position={[0, 3.5, -7]} center distanceFactor={15}>
