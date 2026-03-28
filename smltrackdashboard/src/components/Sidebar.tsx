@@ -442,7 +442,7 @@ interface FreeModelsData { count: number; lastDiscovery: string | null; models: 
 function AICostWidget() {
   const [data, setData] = useState<CostSummary | null>(null);
   const [models, setModels] = useState<FreeModelsData | null>(null);
-  const [showModels, setShowModels] = useState(false);
+  const [showModels, setShowModels] = useState(true);
 
   useEffect(() => {
     const loadCost = () => fetch("/dashboard/api/ai-cost-summary").then(r => r.json()).then(setData).catch(() => {});
@@ -495,33 +495,55 @@ function AICostWidget() {
       {/* Free Models List */}
       {showModels && models && (
         <div className="mt-2 pt-2 border-t space-y-0.5" style={{ borderColor: "var(--border)" }}>
-          <div className="text-[9px] mb-1" style={{ color: "var(--text-muted)" }}>
-            🔍 ค้นพบ {models.lastDiscovery ? new Date(models.lastDiscovery).toLocaleTimeString("th-TH") : ""} · รีเฟรชทุก 1 ชม.
+          <div className="text-[9px] mb-1.5 flex items-center justify-between" style={{ color: "var(--text-muted)" }}>
+            <span>🔍 ค้นพบ {models.lastDiscovery ? new Date(models.lastDiscovery).toLocaleTimeString("th-TH") : ""}</span>
+            <span>ทุก 1 ชม.</span>
+          </div>
+          {/* Header */}
+          <div className="flex items-center gap-1 text-[8px] mb-0.5 pb-0.5 border-b" style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}>
+            <span className="w-2"></span>
+            <span className="flex-1">Provider / Model</span>
+            <span className="w-10 text-right">สถานะ</span>
           </div>
           {models.models.map((m) => {
             const shortName = "OR-" + m.id.split("/").pop()?.substring(0, 15);
             const cd = models.cooldowns?.[shortName];
             const isCooling = cd && cd.remainSec > 0;
+            const provider = m.id.split("/")[0];
+            const model = m.id.split("/")[1]?.replace(":free", "") || m.id;
             return (
-              <div key={m.id} className="flex items-center gap-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500" : "bg-green-500"}`}></span>
-                <span className="text-[9px] truncate" style={{ color: isCooling ? "var(--text-muted)" : "var(--text-secondary)" }} title={m.id}>
-                  {m.name.replace(" (free)", "")}
-                </span>
-                <span className="text-[8px] ml-auto shrink-0" style={{ color: isCooling ? "#f87171" : "var(--text-muted)" }}>
-                  {isCooling ? `${Math.ceil(cd.remainSec / 60)}m` : `${Math.round(m.context_length / 1000)}K`}
+              <div key={m.id} className="flex items-center gap-1" title={m.id}>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-green-500"}`}></span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] truncate" style={{ color: isCooling ? "var(--text-muted)" : "var(--text-secondary)" }}>
+                    {model}
+                  </div>
+                  <div className="text-[8px]" style={{ color: "var(--text-muted)" }}>{provider}</div>
+                </div>
+                <span className="text-[8px] shrink-0 text-right w-10" style={{ color: isCooling ? "#f87171" : "#4ade80" }}>
+                  {isCooling ? `⏳${Math.ceil(cd.remainSec / 60)}m` : "✓ พร้อม"}
                 </span>
               </div>
             );
           })}
           {/* Dedicated providers */}
-          {models.dedicated?.map((d) => (
-            <div key={d} className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
-              <span className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{d}</span>
-              <span className="text-[8px] ml-auto" style={{ color: "#60a5fa" }}>ฟรี</span>
-            </div>
-          ))}
+          {models.dedicated?.map((d) => {
+            const cdKey = d.startsWith("SambaNova") ? "SambaNova" : "Gemini";
+            const cd = models.cooldowns?.[cdKey];
+            const isCooling = cd && cd.remainSec > 0;
+            return (
+              <div key={d} className="flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCooling ? "bg-red-500 animate-pulse" : "bg-blue-500"}`}></span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{d.split(" (")[0]}</div>
+                  <div className="text-[8px]" style={{ color: "var(--text-muted)" }}>dedicated</div>
+                </div>
+                <span className="text-[8px] shrink-0 text-right w-10" style={{ color: isCooling ? "#f87171" : "#60a5fa" }}>
+                  {isCooling ? `⏳${Math.ceil(cd.remainSec / 60)}m` : "✓ พร้อม"}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
