@@ -127,6 +127,7 @@ services:
     restart: always
     environment:
       - PORT=5050
+      - REQUIRE_API_KEY=false
     deploy:
       resources:
         limits:

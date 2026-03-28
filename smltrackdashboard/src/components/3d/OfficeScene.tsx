@@ -74,19 +74,17 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   ttsBusy = true;
   fetchAIQuotes();
 
-  // CEO พูด — เสียงชาย (Niwat) ผู้บริหาร
+  // CEO พูด — เสียงชาย ต่ำ ช้า (Niwat)
   const quote = getRandomCeoQuote();
   const ceoText = agentName ? `${agentName}! ${quote}` : quote;
-  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 1.2);
-  if (!ok) await webSpeechFallback(ceoText, 0.8, 1.8);
+  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 1.0);
+  if (!ok) await webSpeechFallback(ceoText, 0.6, 1.0); // เสียงต่ำมาก ช้า
 
-  // 50% พนักงานเถียงกลับ — สุ่มชาย/หญิง
+  // 50% พนักงานเถียงกลับ — เสียงหญิง สูง (Premwadee)
   if (enabled && Math.random() < 0.5) {
     const reply = getRandomEmployeeQuote();
-    const isFemale = Math.random() < 0.5;
-    const voice = isFemale ? "th-TH-PremwadeeNeural" : "th-TH-NiwatNeural";
-    const ok2 = await edgeTTS(reply, voice, isFemale ? 1.3 : 1.1);
-    if (!ok2) await webSpeechFallback(reply, isFemale ? 1.4 : 0.7, 1.6);
+    const ok2 = await edgeTTS(reply, "th-TH-PremwadeeNeural", 1.1);
+    if (!ok2) await webSpeechFallback(reply, 1.8, 1.1); // เสียงสูงมาก ต่างชัด
   }
   ttsBusy = false;
 }
