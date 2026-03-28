@@ -3416,10 +3416,10 @@ app.get("/api/free-models", (req, res) => {
 
 // ─── CEO Plan — วางแผนบทสนทนาล่วงหน้าทุกตัว (batch) ───
 const KUNG_TO_FEATURE = {
-  "แก้ว": "crm-analysis", "ทองคำ": "sales-opportunity", "ครูโค้ช": "team-coaching",
-  "อาร์ม": "weekly-strategy", "หมอใจ": "customer-health", "แบงค์": "payment-verify",
-  "เมฆ": "delivery-track", "ขนุน": "win-back", "แนน": "cross-sell",
-  "บุ๋ม": "daily-summary", "แต้ม": "lead-scoring", "นาฬิกา": "appointment", "เปรียบ": "price-analysis",
+  "แก้ว": "crm-analysis", "ทองคำ": "sales-hunter", "ครูโค้ช": "team-coaching",
+  "อาร์ม": "weekly-strategy", "หมอใจ": "health-monitor", "แบงค์": "payment-guardian",
+  "เมฆ": "order-tracker", "ขนุน": "re-engagement", "แนน": "upsell-crosssell",
+  "บุ๋ม": "daily-report", "แต้ม": "lead-scorer", "นาฬิกา": "appointment-reminder", "เปรียบ": "price-watcher",
 };
 const KUNG_NAMES = Object.keys(KUNG_TO_FEATURE);
 
