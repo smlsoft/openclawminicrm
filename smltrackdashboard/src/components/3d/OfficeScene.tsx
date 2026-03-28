@@ -376,13 +376,13 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — อัพเดตตาม ceoPlan (ไม่ใช้ useMemo เพราะ ceoPlan เป็น global)
+  // Waypoints — อัพเดตตาม ceoPlan (ตรวจทุก render)
   const waypointsRef = useRef<[number, number][]>([[0.5, 0]]);
-  const lastPlanKeys = useRef("");
-  // อัพเดต waypoints เมื่อ plan เปลี่ยน (ตรวจทุก frame)
-  const planKeys = Object.keys(ceoPlan).sort().join(",");
-  if (planKeys !== lastPlanKeys.current) {
-    lastPlanKeys.current = planKeys;
+  const lastPlanCheck = useRef("");
+  // สร้าง key รวม plan + usedKeys เพื่อตรวจว่าเปลี่ยนหรือยัง
+  const checkKey = Object.keys(ceoPlan).sort().join(",") + "|" + [...usedPlanKeys].join(",");
+  if (checkKey !== lastPlanCheck.current) {
+    lastPlanCheck.current = checkKey;
     const planned: [number, number][] = [];
     agents.forEach((agent, i) => {
       const dp = deskPositions[i];
@@ -392,7 +392,21 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
         planned.push([dp.pos[0] + offset, dp.pos[2]]);
       }
     });
-    waypointsRef.current = planned.length > 0 ? planned : [[0.5, 0]];
+    if (planned.length > 0) {
+      waypointsRef.current = planned;
+    } else {
+      // ถามครบแล้ว → เดินสุ่มรอ plan ใหม่ (ไม่ยืนเฉย)
+      const patrol: [number, number][] = [];
+      agents.forEach((_, i) => {
+        const dp = deskPositions[i];
+        if (!dp) return;
+        if (Math.random() < 0.3) {
+          const offset = dp.facing === 0 ? 1.2 : -1.2;
+          patrol.push([dp.pos[0] + offset, dp.pos[2]]);
+        }
+      });
+      waypointsRef.current = patrol.length > 0 ? patrol : [[0.5, 0], [-3, 2], [3, -2]];
+    }
   }
   const waypoints = waypointsRef.current;
 
