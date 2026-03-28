@@ -437,15 +437,13 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     if (planned.length > 0) {
       waypointsRef.current = planned;
     } else {
-      // ถามครบแล้ว → เดินสุ่มรอ plan ใหม่ (ไม่ยืนเฉย)
+      // ถามครบแล้ว / ไม่มี plan → เดินตรวจทุกโต๊ะวนไปเรื่อยๆ
       const patrol: [number, number][] = [];
       agents.forEach((_, i) => {
         const dp = deskPositions[i];
         if (!dp) return;
-        if (Math.random() < 0.3) {
-          const offset = dp.facing === 0 ? 1.2 : -1.2;
-          patrol.push([dp.pos[0] + offset, dp.pos[2]]);
-        }
+        const offset = dp.facing === 0 ? 1.2 : -1.2;
+        patrol.push([dp.pos[0] + offset, dp.pos[2]]);
       });
       waypointsRef.current = patrol.length > 0 ? patrol : [[0.5, 0], [-3, 2], [3, -2]];
     }
