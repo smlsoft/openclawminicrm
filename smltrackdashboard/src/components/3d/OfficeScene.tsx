@@ -404,7 +404,7 @@ function Whiteboard({ position, rotation }: { position: [number, number, number]
       <mesh position={[0.7, -0.9, 0.1]} castShadow><boxGeometry args={[0.04, 0.6, 0.04]} /><meshStandardMaterial color="#94a3b8" /></mesh>
 
       {/* กราฟ Animation */}
-      <Html position={[0, 0, 0.04]} center distanceFactor={8} style={{ pointerEvents: "none" }}>
+      <Html position={[0, 0, 0.04]} transform occlude={false} distanceFactor={8} style={{ pointerEvents: "none" }}>
         <div style={{
           width: 280, height: 160, background: "#fff", borderRadius: 8, padding: "10px 12px",
           fontFamily: "Prompt,sans-serif", overflow: "hidden",
