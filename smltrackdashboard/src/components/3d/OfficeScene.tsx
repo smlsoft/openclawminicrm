@@ -14,7 +14,36 @@ let ttsBusySince = 0;
 // Safety: ถ้า ttsBusy ค้างนานกว่า 30 วิ → auto-reset
 function checkTTSStuck() { if (ttsBusy && Date.now() - ttsBusySince > 30000) { ttsBusy = false; } }
 
-// (บทสนทนาทั้งหมดสร้างจาก AI ผ่าน CEO Review API — ไม่ hardcode)
+// ─── CEO Plan — วางแผนบทสนทนาล่วงหน้า (batch ทุก 1 นาที) ───
+let ceoPlan: Record<string, { ceo: string; emp: string }> = {};
+let lastPlanFetch = 0;
+
+async function fetchCeoPlan() {
+  if (typeof window === "undefined") return;
+  if (Date.now() - lastPlanFetch < 60000 && Object.keys(ceoPlan).length > 0) return; // ดึงทุก 1 นาที
+  try {
+    const r = await fetch("/dashboard/api/ceo-review");
+    const d = await r.json();
+    if (d && typeof d === "object" && Object.keys(d).length > 0) {
+      ceoPlan = d;
+      lastPlanFetch = Date.now();
+    }
+  } catch { /* keep existing */ }
+}
+
+// เริ่มโหลดแผนทันทีที่เปิดหน้า + refresh ทุก 1 นาที
+if (typeof window !== "undefined") {
+  fetchCeoPlan();
+  setInterval(fetchCeoPlan, 60000);
+}
+
+function getCeoPlanFor(agentName: string): [string, string] | null {
+  // ตัดชื่อให้ตรง — เช่น "น้องกุ้งแก้ว" → "แก้ว"
+  const shortName = agentName.replace("น้องกุ้ง", "");
+  const pair = ceoPlan[shortName] || ceoPlan[agentName];
+  if (pair?.ceo && pair?.emp) return [pair.ceo, pair.emp];
+  return null;
+}
 
 // Edge TTS (Neural voice) → fallback Web Speech API
 async function edgeTTS(text: string, voice: string, speed: number): Promise<boolean> {
@@ -48,27 +77,18 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
   });
 }
 
-// ดึงบทสนทนาจาก AI (ผลงานจริง) — ถ้าไม่ได้ก็ข้ามไม่พูด
-async function fetchReviewPair(agentName: string): Promise<[string, string] | null> {
-  if (!agentName) return null;
-  try {
-    const r = await fetch(`/dashboard/api/ceo-review?agent=${encodeURIComponent(agentName)}`);
-    const d = await r.json();
-    if (d.ceo && d.emp) return [d.ceo, d.emp];
-  } catch { /* fallback */ }
-  return null;
-}
-
 async function ceoSpeak(agentName: string, enabled: boolean) {
   checkTTSStuck();
   if (!enabled || ttsBusy) return;
+
+  // ดึงจากแผนที่วางไว้ล่วงหน้า — ไม่ต้องรอ API (instant!)
+  const pair = getCeoPlanFor(agentName);
+  if (!pair) return; // ไม่มีข้อมูล → ข้ามเลย
+  const [ceoQ, empA] = pair;
+
   ttsBusy = true;
   ttsBusySince = Date.now();
   try {
-    // ดึงบทสนทนาจาก AI (ผลงานจริง) — ถ้าไม่ได้ก็ข้ามไม่พูด
-    const review = await fetchReviewPair(agentName);
-    if (!review) { return; }
-    const [ceoQ, empA] = review;
 
     // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
     const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
@@ -343,24 +363,20 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — เดินทุกโต๊ะ (active ก่อน แล้ว idle) ไม่หายไปแม้ไม่มีคนทำงาน
+  // Waypoints — ไปเฉพาะตัวที่มีแผนคุย (มีข้อมูลทำงาน) เหมือน CEO ตามงานจริง
   const waypoints: [number, number][] = useMemo(() => {
-    const active: [number, number][] = [];
-    const idle: [number, number][] = [];
+    const planned: [number, number][] = [];
     agents.forEach((agent, i) => {
       const dp = deskPositions[i];
       if (!dp) return;
-      const offset = dp.facing === 0 ? 1.2 : -1.2;
-      const pt: [number, number] = [dp.pos[0] + offset, dp.pos[2]];
-      const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
-      if (isActive) active.push(pt);
-      else idle.push(pt);
+      // ไปเฉพาะตัวที่มีแผนคุย
+      if (getCeoPlanFor(agent.name)) {
+        const offset = dp.facing === 0 ? 1.2 : -1.2;
+        planned.push([dp.pos[0] + offset, dp.pos[2]]);
+      }
     });
-    // active ก่อน → สุ่ม idle 3 ตัว (CEO ไปดูคนไม่ทำงานด้วย)
-    const shuffledIdle = idle.sort(() => Math.random() - 0.5).slice(0, 3);
-    const all = [...active, ...shuffledIdle];
-    if (all.length === 0) return [[0.5, 0], [-3, 2], [3, -2]]; // เดินสุ่มถ้าว่าง
-    return all;
+    if (planned.length === 0) return [[0.5, 0]]; // ยืนรอกลางออฟฟิศถ้ายังไม่มีแผน
+    return planned;
   }, [agents, deskPositions]);
 
   // คำพูด CEO สำหรับ balloon text (แสดงระหว่างเดิน)

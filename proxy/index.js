@@ -3414,112 +3414,109 @@ app.get("/api/free-models", (req, res) => {
   });
 });
 
-// ─── CEO Review — ดึงผลงานจริงของน้องกุ้ง + AI สร้างบทสนทนาติดตามผลงาน ───
-const ceoReviewCache = {}; // { agentName: { ceo, emp, ts } }
-
-// Map ชื่อน้องกุ้ง → feature ใน ai_costs
+// ─── CEO Plan — วางแผนบทสนทนาล่วงหน้าทุกตัว (batch) ───
 const KUNG_TO_FEATURE = {
   "แก้ว": "crm-analysis", "ทองคำ": "sales-opportunity", "ครูโค้ช": "team-coaching",
   "อาร์ม": "weekly-strategy", "หมอใจ": "customer-health", "แบงค์": "payment-verify",
   "เมฆ": "delivery-track", "ขนุน": "win-back", "แนน": "cross-sell",
   "บุ๋ม": "daily-summary", "แต้ม": "lead-scoring", "นาฬิกา": "appointment", "เปรียบ": "price-analysis",
 };
+const KUNG_NAMES = Object.keys(KUNG_TO_FEATURE);
 
-app.get("/api/ceo-review", async (req, res) => {
-  const agentName = req.query.agent || "";
-  if (!agentName) return res.json({ ceo: "", emp: "" });
+// Cache แผนบทสนทนาทั้งหมด { plan: Record<name, {ceo,emp}>, ts }
+let ceoPlanCache = { plan: {}, ts: 0 };
+const PLAN_TTL = 300000; // 5 นาที
 
-  // cache 5 นาที/ตัว
-  const cached = ceoReviewCache[agentName];
-  if (cached && Date.now() - cached.ts < 300000) {
-    return res.json({ ceo: cached.ceo, emp: cached.emp });
+// Batch: วางแผนบทสนทนาทุกตัวที่มีผลงาน — AI สร้างทีเดียว 13 คู่
+app.get("/api/ceo-plan", async (req, res) => {
+  // ใช้ cache ถ้ายังไม่หมดอายุ
+  if (ceoPlanCache.ts > 0 && Date.now() - ceoPlanCache.ts < PLAN_TTL && Object.keys(ceoPlanCache.plan).length > 0) {
+    return res.json(ceoPlanCache.plan);
   }
 
   try {
     const database = await getDB();
-    if (!database) return res.json({ ceo: "", emp: "" });
+    if (!database) return res.json({});
 
-    // หา feature ของน้องกุ้งตัวนี้
-    const feature = KUNG_TO_FEATURE[agentName] || "";
-    const query = feature ? { feature } : {};
-
-    // ดึงผลงานล่าสุด 5 รายการ
-    const recentWork = await database.collection("ai_costs")
-      .find(query)
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .toArray();
-
-    console.log(`[CEO-Review] ${agentName}: feature=${feature}, recentWork=${recentWork.length}`);
-    // สร้าง context — ถ้ามีผลงานจริงใช้ผลงาน ถ้าไม่มีก็ให้ AI แต่งเอง
-    let prompt;
-    if (recentWork.length > 0) {
-      const workSummary = recentWork.map(w => {
-        const t = w.createdAt ? new Date(w.createdAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "?";
-        return `${t} — ${w.feature} ${w.totalTokens || 0} tokens ${w.costUsd > 0 ? "฿" + (w.costUsd * 35).toFixed(2) : "ฟรี"}`;
-      }).join("\n");
-      prompt = `CEO ชื่อบอส กำลังตรวจงาน "${agentName}" น้องกุ้ง AI
-ผลงานล่าสุด:
-${workSummary}
-
-สร้างบทสนทนา 1 คู่ CEO ถามติดตามผลงานจริง + พนักงานเถียงกลับตลกๆ แซวกัน ห้ามซ้ำกับครั้งก่อน
-{"ceo":"ถามเรื่องผลงานจริง สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}`;
-    } else {
-      prompt = `CEO ชื่อบอส กำลังเดินตรวจออฟฟิศ เจอ "${agentName}" น้องกุ้ง AI
-สร้างบทสนทนา 1 คู่ CEO ถามพนักงานตลกๆ + พนักงานเถียงกลับแซวบอส ห้ามซ้ำกับครั้งก่อน เรื่องในออฟฟิศ (กาแฟ แมว งาน ลูกค้า เงินเดือน โบนัส ฯลฯ)
-{"ceo":"ถามตลก สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}`;
+    // ดึงผลงานล่าสุดของทุกตัวที่มีข้อมูล
+    const agentsWithWork = [];
+    for (const name of KUNG_NAMES) {
+      const feature = KUNG_TO_FEATURE[name];
+      const recent = await database.collection("ai_costs")
+        .find({ feature })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .toArray();
+      if (recent.length > 0) {
+        const summary = recent.map(w => {
+          const t = w.createdAt ? new Date(w.createdAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "?";
+          return `${w.feature} ${w.totalTokens || 0}tok ${w.costUsd > 0 ? "฿" + (w.costUsd * 35).toFixed(1) : "ฟรี"} (${t})`;
+        }).join(", ");
+        agentsWithWork.push({ name, summary });
+      }
     }
 
-    // ให้ AI สร้างบทสนทนา — ลอง SambaNova ก่อน → fallback callLightAI (OpenRouter)
+    if (agentsWithWork.length === 0) return res.json({});
+
+    // สร้าง prompt รวม — ให้ AI สร้างบทสนทนาทุกตัวทีเดียว
+    const agentList = agentsWithWork.map(a => `- ${a.name}: ${a.summary}`).join("\n");
+    const prompt = `CEO ชื่อบอส กำลังเดินตรวจงานน้องกุ้ง AI ทุกตัว
+ข้อมูลผลงานแต่ละตัว:
+${agentList}
+
+สร้างบทสนทนา ${agentsWithWork.length} คู่ (ตัวละ 1 คู่) CEO ถามติดตามผลงานจริง + พนักงานเถียงกลับตลกๆ แซวกัน ห้ามซ้ำ
+ตอบ JSON: {"แก้ว":{"ceo":"ถาม 5-15 คำ","emp":"ตอบ 5-15 คำ"},"ทองคำ":{...},...}`;
+
     const msgs = [
-      { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น ห้ามซ้ำกับครั้งก่อน" },
+      { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
       { role: "user", content: prompt },
     ];
     let result = null;
 
-    // 1) SambaNova
+    // SambaNova → OpenRouter fallback
     const sambaKey = process.env.SAMBANOVA_API_KEY;
     if (sambaKey) {
       try {
         const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
-          method: "POST", signal: AbortSignal.timeout(15000),
+          method: "POST", signal: AbortSignal.timeout(20000),
           headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "Qwen3-235B", messages: msgs, max_tokens: 200, response_format: { type: "json_object" } }),
+          body: JSON.stringify({ model: "Qwen3-235B", messages: msgs, max_tokens: 1500, response_format: { type: "json_object" } }),
         });
         const d = await r.json();
         if (d.choices?.[0]?.message?.content) {
           result = d.choices[0].message.content;
-          trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
+          trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-plan",
             inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
         } else if (d.error) {
-          console.log(`[CEO-Review] SambaNova ${r.status}:`, d.error?.message || "unknown");
+          console.log(`[CEO-Plan] SambaNova:`, d.error?.message);
         }
-      } catch (e) { console.log("[CEO-Review] SambaNova timeout:", e.message); }
+      } catch (e) { console.log("[CEO-Plan] SambaNova timeout:", e.message); }
     }
-
-    // 2) Fallback: callLightAI (OpenRouter free models)
     if (!result) {
       try {
-        const fallback = await callLightAI(msgs, { json: true, maxTokens: 200, timeout: 15000 });
-        if (fallback) result = fallback;
+        result = await callLightAI(msgs, { json: true, maxTokens: 1500, timeout: 20000 });
       } catch { /* silent */ }
     }
 
-    console.log(`[CEO-Review] ${agentName}: result=${result ? result.substring(0, 80) : "null"}`);
     if (result) {
       try {
         const parsed = JSON.parse(result);
-        if (parsed.ceo && parsed.emp) {
-          ceoReviewCache[agentName] = { ceo: parsed.ceo, emp: parsed.emp, ts: Date.now() };
-          console.log(`[CEO-Review] ✅ ${agentName}: "${parsed.ceo}" → "${parsed.emp}"`);
-          return res.json(parsed);
+        // เก็บเฉพาะตัวที่มี ceo + emp ครบ
+        const plan = {};
+        for (const [name, pair] of Object.entries(parsed)) {
+          if (pair && pair.ceo && pair.emp) plan[name] = pair;
         }
-      } catch { /* parse fail */ }
+        if (Object.keys(plan).length > 0) {
+          ceoPlanCache = { plan, ts: Date.now() };
+          console.log(`[CEO-Plan] ✅ วางแผน ${Object.keys(plan).length} ตัว`);
+          return res.json(plan);
+        }
+      } catch { console.log("[CEO-Plan] JSON parse fail"); }
     }
   } catch (e) {
-    console.log("[CEO-Review] error:", e.message);
+    console.log("[CEO-Plan] error:", e.message);
   }
-  res.json({ ceo: "", emp: "" });
+  res.json({});
 });
 
 app.get("/api/costs", async (req, res) => {
