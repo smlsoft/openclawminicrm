@@ -20,6 +20,7 @@ export async function proxy(req: NextRequest) {
     "/api/visitor-count",
     "/api/tts",
     "/api/ceo-quotes",
+    "/api/ceo-review",
     "/_next",
     "/favicon.ico",
   ];

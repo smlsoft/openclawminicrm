@@ -3495,6 +3495,91 @@ ceo[i] คู่กับ employee[i]` },
   res.json({ ceo: [], employee: [], updatedAt: 0 });
 });
 
+// ─── CEO Review — ดึงผลงานจริงของน้องกุ้ง + AI สร้างบทสนทนาติดตามผลงาน ───
+const ceoReviewCache = {}; // { agentName: { ceo, emp, ts } }
+
+// Map ชื่อน้องกุ้ง → feature ใน ai_costs
+const KUNG_TO_FEATURE = {
+  "แก้ว": "crm-analysis", "ทองคำ": "sales-opportunity", "ครูโค้ช": "team-coaching",
+  "อาร์ม": "weekly-strategy", "หมอใจ": "customer-health", "แบงค์": "payment-verify",
+  "เมฆ": "delivery-track", "ขนุน": "win-back", "แนน": "cross-sell",
+  "บุ๋ม": "daily-summary", "แต้ม": "lead-scoring", "นาฬิกา": "appointment", "เปรียบ": "price-analysis",
+};
+
+app.get("/api/ceo-review", async (req, res) => {
+  const agentName = req.query.agent || "";
+  if (!agentName) return res.json({ ceo: "", emp: "" });
+
+  // cache 5 นาที/ตัว
+  const cached = ceoReviewCache[agentName];
+  if (cached && Date.now() - cached.ts < 300000) {
+    return res.json({ ceo: cached.ceo, emp: cached.emp });
+  }
+
+  try {
+    const database = await getDB();
+    if (!database) return res.json({ ceo: "", emp: "" });
+
+    // หา feature ของน้องกุ้งตัวนี้
+    const feature = KUNG_TO_FEATURE[agentName] || "";
+    const query = feature ? { feature } : {};
+
+    // ดึงผลงานล่าสุด 5 รายการ
+    const recentWork = await database.collection("ai_costs")
+      .find(query)
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .toArray();
+
+    if (recentWork.length === 0) return res.json({ ceo: "", emp: "" });
+
+    // สร้าง context จากผลงานจริง
+    const workSummary = recentWork.map(w => {
+      const t = w.createdAt ? new Date(w.createdAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "?";
+      return `${t} — ${w.feature} ${w.totalTokens || 0} tokens ${w.costUsd > 0 ? "฿" + (w.costUsd * 35).toFixed(2) : "ฟรี"}`;
+    }).join("\n");
+
+    // ให้ AI สร้างบทสนทนา
+    const sambaKey = process.env.SAMBANOVA_API_KEY;
+    if (!sambaKey) return res.json({ ceo: "", emp: "" });
+
+    const r = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+      method: "POST", signal: AbortSignal.timeout(15000),
+      headers: { Authorization: `Bearer ${sambaKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "Qwen3-235B",
+        messages: [
+          { role: "system", content: "ตอบ JSON เท่านั้น ห้ามเพิ่มข้อความอื่น" },
+          { role: "user", content: `CEO ชื่อบอส กำลังตรวจงาน "${agentName}" น้องกุ้ง AI
+ผลงานล่าสุด:
+${workSummary}
+
+สร้างบทสนทนา 1 คู่ CEO ถามติดตามผลงานจริง + พนักงานเถียงกลับตลกๆ แซวกัน
+{"ceo":"ถามเรื่องผลงานจริง สั้น 5-15 คำ","emp":"ตอบเถียงกลับ ตลก 5-15 คำ"}` },
+        ],
+        max_tokens: 200,
+        response_format: { type: "json_object" },
+      }),
+    });
+    const d = await r.json();
+    const result = d.choices?.[0]?.message?.content;
+    if (result) {
+      trackAICost({ provider: "SambaNova", model: "Qwen3-235B", feature: "ceo-review",
+        inputTokens: d.usage?.prompt_tokens || 0, outputTokens: d.usage?.completion_tokens || 0 });
+      try {
+        const parsed = JSON.parse(result);
+        if (parsed.ceo && parsed.emp) {
+          ceoReviewCache[agentName] = { ceo: parsed.ceo, emp: parsed.emp, ts: Date.now() };
+          return res.json(parsed);
+        }
+      } catch { /* parse fail */ }
+    }
+  } catch (e) {
+    console.log("[CEO-Review] error:", e.message);
+  }
+  res.json({ ceo: "", emp: "" });
+});
+
 app.get("/api/costs", async (req, res) => {
   const database = await getDB();
   if (!database) return res.json({ today: {}, weekly: {}, daily: [] });

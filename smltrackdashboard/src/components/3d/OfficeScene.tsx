@@ -10,6 +10,9 @@ interface Props { agents: Agent[]; ttsEnabled?: boolean; }
 
 // ─── TTS System — Edge TTS (Neural ไทยชัด) + fallback Web Speech ───
 let ttsBusy = false;
+let ttsBusySince = 0;
+// Safety: ถ้า ttsBusy ค้างนานกว่า 30 วิ → auto-reset
+function checkTTSStuck() { if (ttsBusy && Date.now() - ttsBusySince > 30000) { ttsBusy = false; } }
 
 // จับคู่ CEO ถาม + พนักงานตอบ ให้สัมพันธ์กัน
 const CONVERSATION_PAIRS: [string, string][] = [
@@ -94,24 +97,55 @@ function webSpeechFallback(text: string, pitch: number, rate: number): Promise<v
   });
 }
 
+// ดึงบทสนทนาจากผลงานจริง (40% โอกาส)
+async function fetchReviewPair(agentName: string): Promise<[string, string] | null> {
+  if (!agentName) return null;
+  try {
+    const r = await fetch(`/dashboard/api/ceo-review?agent=${encodeURIComponent(agentName)}`);
+    const d = await r.json();
+    if (d.ceo && d.emp) return [d.ceo, d.emp];
+  } catch { /* fallback */ }
+  return null;
+}
+
 async function ceoSpeak(agentName: string, enabled: boolean) {
+  checkTTSStuck();
   if (!enabled || ttsBusy) return;
   ttsBusy = true;
-  fetchAIQuotes();
+  ttsBusySince = Date.now();
+  try {
+    fetchAIQuotes();
 
-  const [ceoQ, empA] = getNextPair();
+    let ceoQ: string, empA: string;
 
-  // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
-  const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
-  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
-  if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
+    // 40% โอกาส → ดึงจากผลงานจริง (ถ้าได้)
+    if (agentName && Math.random() < 0.4) {
+      const review = await fetchReviewPair(agentName);
+      if (review) {
+        [ceoQ, empA] = review;
+      } else {
+        [ceoQ, empA] = getNextPair();
+      }
+    } else {
+      [ceoQ, empA] = getNextPair();
+    }
 
-  // 60% พนักงานตอบ — เสียงหญิง สูง (Premwadee) speed 1.0
-  if (enabled && Math.random() < 0.6) {
-    const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
-    if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
+    // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
+    const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
+    const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
+    if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
+
+    // 70% พนักงานตอบ — เสียงหญิง สูง (Premwadee) speed 1.0
+    if (enabled && Math.random() < 0.7) {
+      const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
+      if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
+    }
+  } catch (e) {
+    // ป้องกัน ttsBusy ค้าง
+    console.warn("[CEO TTS]", e);
+  } finally {
+    ttsBusy = false;
   }
-  ttsBusy = false;
 }
 
 function isCeoSpeaking() { return ttsBusy; }
@@ -369,22 +403,24 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
   const color = useMemo(() => new THREE.Color("#ffd700"), []);
   const lighter = useMemo(() => color.clone().offsetHSL(0, 0, 0.15), [color]);
 
-  // Waypoints — เฉพาะโต๊ะที่น้องกุ้งกำลังทำงาน
+  // Waypoints — เดินทุกโต๊ะ (active ก่อน แล้ว idle) ไม่หายไปแม้ไม่มีคนทำงาน
   const waypoints: [number, number][] = useMemo(() => {
     const active: [number, number][] = [];
+    const idle: [number, number][] = [];
     agents.forEach((agent, i) => {
       const dp = deskPositions[i];
       if (!dp) return;
+      const offset = dp.facing === 0 ? 1.2 : -1.2;
+      const pt: [number, number] = [dp.pos[0] + offset, dp.pos[2]];
       const isActive = agent.status === "working" || agent.status === "excited" || agent.status === "running" || agent.status === "alert";
-      if (isActive) {
-        // ยืนข้างโต๊ะ (ฝั่งทางเดิน)
-        const offset = dp.facing === 0 ? 1.2 : -1.2;
-        active.push([dp.pos[0] + offset, dp.pos[2]]);
-      }
+      if (isActive) active.push(pt);
+      else idle.push(pt);
     });
-    // ถ้าไม่มีใครทำงาน → ยืนกลางออฟฟิศ
-    if (active.length === 0) return [[0.5, 0]];
-    return active;
+    // active ก่อน → สุ่ม idle 3 ตัว (CEO ไปดูคนไม่ทำงานด้วย)
+    const shuffledIdle = idle.sort(() => Math.random() - 0.5).slice(0, 3);
+    const all = [...active, ...shuffledIdle];
+    if (all.length === 0) return [[0.5, 0], [-3, 2], [3, -2]]; // เดินสุ่มถ้าว่าง
+    return all;
   }, [agents, deskPositions]);
 
   // คำพูด CEO สำหรับ balloon text (ดึงจากคู่สนทนา)
