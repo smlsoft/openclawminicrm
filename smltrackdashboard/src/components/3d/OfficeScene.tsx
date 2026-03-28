@@ -182,11 +182,14 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
       if (!enabled) break;
       const text = conv.turns[i];
       const isCeo = i % 2 === 0;
+      console.log(`[CEO] turn ${i+1}/${conv.turns.length} ${isCeo ? "CEO" : "EMP"}: ${text.substring(0, 30)}...`);
       if (isCeo) {
         const ok = await edgeTTS(text, "th-TH-NiwatNeural", 0.9);
+        console.log(`[CEO] edgeTTS=${ok}`);
         if (!ok) await webSpeechFallback(text, 0.5, 0.85);
       } else {
         const ok = await edgeTTS(text, "th-TH-PremwadeeNeural", 1.0);
+        console.log(`[CEO] edgeTTS=${ok}`);
         if (!ok) await webSpeechFallback(text, 1.8, 0.9);
       }
     }
@@ -614,7 +617,7 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
 
     // ถึง waypoint → หยุดดู + เคาะหัว → ไปต่อ
     if (dist < 0.15) {
-      st.pauseUntil = now + 2 + Math.random() * 1.5; // หยุด 2-3.5 วินาที
+      st.pauseUntil = now + 15 + Math.random() * 5; // หยุด 15-20 วินาที (รอ TTS 6 turns จบ)
       st.vx = 0; st.vz = 0;
       // ธง — ไม่ต้อง reset (โบกตลอด)
       // หันหน้าเข้าหาตัวน้องกุ้ง (ไม่ใช่โต๊ะ)
