@@ -527,16 +527,75 @@ async function getUserName(source) {
 const lightAICooldown = {}; // provider → cooldown until timestamp
 const PAID_AI = process.env.PAID_AI_ENABLED === "true"; // ถ้าไม่ตั้ง = ปิดตัวเสียเงิน
 
+// === Auto-discover OpenRouter free models (ทุก 1 ชม.) ===
+let discoveredFreeModels = []; // [{ id, name, context_length }]
+let lastDiscovery = 0;
+
+async function discoverFreeModels() {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) return;
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      signal: AbortSignal.timeout(15000),
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const data = await res.json();
+    if (!data.data) return;
+
+    // Filter: ฟรี, context >= 8K, support chat, ไม่ใช่ vision-only
+    const free = data.data.filter((m) => {
+      const p = m.pricing || {};
+      const isFree = parseFloat(p.prompt || "1") === 0 && parseFloat(p.completion || "1") === 0;
+      const bigEnough = (m.context_length || 0) >= 8000;
+      const isChat = m.id && !m.id.includes("embed") && !m.id.includes("tts") && !m.id.includes("image");
+      return isFree && bigEnough && isChat;
+    });
+
+    // Sort by context_length desc, take top 10
+    free.sort((a, b) => (b.context_length || 0) - (a.context_length || 0));
+    discoveredFreeModels = free.slice(0, 10).map((m) => ({
+      id: m.id,
+      name: m.name || m.id,
+      context_length: m.context_length || 0,
+    }));
+
+    lastDiscovery = Date.now();
+    console.log(`[FreeAI] ค้นพบ ${discoveredFreeModels.length} models ฟรี:`, discoveredFreeModels.map((m) => m.id.split("/").pop()).join(", "));
+  } catch (e) {
+    console.log("[FreeAI] discover error:", e.message);
+  }
+}
+
+// เริ่มค้นหาทันที + ทุก 1 ชม.
+discoverFreeModels();
+setInterval(discoverFreeModels, 3600000);
+
+function getOpenRouterFreeProviders() {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key || discoveredFreeModels.length === 0) {
+    // Fallback: hardcoded models
+    return [
+      { name: "OR-Nemotron", url: "https://openrouter.ai/api/v1/chat/completions", key, model: "nvidia/nemotron-3-super-120b-a12b:free" },
+      { name: "OR-DeepSeek", url: "https://openrouter.ai/api/v1/chat/completions", key, model: "deepseek/deepseek-chat-v3-0324:free" },
+      { name: "OR-Llama", url: "https://openrouter.ai/api/v1/chat/completions", key, model: "meta-llama/llama-3.3-70b-instruct:free" },
+      { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key, model: "stepfun/step-3.5-flash:free" },
+    ];
+  }
+  // ใช้ discovered models
+  return discoveredFreeModels.map((m) => ({
+    name: "OR-" + m.id.split("/").pop().substring(0, 15),
+    url: "https://openrouter.ai/api/v1/chat/completions",
+    key,
+    model: m.id,
+  }));
+}
+
 async function callLightAI(messages, { json = false, maxTokens = 500, timeout = 15000 } = {}) {
-  // OpenAI-compatible providers (เรียง: ฟรี 100% ก่อน → เสียเงินทีหลัง)
+  // OpenAI-compatible providers (ฟรี auto-discover + dedicated + paid)
   const providers = [
-    // ─── ฟรี 100% (OpenRouter free models) ───
-    { name: "OR-Nemotron", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "nvidia/nemotron-3-super-120b-a12b:free" },
-    { name: "OR-DeepSeek", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "deepseek/deepseek-chat-v3-0324:free" },
-    { name: "OR-Llama", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "meta-llama/llama-3.3-70b-instruct:free" },
-    { name: "OR-Trinity", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "arcee-ai/trinity-large-preview:free" },
-    { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
-    // ─── ฟรี 100% (dedicated providers) ───
+    // ─── ฟรี (auto-discover จาก OpenRouter ทุก 1 ชม.) ───
+    ...getOpenRouterFreeProviders(),
+    // ─── ฟรี (dedicated providers) ───
     { name: "SambaNova", url: "https://api.sambanova.ai/v1/chat/completions", key: process.env.SAMBANOVA_API_KEY, model: "Qwen3-235B" },
     // ─── เสียเงิน (ต้องเปิด PAID_AI_ENABLED=true) ───
     ...(PAID_AI ? [
@@ -1403,12 +1462,9 @@ const providerCooldown = {}; // provider → timestamp ที่จะหมด 
 
 async function callProvider(messages, tools) {
   const providers = [
-    // ─── ฟรี 100% (OpenRouter free) ───
-    { name: "OR-Nemotron", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "nvidia/nemotron-3-super-120b-a12b:free" },
-    { name: "OR-DeepSeek", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "deepseek/deepseek-chat-v3-0324:free" },
-    { name: "OR-Llama", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "meta-llama/llama-3.3-70b-instruct:free" },
-    { name: "OR-StepFlash", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model: "stepfun/step-3.5-flash:free" },
-    // ─── ฟรี 100% (dedicated) ───
+    // ─── ฟรี (auto-discover จาก OpenRouter ทุก 1 ชม.) ───
+    ...getOpenRouterFreeProviders(),
+    // ─── ฟรี (dedicated) ───
     { name: "SambaNova", url: "https://api.sambanova.ai/v1/chat/completions", key: process.env.SAMBANOVA_API_KEY, model: "Qwen3-235B" },
     // ─── เสียเงิน (ต้องเปิด PAID_AI_ENABLED=true) ───
     ...(PAID_AI ? [
@@ -3334,6 +3390,16 @@ app.post("/api/advisor/cost", express.json(), async (req, res) => {
 });
 
 // ดึง cost summary สำหรับ dashboard
+// API: ดู free models ที่ค้นพบ
+app.get("/api/free-models", (req, res) => {
+  res.json({
+    count: discoveredFreeModels.length,
+    lastDiscovery: lastDiscovery ? new Date(lastDiscovery).toISOString() : null,
+    models: discoveredFreeModels,
+    paidAI: PAID_AI,
+  });
+});
+
 app.get("/api/costs", async (req, res) => {
   const database = await getDB();
   if (!database) return res.json({ today: {}, weekly: {}, daily: [] });
