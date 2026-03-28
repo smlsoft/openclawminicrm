@@ -158,8 +158,9 @@ export default function KungRoomPage() {
 
           {/* Instructions */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-            <div className="theme-bg-secondary/80 backdrop-blur border theme-border rounded-full px-4 py-1.5 text-[11px] theme-text-muted">
-              🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม
+            <div className="theme-bg-secondary/80 backdrop-blur border theme-border rounded-2xl px-4 py-2 text-[11px] theme-text-muted leading-relaxed text-center">
+              <div>🖱️ ลากเพื่อหมุน · เลื่อนเพื่อซูม</div>
+              <div className="mt-1 text-[10px] opacity-70">🦐 กระโดด = กำลังทำงาน · 🎈 มีลูกโป่ง = มีงานรายงาน · 🪑 นั่งนิ่ง = รอคิว</div>
             </div>
           </div>
 
