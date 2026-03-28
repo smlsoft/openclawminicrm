@@ -3432,10 +3432,39 @@ ceo[i] คู่กับ employee[i]` },
     ], { json: true, maxTokens: 1500, timeout: 20000 });
 
     if (result) {
-      const parsed = JSON.parse(result);
-      if (parsed.ceo?.length > 3 && parsed.employee?.length > 3) {
-        ceoQuotesCache = { ceo: parsed.ceo, employee: parsed.employee, updatedAt: now };
-        console.log(`[CEO-Quotes] AI สร้างใหม่: ${parsed.ceo.length} คู่สนทนา`);
+      // พยายาม parse — ถ้า JSON ถูกตัด ลอง repair
+      let parsed;
+      try {
+        parsed = JSON.parse(result);
+      } catch {
+        // ลอง repair: ตัดถึง ] ตัวสุดท้าย แล้วปิด
+        try {
+          let fixed = result;
+          // หา ceo array
+          const ceoMatch = fixed.match(/"ceo"\s*:\s*\[([\s\S]*?)\]/);
+          const empMatch = fixed.match(/"employee"\s*:\s*\[([\s\S]*?)\]/);
+          if (ceoMatch && empMatch) {
+            parsed = {
+              ceo: JSON.parse("[" + ceoMatch[1] + "]"),
+              employee: JSON.parse("[" + empMatch[1] + "]"),
+            };
+          } else {
+            // ลอง fix ง่ายๆ
+            const lastBracket = fixed.lastIndexOf("]");
+            if (lastBracket > 0) {
+              fixed = fixed.substring(0, lastBracket + 1) + "]}";
+              parsed = JSON.parse(fixed);
+            }
+          }
+        } catch {
+          console.log("[CEO-Quotes] JSON repair failed");
+        }
+      }
+      if (parsed?.ceo?.length > 3 && parsed?.employee?.length > 3) {
+        // ตัดให้เท่ากัน
+        const len = Math.min(parsed.ceo.length, parsed.employee.length);
+        ceoQuotesCache = { ceo: parsed.ceo.slice(0, len), employee: parsed.employee.slice(0, len), updatedAt: now };
+        console.log(`[CEO-Quotes] AI สร้างใหม่: ${len} คู่สนทนา`);
         return res.json(ceoQuotesCache);
       }
     }
