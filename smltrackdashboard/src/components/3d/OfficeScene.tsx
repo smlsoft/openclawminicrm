@@ -11,30 +11,55 @@ interface Props { agents: Agent[]; ttsEnabled?: boolean; }
 // ─── TTS System — Edge TTS (Neural ไทยชัด) + fallback Web Speech ───
 let ttsBusy = false;
 
-// AI-generated quotes (ดึงจาก /api/ceo-quotes ทุก 1 ชม.)
-let aiCeoQuotes: string[] = [];
-let aiEmployeeQuotes: string[] = [];
+// จับคู่ CEO ถาม + พนักงานตอบ ให้สัมพันธ์กัน
+const CONVERSATION_PAIRS: [string, string][] = [
+  ["ยอดขายวันนี้เป็นไงบ้าง?", "ปิดได้ 3 ดีลแล้วค่ะบอส!"],
+  ["ใครยังไม่ตอบแชทลูกค้า?", "ตอบหมดแล้วค่า ไม่ต้องห่วง!"],
+  ["ทำงานเร็วกว่านี้ได้ไหม?", "ก็ทำเร็วสุดแล้วนะบอส!"],
+  ["KPI เดือนนี้โอเคมั้ย?", "เกินเป้า 120% แล้วค่ะ!"],
+  ["ลูกค้ารายนี้ follow up หรือยัง?", "ส่งข้อความไปแล้ว 3 รอบ!"],
+  ["ทำไมยอดตกลงจากเมื่อวาน?", "วันนี้วันจันทร์ ลูกค้ายังไม่ตื่นค่ะ!"],
+  ["กาแฟหมดแล้ว ใครไปซื้อ?", "ให้แมวไปซื้อดีกว่า!"],
+  ["ขยันดีนะ ชอบๆ!", "ขอบคุณค่ะบอส ขอขึ้นเงินเดือนด้วย!"],
+  ["ประชุมอีก 5 นาทีนะ!", "อ๋อ ขอกินโดนัทก่อน!"],
+  ["ลูกค้า VIP โทรมา ดูแลด่วน!", "รับสายแล้วค่ะ กำลังจัดการ!"],
+  ["สต็อกสินค้าเช็คหรือยัง?", "เช็คแล้ว เหลือน้อยมาก ต้องสั่งเพิ่ม!"],
+  ["ใครอยากได้โบนัสยกมือ!", "หนูๆๆ! ยกทั้งสองมือเลย!"],
+  ["ระวังคู่แข่งมาตัดราคานะ!", "รู้แล้วค่ะ เตรียมโปรไว้แล้ว!"],
+  ["วันนี้ใครมาสาย?", "ไม่มีค่ะ มาก่อนบอสอีก!"],
+  ["เงินเดือนออกแล้วนะ!", "เย้! ขอบคุณบอส!"],
+  ["ทำไมแมวมานอนบนโต๊ะอีกแล้ว?", "หนูไล่ไม่ไป มันไม่กลัวหนู!"],
+  ["พรุ่งนี้มีนัดส่งของ อย่าลืม!", "จดไว้แล้วค่ะ พร้อมส่ง!"],
+  ["ตอบแชทให้เร็วนะ ลูกค้ารอ!", "ตอบอยู่ค่ะ มือไม่ว่างเลย!"],
+  ["ใครทำยอดสูงสุดวันนี้?", "หนูเองค่ะ! ปิดไป 5 ราย!"],
+  ["สู้ๆ นะทีม เชื่อมือทุกคน!", "สู้ๆ ค่ะบอส! ไม่ถอย!"],
+  ["ลดราคาอีกได้ไหม ลูกค้าต่อ?", "ลดอีกไม่ได้แล้ว ขาดทุนค่ะ!"],
+  ["ออฟฟิศรกจัง จัดให้หน่อย!", "ก็แมวมันรื้อไง!"],
+  ["บอสภูมิใจในทีมนี้มาก!", "หนูก็ภูมิใจที่มีบอสดีๆ ค่ะ!"],
+];
+
+let aiPairs: [string, string][] = [];
 let lastQuoteFetch = 0;
+let pairIdx = 0;
 
 async function fetchAIQuotes() {
   if (typeof window === "undefined") return;
-  if (Date.now() - lastQuoteFetch < 3600000 && aiCeoQuotes.length > 0) return;
+  if (Date.now() - lastQuoteFetch < 3600000 && aiPairs.length > 0) return;
   try {
     const r = await fetch("/dashboard/api/ceo-quotes");
     const d = await r.json();
-    if (d.ceo?.length > 0) aiCeoQuotes = d.ceo;
-    if (d.employee?.length > 0) aiEmployeeQuotes = d.employee;
+    if (d.ceo?.length > 0 && d.employee?.length > 0) {
+      // จับคู่ ceo[i] กับ employee[i]
+      aiPairs = d.ceo.map((c: string, i: number) => [c, d.employee[i % d.employee.length]] as [string, string]);
+    }
     lastQuoteFetch = Date.now();
   } catch { /* keep existing */ }
 }
 
-function getRandomCeoQuote() {
-  if (aiCeoQuotes.length > 0) return aiCeoQuotes[Math.floor(Math.random() * aiCeoQuotes.length)];
-  return "ทำงานดีมาก!";
-}
-function getRandomEmployeeQuote() {
-  if (aiEmployeeQuotes.length > 0) return aiEmployeeQuotes[Math.floor(Math.random() * aiEmployeeQuotes.length)];
-  return "รู้แล้วค่า~";
+function getNextPair(): [string, string] {
+  const pool = aiPairs.length > 0 ? aiPairs : CONVERSATION_PAIRS;
+  pairIdx = (pairIdx + 1) % pool.length;
+  return pool[pairIdx];
 }
 
 // Edge TTS (Neural voice) → fallback Web Speech API
@@ -74,17 +99,17 @@ async function ceoSpeak(agentName: string, enabled: boolean) {
   ttsBusy = true;
   fetchAIQuotes();
 
-  // CEO พูด — เสียงชาย ต่ำ ช้า (Niwat)
-  const quote = getRandomCeoQuote();
-  const ceoText = agentName ? `${agentName}! ${quote}` : quote;
-  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 1.0);
-  if (!ok) await webSpeechFallback(ceoText, 0.6, 1.0); // เสียงต่ำมาก ช้า
+  const [ceoQ, empA] = getNextPair();
 
-  // 50% พนักงานเถียงกลับ — เสียงหญิง สูง (Premwadee)
-  if (enabled && Math.random() < 0.5) {
-    const reply = getRandomEmployeeQuote();
-    const ok2 = await edgeTTS(reply, "th-TH-PremwadeeNeural", 1.1);
-    if (!ok2) await webSpeechFallback(reply, 1.8, 1.1); // เสียงสูงมาก ต่างชัด
+  // CEO ถาม — เสียงชาย ต่ำ ช้า (Niwat) speed 0.9
+  const ceoText = agentName ? `${agentName}! ${ceoQ}` : ceoQ;
+  const ok = await edgeTTS(ceoText, "th-TH-NiwatNeural", 0.9);
+  if (!ok) await webSpeechFallback(ceoText, 0.5, 0.85);
+
+  // 60% พนักงานตอบ — เสียงหญิง สูง (Premwadee) speed 1.0
+  if (enabled && Math.random() < 0.6) {
+    const ok2 = await edgeTTS(empA, "th-TH-PremwadeeNeural", 1.0);
+    if (!ok2) await webSpeechFallback(empA, 1.8, 0.9);
   }
   ttsBusy = false;
 }
@@ -362,13 +387,8 @@ function CEOShrimp({ agents, deskPositions, ttsEnabled = true }: { agents: Agent
     return active;
   }, [agents, deskPositions]);
 
-  // ใช้ AI quotes (ดึงทุก 1 ชม.) — fallback hardcoded
-  const CEO_QUOTES = aiCeoQuotes.length > 0 ? aiCeoQuotes : [
-    "ทำงานได้ดีมาก!", "เร็วกว่านี้ได้ไหม?", "ลูกค้ารอนะ!",
-    "ยอดขายเป็นไงบ้าง?", "ใครยังไม่ตอบแชท?", "กาแฟหมดแล้วนะ",
-    "ดีใจที่มีทีมแบบนี้", "อย่าลืม follow up!", "สู้ๆ น้องกุ้ง!",
-    "ประชุม 5 นาทีนะ", "KPI เดือนนี้โอเคมั้ย?", "ขยันดี ชอบๆ",
-  ];
+  // คำพูด CEO สำหรับ balloon text (ดึงจากคู่สนทนา)
+  const CEO_QUOTES = (aiPairs.length > 0 ? aiPairs : CONVERSATION_PAIRS).map(p => p[0]);
   const hammerRef = useRef<THREE.Group>(null!);
   const state = useRef({ wpIdx: 0, x: 0.5, z: 0, vx: 0, vz: 0, facingAngle: 0, legPhase: 0, pauseUntil: 0, quoteIdx: 0, quoteTime: 0, hammerSwing: 0, targetAngleAtPause: 0, currentAgentName: "" });
 
